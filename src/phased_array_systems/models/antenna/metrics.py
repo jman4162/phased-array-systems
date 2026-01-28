@@ -119,7 +119,8 @@ def compute_scan_loss(scan_angle_deg: float, model: str = "cosine") -> float:
     if loss_linear <= 0:
         return float("inf")
 
-    return -10 * math.log10(loss_linear)
+    loss_db = -10 * math.log10(loss_linear)
+    return abs(loss_db) if abs(loss_db) < 1e-10 else loss_db  # Avoid -0.0 display
 
 
 def compute_array_gain(n_elements: int, element_gain_db: float = 0.0) -> float:
