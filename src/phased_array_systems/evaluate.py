@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from phased_array_systems.architecture import Architecture
 from phased_array_systems.models.antenna import PhasedArrayAdapter
 from phased_array_systems.models.comms import CommsLinkModel
+from phased_array_systems.models.radar import RadarModel
 from phased_array_systems.models.swapc import CostModel, PowerModel
 from phased_array_systems.requirements import RequirementSet, VerificationReport
 from phased_array_systems.scenarios import CommsLinkScenario, RadarDetectionScenario
@@ -74,8 +75,9 @@ def evaluate_case(
         comms_metrics = comms_model.evaluate(arch, scenario, context)
         metrics.update(comms_metrics)
     elif isinstance(scenario, RadarDetectionScenario):
-        # Radar model placeholder (Phase 3)
-        metrics["meta.warning"] = "Radar model not yet implemented"
+        radar_model = RadarModel()
+        radar_metrics = radar_model.evaluate(arch, scenario, context)
+        metrics.update(radar_metrics)
 
     # Verify requirements if provided
     if requirements is not None and len(requirements) > 0:

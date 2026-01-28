@@ -4,6 +4,7 @@ import math
 
 # Speed of light in vacuum [m/s]
 C = 299_792_458.0
+C_LIGHT = C  # Alias for clarity
 
 # Boltzmann constant [J/K]
 K_B = 1.380649e-23
