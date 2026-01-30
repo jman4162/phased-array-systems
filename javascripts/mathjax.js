@@ -11,6 +11,13 @@ window.MathJax = {
   }
 };
 
-document$.subscribe(() => {
-  MathJax.typesetPromise()
-})
+// Support both instant loading (document$) and regular page loads
+if (typeof document$ !== 'undefined') {
+  document$.subscribe(() => {
+    MathJax.typesetPromise();
+  });
+} else {
+  document.addEventListener("DOMContentLoaded", function() {
+    MathJax.typesetPromise();
+  });
+}
