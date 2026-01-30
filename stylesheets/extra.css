@@ -1,0 +1,131 @@
+/* Custom styles for phased-array-systems documentation */
+
+/* Improve code block styling */
+.md-typeset code {
+  background-color: var(--md-code-bg-color);
+  padding: 0.1em 0.3em;
+  border-radius: 0.2em;
+}
+
+/* Better table styling */
+.md-typeset table:not([class]) {
+  font-size: 0.85em;
+}
+
+/* Improve admonition styling */
+.md-typeset .admonition {
+  font-size: 0.9em;
+}
+
+/* Custom banner for tips */
+.md-typeset .admonition.tip {
+  border-color: #00bfa5;
+}
+
+/* API reference styling */
+.doc-heading {
+  font-weight: 600;
+}
+
+/* Signature styling */
+.doc-signature {
+  background: var(--md-code-bg-color);
+  padding: 0.5em 1em;
+  border-radius: 0.3em;
+  overflow-x: auto;
+}
+
+/* Parameter list styling */
+.doc-param-name {
+  font-weight: 600;
+  color: var(--md-primary-fg-color);
+}
+
+/* Better equation display */
+.arithmatex {
+  overflow-x: auto;
+}
+
+/* Responsive images */
+.md-typeset img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Grid layout for feature cards */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.feature-card {
+  padding: 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  background: var(--md-default-bg-color);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+  color: var(--md-primary-fg-color);
+}
+
+/* Terminal output styling */
+.terminal-output {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.3em;
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 0.85em;
+}
+
+/* Metrics table styling */
+.metrics-table {
+  width: 100%;
+}
+
+.metrics-table th {
+  text-align: left;
+  background: var(--md-primary-fg-color);
+  color: white;
+  padding: 0.5rem;
+}
+
+.metrics-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Badge styling */
+.badge {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  font-size: 0.75em;
+  font-weight: 600;
+  border-radius: 0.3em;
+  text-transform: uppercase;
+}
+
+.badge-required {
+  background: #f44336;
+  color: white;
+}
+
+.badge-optional {
+  background: #4caf50;
+  color: white;
+}
+
+/* Workflow diagram styling */
+.workflow-diagram {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.workflow-diagram svg {
+  max-width: 100%;
+}
