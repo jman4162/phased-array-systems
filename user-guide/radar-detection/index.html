@@ -2802,19 +2802,19 @@
 </ul>
 <h2 id="radar-range-equation">Radar Range Equation<a class="headerlink" href="#radar-range-equation" title="Permanent link">&para;</a></h2>
 <p>The fundamental radar equation:</p>
-<p>\[
+<div class="arithmatex">\[
 SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B_n L_s}
-\]</p>
+\]</div>
 <p>Where:
-- \(P_t\) = Peak transmit power (W)
-- \(G\) = Antenna gain (linear)
-- \(\lambda\) = Wavelength (m)
-- \(\sigma\) = Target radar cross section (m²)
-- \(R\) = Target range (m)
-- \(k\) = Boltzmann constant
-- \(T_s\) = System noise temperature (K)
-- \(B_n\) = Noise bandwidth (Hz)
-- \(L_s\) = System losses (linear)</p>
+- <span class="arithmatex">\(P_t\)</span> = Peak transmit power (W)
+- <span class="arithmatex">\(G\)</span> = Antenna gain (linear)
+- <span class="arithmatex">\(\lambda\)</span> = Wavelength (m)
+- <span class="arithmatex">\(\sigma\)</span> = Target radar cross section (m²)
+- <span class="arithmatex">\(R\)</span> = Target range (m)
+- <span class="arithmatex">\(k\)</span> = Boltzmann constant
+- <span class="arithmatex">\(T_s\)</span> = System noise temperature (K)
+- <span class="arithmatex">\(B_n\)</span> = Noise bandwidth (Hz)
+- <span class="arithmatex">\(L_s\)</span> = System losses (linear)</p>
 <h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">phased_array_systems.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">Architecture</span><span class="p">,</span> <span class="n">ArrayConfig</span><span class="p">,</span> <span class="n">RFChainConfig</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">phased_array_systems.scenarios</span><span class="w"> </span><span class="kn">import</span> <span class="n">RadarDetectionScenario</span>
@@ -2896,9 +2896,9 @@ SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B_n L_s}
 - False alarm probability (Pfa)
 - Target fluctuation model (Swerling)</p>
 <p>For Swerling 0 (non-fluctuating):</p>
-<p>\[
+<div class="arithmatex">\[
 SNR_{req} = \frac{[\text{erfc}^{-1}(2P_{fa}) - \text{erfc}^{-1}(2P_d)]^2}{2}
-\]</p>
+\]</div>
 <h3 id="swerling-target-models">Swerling Target Models<a class="headerlink" href="#swerling-target-models" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2944,9 +2944,9 @@ SNR_{req} = \frac{[\text{erfc}^{-1}(2P_{fa}) - \text{erfc}^{-1}(2P_d)]^2}{2}
 <h2 id="pulse-integration">Pulse Integration<a class="headerlink" href="#pulse-integration" title="Permanent link">&para;</a></h2>
 <h3 id="coherent-integration">Coherent Integration<a class="headerlink" href="#coherent-integration" title="Permanent link">&para;</a></h3>
 <p>Maintains phase information; provides linear SNR improvement:</p>
-<p>\[
+<div class="arithmatex">\[
 SNR_{integrated} = N \cdot SNR_{single}
-\]</p>
+\]</div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">scenario</span> <span class="o">=</span> <span class="n">RadarDetectionScenario</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="o">...</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">n_pulses</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
@@ -2956,9 +2956,9 @@ SNR_{integrated} = N \cdot SNR_{single}
 </span></code></pre></div>
 <h3 id="non-coherent-integration">Non-Coherent Integration<a class="headerlink" href="#non-coherent-integration" title="Permanent link">&para;</a></h3>
 <p>Magnitude-only; provides approximately √N improvement:</p>
-<p>\[
+<div class="arithmatex">\[
 SNR_{integrated} \approx \sqrt{N} \cdot SNR_{single}
-\]</p>
+\]</div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">scenario</span> <span class="o">=</span> <span class="n">RadarDetectionScenario</span><span class="p">(</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="o">...</span><span class="p">,</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">n_pulses</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
@@ -3105,9 +3105,9 @@ SNR_{integrated} \approx \sqrt{N} \cdot SNR_{single}
 <h2 id="key-considerations">Key Considerations<a class="headerlink" href="#key-considerations" title="Permanent link">&para;</a></h2>
 <h3 id="power-aperture-product">Power-Aperture Product<a class="headerlink" href="#power-aperture-product" title="Permanent link">&para;</a></h3>
 <p>Radar performance scales with power × aperture:</p>
-<p>\[
+<div class="arithmatex">\[
 PA = P_t \cdot A_{eff} = P_t \cdot \frac{G \lambda^2}{4\pi}
-\]</p>
+\]</div>
 <p>Trade off between:
 - More power (higher cost, heat)
 - Larger aperture (more elements, higher cost)</p>
@@ -3283,9 +3283,7 @@ PA = P_t \cdot A_{eff} = P_t \cdot \frac{G \lambda^2}{4\pi}
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

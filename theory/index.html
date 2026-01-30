@@ -2368,33 +2368,33 @@
 </table>
 <h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
 <h3 id="antenna-gain">Antenna Gain<a class="headerlink" href="#antenna-gain" title="Permanent link">&para;</a></h3>
-<p>For a uniform rectangular array with \(N = n_x \times n_y\) elements:</p>
-<p>\[
+<p>For a uniform rectangular array with <span class="arithmatex">\(N = n_x \times n_y\)</span> elements:</p>
+<div class="arithmatex">\[
 G \approx \eta_a \cdot 4\pi \cdot n_x d_x \cdot n_y d_y
-\]</p>
-<p>Where \(\eta_a\) is aperture efficiency (~0.6-0.7) and \(d_x, d_y\) are spacings in wavelengths.</p>
+\]</div>
+<p>Where <span class="arithmatex">\(\eta_a\)</span> is aperture efficiency (~0.6-0.7) and <span class="arithmatex">\(d_x, d_y\)</span> are spacings in wavelengths.</p>
 <h3 id="free-space-path-loss">Free Space Path Loss<a class="headerlink" href="#free-space-path-loss" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 20 \log_{10}\left(\frac{4\pi d f}{c}\right) = 32.45 + 20\log_{10}(f_{MHz}) + 20\log_{10}(d_{km})
-\]</p>
+\]</div>
 <h3 id="link-budget">Link Budget<a class="headerlink" href="#link-budget" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 \begin{aligned}
-EIRP &amp;= P_{tx} + G_{tx} - L_{tx} \
-P_{rx} &amp;= EIRP - L_{path} + G_{rx} \
-SNR &amp;= P_{rx} - N \
+EIRP &amp;= P_{tx} + G_{tx} - L_{tx} \\
+P_{rx} &amp;= EIRP - L_{path} + G_{rx} \\
+SNR &amp;= P_{rx} - N \\
 Margin &amp;= SNR - SNR_{required}
 \end{aligned}
-\]</p>
+\]</div>
 <h3 id="radar-range-equation">Radar Range Equation<a class="headerlink" href="#radar-range-equation" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B L}
-\]</p>
+\]</div>
 <h3 id="pareto-optimality">Pareto Optimality<a class="headerlink" href="#pareto-optimality" title="Permanent link">&para;</a></h3>
-<p>Design \(A\) dominates design \(B\) if:</p>
+<p>Design <span class="arithmatex">\(A\)</span> dominates design <span class="arithmatex">\(B\)</span> if:</p>
 <ul>
-<li>\(f_i(A) \leq f_i(B)\) for all objectives (minimization)</li>
-<li>\(f_j(A) &lt; f_j(B)\) for at least one objective</li>
+<li><span class="arithmatex">\(f_i(A) \leq f_i(B)\)</span> for all objectives (minimization)</li>
+<li><span class="arithmatex">\(f_j(A) &lt; f_j(B)\)</span> for at least one objective</li>
 </ul>
 <h2 id="key-constants">Key Constants<a class="headerlink" href="#key-constants" title="Permanent link">&para;</a></h2>
 <table>
@@ -2408,17 +2408,17 @@ SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B L}
 <tbody>
 <tr>
 <td>Speed of light</td>
-<td>\(c\)</td>
+<td><span class="arithmatex">\(c\)</span></td>
 <td>299,792,458 m/s</td>
 </tr>
 <tr>
 <td>Boltzmann constant</td>
-<td>\(k\)</td>
+<td><span class="arithmatex">\(k\)</span></td>
 <td>1.38×10⁻²³ J/K</td>
 </tr>
 <tr>
 <td>Reference temperature</td>
-<td>\(T_0\)</td>
+<td><span class="arithmatex">\(T_0\)</span></td>
 <td>290 K</td>
 </tr>
 </tbody>
@@ -2566,9 +2566,7 @@ SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B L}
       
         <script src="../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

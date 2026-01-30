@@ -2965,9 +2965,9 @@
 </tbody>
 </table>
 <p>Free space path loss:</p>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 20 \log_{10}(4\pi d f / c)
-\]</p>
+\]</div>
 <h3 id="extra-losses">Extra Losses<a class="headerlink" href="#extra-losses" title="Permanent link">&para;</a></h3>
 <p>Total extra loss is computed automatically:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Available as property</span>
@@ -3127,12 +3127,12 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
 <tr>
 <td><code>"coherent"</code></td>
 <td>Phase-coherent integration</td>
-<td>\(N\) (linear)</td>
+<td><span class="arithmatex">\(N\)</span> (linear)</td>
 </tr>
 <tr>
 <td><code>"noncoherent"</code></td>
 <td>Magnitude-only integration</td>
-<td>\(\sqrt{N}\) (approx)</td>
+<td><span class="arithmatex">\(\sqrt{N}\)</span> (approx)</td>
 </tr>
 </tbody>
 </table>
@@ -3476,9 +3476,7 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

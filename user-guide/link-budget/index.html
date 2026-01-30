@@ -2858,34 +2858,34 @@
 </ul>
 <h2 id="link-budget-equation">Link Budget Equation<a class="headerlink" href="#link-budget-equation" title="Permanent link">&para;</a></h2>
 <p>The fundamental link budget equation:</p>
-<p>\[
+<div class="arithmatex">\[
 P_{rx} = EIRP - L_{path} + G_{rx}
-\]</p>
+\]</div>
 <p>Where:
-- \(P_{rx}\) = Received power (dBW)
-- \(EIRP\) = Effective Isotropic Radiated Power (dBW)
-- \(L_{path}\) = Total path loss (dB)
-- \(G_{rx}\) = Receive antenna gain (dBi)</p>
+- <span class="arithmatex">\(P_{rx}\)</span> = Received power (dBW)
+- <span class="arithmatex">\(EIRP\)</span> = Effective Isotropic Radiated Power (dBW)
+- <span class="arithmatex">\(L_{path}\)</span> = Total path loss (dB)
+- <span class="arithmatex">\(G_{rx}\)</span> = Receive antenna gain (dBi)</p>
 <h3 id="eirp-calculation">EIRP Calculation<a class="headerlink" href="#eirp-calculation" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 EIRP = P_{tx} + G_{tx} - L_{tx}
-\]</p>
+\]</div>
 <p>Where:
-- \(P_{tx}\) = Total transmit power (dBW)
-- \(G_{tx}\) = Transmit antenna gain (dBi)
-- \(L_{tx}\) = Transmit losses (feed + system)</p>
+- <span class="arithmatex">\(P_{tx}\)</span> = Total transmit power (dBW)
+- <span class="arithmatex">\(G_{tx}\)</span> = Transmit antenna gain (dBi)
+- <span class="arithmatex">\(L_{tx}\)</span> = Transmit losses (feed + system)</p>
 <h3 id="snr-calculation">SNR Calculation<a class="headerlink" href="#snr-calculation" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 SNR = P_{rx} - N
-\]</p>
-<p>\[
+\]</div>
+<div class="arithmatex">\[
 N = 10 \log_{10}(kTB) + NF
-\]</p>
+\]</div>
 <p>Where:
-- \(k\) = Boltzmann constant (1.38×10⁻²³ J/K)
-- \(T\) = Noise temperature (K)
-- \(B\) = Bandwidth (Hz)
-- \(NF\) = Noise figure (dB)</p>
+- <span class="arithmatex">\(k\)</span> = Boltzmann constant (1.38×10⁻²³ J/K)
+- <span class="arithmatex">\(T\)</span> = Noise temperature (K)
+- <span class="arithmatex">\(B\)</span> = Bandwidth (Hz)
+- <span class="arithmatex">\(NF\)</span> = Noise figure (dB)</p>
 <h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
 <h3 id="single-evaluation">Single Evaluation<a class="headerlink" href="#single-evaluation" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">phased_array_systems.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">Architecture</span><span class="p">,</span> <span class="n">ArrayConfig</span><span class="p">,</span> <span class="n">RFChainConfig</span>
@@ -3020,9 +3020,9 @@ N = 10 \log_{10}(kTB) + NF
 <h2 id="path-loss-models">Path Loss Models<a class="headerlink" href="#path-loss-models" title="Permanent link">&para;</a></h2>
 <h3 id="free-space-path-loss-fspl">Free Space Path Loss (FSPL)<a class="headerlink" href="#free-space-path-loss-fspl" title="Permanent link">&para;</a></h3>
 <p>The default model:</p>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 20 \log_{10}\left(\frac{4\pi d f}{c}\right)
-\]</p>
+\]</div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">phased_array_systems.models.comms.propagation</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_fspl</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Calculate FSPL</span>
@@ -3053,10 +3053,10 @@ L_{FSPL} = 20 \log_{10}\left(\frac{4\pi d f}{c}\right)
 </span></code></pre></div>
 <h3 id="approximation">Approximation<a class="headerlink" href="#approximation" title="Permanent link">&para;</a></h3>
 <p>Without pre-computed values, gain is approximated:</p>
-<p>\[
+<div class="arithmatex">\[
 G \approx 4\pi \cdot n_x d_x \cdot n_y d_y
-\]</p>
-<p>Where \(d_x, d_y\) are spacings in wavelengths.</p>
+\]</div>
+<p>Where <span class="arithmatex">\(d_x, d_y\)</span> are spacings in wavelengths.</p>
 <h2 id="scan-loss">Scan Loss<a class="headerlink" href="#scan-loss" title="Permanent link">&para;</a></h2>
 <p>When the beam is scanned off boresight, gain is reduced:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">scenario</span> <span class="o">=</span> <span class="n">CommsLinkScenario</span><span class="p">(</span>
@@ -3311,9 +3311,7 @@ G \approx 4\pi \cdot n_x d_x \cdot n_y d_y
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

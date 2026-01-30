@@ -2773,88 +2773,88 @@
 <p>The radar equation relates transmitter power, antenna gain, target characteristics, and receiver sensitivity to determine detection capability.</p>
 <h2 id="basic-radar-equation">Basic Radar Equation<a class="headerlink" href="#basic-radar-equation" title="Permanent link">&para;</a></h2>
 <h3 id="power-density-at-target">Power Density at Target<a class="headerlink" href="#power-density-at-target" title="Permanent link">&para;</a></h3>
-<p>Power density at range \(R\) from an isotropic radiator:</p>
-<p>\[
+<p>Power density at range <span class="arithmatex">\(R\)</span> from an isotropic radiator:</p>
+<div class="arithmatex">\[
 S_i = \frac{P_t}{4\pi R^2}
-\]</p>
-<p>With transmit antenna gain \(G_t\):</p>
-<p>\[
+\]</div>
+<p>With transmit antenna gain <span class="arithmatex">\(G_t\)</span>:</p>
+<div class="arithmatex">\[
 S_t = \frac{P_t G_t}{4\pi R^2}
-\]</p>
+\]</div>
 <h3 id="power-reflected-by-target">Power Reflected by Target<a class="headerlink" href="#power-reflected-by-target" title="Permanent link">&para;</a></h3>
-<p>The target intercepts and re-radiates power proportional to its radar cross section (RCS) \(\sigma\):</p>
-<p>\[
+<p>The target intercepts and re-radiates power proportional to its radar cross section (RCS) <span class="arithmatex">\(\sigma\)</span>:</p>
+<div class="arithmatex">\[
 P_{reflected} = S_t \cdot \sigma = \frac{P_t G_t \sigma}{4\pi R^2}
-\]</p>
+\]</div>
 <h3 id="power-density-at-receiver">Power Density at Receiver<a class="headerlink" href="#power-density-at-receiver" title="Permanent link">&para;</a></h3>
-<p>The reflected power spreads again over \(4\pi R^2\):</p>
-<p>\[
+<p>The reflected power spreads again over <span class="arithmatex">\(4\pi R^2\)</span>:</p>
+<div class="arithmatex">\[
 S_r = \frac{P_t G_t \sigma}{(4\pi)^2 R^4}
-\]</p>
+\]</div>
 <h3 id="received-power">Received Power<a class="headerlink" href="#received-power" title="Permanent link">&para;</a></h3>
-<p>The receiver antenna with effective area \(A_e\) captures:</p>
-<p>\[
+<p>The receiver antenna with effective area <span class="arithmatex">\(A_e\)</span> captures:</p>
+<div class="arithmatex">\[
 P_r = S_r \cdot A_e = \frac{P_t G_t \sigma A_e}{(4\pi)^2 R^4}
-\]</p>
-<p>Using \(A_e = G_r \lambda^2 / 4\pi\):</p>
-<p>\[
+\]</div>
+<p>Using <span class="arithmatex">\(A_e = G_r \lambda^2 / 4\pi\)</span>:</p>
+<div class="arithmatex">\[
 P_r = \frac{P_t G_t G_r \lambda^2 \sigma}{(4\pi)^3 R^4}
-\]</p>
-<p>For monostatic radar (\(G_t = G_r = G\)):</p>
-<p>\[
+\]</div>
+<p>For monostatic radar (<span class="arithmatex">\(G_t = G_r = G\)</span>):</p>
+<div class="arithmatex">\[
 P_r = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4}
-\]</p>
+\]</div>
 <h2 id="snr-form">SNR Form<a class="headerlink" href="#snr-form" title="Permanent link">&para;</a></h2>
 <p>Including noise and losses:</p>
-<p>\[
+<div class="arithmatex">\[
 SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B_n L_s}
-\]</p>
+\]</div>
 <p>Where:
-- \(P_t\) = Peak transmit power (W)
-- \(G\) = Antenna gain (linear)
-- \(\lambda\) = Wavelength (m)
-- \(\sigma\) = Target RCS (m²)
-- \(R\) = Range (m)
-- \(k\) = Boltzmann constant = 1.38×10⁻²³ J/K
-- \(T_s\) = System noise temperature (K)
-- \(B_n\) = Noise bandwidth (Hz)
-- \(L_s\) = System losses (linear)</p>
+- <span class="arithmatex">\(P_t\)</span> = Peak transmit power (W)
+- <span class="arithmatex">\(G\)</span> = Antenna gain (linear)
+- <span class="arithmatex">\(\lambda\)</span> = Wavelength (m)
+- <span class="arithmatex">\(\sigma\)</span> = Target RCS (m²)
+- <span class="arithmatex">\(R\)</span> = Range (m)
+- <span class="arithmatex">\(k\)</span> = Boltzmann constant = 1.38×10⁻²³ J/K
+- <span class="arithmatex">\(T_s\)</span> = System noise temperature (K)
+- <span class="arithmatex">\(B_n\)</span> = Noise bandwidth (Hz)
+- <span class="arithmatex">\(L_s\)</span> = System losses (linear)</p>
 <h2 id="range-form">Range Form<a class="headerlink" href="#range-form" title="Permanent link">&para;</a></h2>
 <p>Solving for range at minimum detectable SNR:</p>
-<p>\[
+<div class="arithmatex">\[
 R_{max} = \left[\frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 k T_s B_n L_s \cdot SNR_{min}}\right]^{1/4}
-\]</p>
+\]</div>
 <h2 id="pulse-integration">Pulse Integration<a class="headerlink" href="#pulse-integration" title="Permanent link">&para;</a></h2>
 <h3 id="coherent-integration">Coherent Integration<a class="headerlink" href="#coherent-integration" title="Permanent link">&para;</a></h3>
-<p>For \(N\) coherently integrated pulses:</p>
-<p>\[
+<p>For <span class="arithmatex">\(N\)</span> coherently integrated pulses:</p>
+<div class="arithmatex">\[
 SNR_N = N \cdot SNR_1
-\]</p>
-<p>The integration gain is \(N\) (linear) or \(10\log_{10}(N)\) dB.</p>
+\]</div>
+<p>The integration gain is <span class="arithmatex">\(N\)</span> (linear) or <span class="arithmatex">\(10\log_{10}(N)\)</span> dB.</p>
 <h3 id="non-coherent-integration">Non-Coherent Integration<a class="headerlink" href="#non-coherent-integration" title="Permanent link">&para;</a></h3>
 <p>For non-coherent integration:</p>
-<p>\[
+<div class="arithmatex">\[
 SNR_N \approx \sqrt{N} \cdot SNR_1
-\]</p>
-<p>More precisely, the integration gain depends on the required \(P_d\) and \(P_{fa}\).</p>
+\]</div>
+<p>More precisely, the integration gain depends on the required <span class="arithmatex">\(P_d\)</span> and <span class="arithmatex">\(P_{fa}\)</span>.</p>
 <h2 id="detection-theory">Detection Theory<a class="headerlink" href="#detection-theory" title="Permanent link">&para;</a></h2>
 <h3 id="single-pulse-detection">Single-Pulse Detection<a class="headerlink" href="#single-pulse-detection" title="Permanent link">&para;</a></h3>
 <p>For a Gaussian noise background and non-fluctuating target (Swerling 0), the detection probability relates to SNR through:</p>
-<p>\[
+<div class="arithmatex">\[
 P_d = \frac{1}{2}\text{erfc}\left[\text{erfc}^{-1}(2P_{fa}) - \sqrt{SNR}\right]
-\]</p>
+\]</div>
 <h3 id="required-snr">Required SNR<a class="headerlink" href="#required-snr" title="Permanent link">&para;</a></h3>
-<p>For given \(P_d\) and \(P_{fa}\):</p>
-<p>\[
+<p>For given <span class="arithmatex">\(P_d\)</span> and <span class="arithmatex">\(P_{fa}\)</span>:</p>
+<div class="arithmatex">\[
 SNR_{req} \approx \ln\left(\frac{1}{P_{fa}}\right) + \ln\left(\frac{1}{1-P_d}\right)
-\]</p>
+\]</div>
 <p>More accurate:</p>
 <table>
 <thead>
 <tr>
-<th>\(P_d\)</th>
-<th>\(P_{fa} = 10^{-6}\)</th>
-<th>\(P_{fa} = 10^{-9}\)</th>
+<th><span class="arithmatex">\(P_d\)</span></th>
+<th><span class="arithmatex">\(P_{fa} = 10^{-6}\)</span></th>
+<th><span class="arithmatex">\(P_{fa} = 10^{-9}\)</span></th>
 </tr>
 </thead>
 <tbody>
@@ -2924,7 +2924,7 @@ SNR_{req} \approx \ln\left(\frac{1}{P_{fa}}\right) + \ln\left(\frac{1}{1-P_d}\ri
 <tbody>
 <tr>
 <td>SW1</td>
-<td>+3 to +8 dB (depends on \(P_d\))</td>
+<td>+3 to +8 dB (depends on <span class="arithmatex">\(P_d\)</span>)</td>
 </tr>
 <tr>
 <td>SW2</td>
@@ -2942,67 +2942,67 @@ SNR_{req} \approx \ln\left(\frac{1}{P_{fa}}\right) + \ln\left(\frac{1}{1-P_d}\ri
 </table>
 <h2 id="power-aperture-product">Power-Aperture Product<a class="headerlink" href="#power-aperture-product" title="Permanent link">&para;</a></h2>
 <p>Radar performance fundamentally scales with:</p>
-<p>\[
+<div class="arithmatex">\[
 PA = P_t \cdot A = P_t \cdot \frac{G\lambda^2}{4\pi}
-\]</p>
+\]</div>
 <p>For a given target and detection requirement:</p>
-<p>\[
+<div class="arithmatex">\[
 R_{max}^4 \propto PA
-\]</p>
+\]</div>
 <p>Trade-off: Higher power OR larger aperture.</p>
 <h2 id="example-calculation">Example Calculation<a class="headerlink" href="#example-calculation" title="Permanent link">&para;</a></h2>
 <p><strong>Given:</strong>
-- Frequency: 10 GHz (\(\lambda\) = 0.03 m)
+- Frequency: 10 GHz (<span class="arithmatex">\(\lambda\)</span> = 0.03 m)
 - Array: 16×16 elements, G = 30 dBi
 - TX power: 10 W/element, 256 elements → 2560 W peak
 - Target RCS: 1 m²
 - Range: 100 km
 - Noise temp: 400 K
-- Losses: 4 dB (\(L_s\) = 2.51)
-- Pulse width: 10 μs → \(B_n\) ≈ 100 kHz</p>
+- Losses: 4 dB (<span class="arithmatex">\(L_s\)</span> = 2.51)
+- Pulse width: 10 μs → <span class="arithmatex">\(B_n\)</span> ≈ 100 kHz</p>
 <p><strong>Calculate:</strong></p>
 <ol>
 <li>
-<p><strong>Wavelength:</strong> \(\lambda\) = 0.03 m</p>
+<p><strong>Wavelength:</strong> <span class="arithmatex">\(\lambda\)</span> = 0.03 m</p>
 </li>
 <li>
-<p><strong>Gain (linear):</strong> \(G\) = 10^(30/10) = 1000</p>
+<p><strong>Gain (linear):</strong> <span class="arithmatex">\(G\)</span> = 10^(30/10) = 1000</p>
 </li>
 <li>
 <p><strong>Numerator:</strong>
-\[
+$$
 P_t G^2 \lambda^2 \sigma = 2560 \times 1000^2 \times 0.03^2 \times 1 = 2.3 \times 10^6
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>Denominator:</strong>
-\[
+$$
 (4\pi)^3 R^4 k T_s B_n L_s = 1984 \times 10^{20} \times 1.38 \times 10^{-23} \times 400 \times 10^5 \times 2.51
-\]
-\[
+$$
+$$
 = 2.74 \times 10^6
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>SNR (single pulse):</strong>
-\[
+$$
 SNR = \frac{2.3 \times 10^6}{2.74 \times 10^6} = 0.84 = -0.75 \text{ dB}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>With 10-pulse coherent integration:</strong>
-\[
+$$
 SNR_{10} = -0.75 + 10 = 9.25 \text{ dB}
-\]</p>
+$$</p>
 </li>
 <li>
-<p><strong>Required SNR</strong> for \(P_d\) = 0.9, \(P_{fa}\) = 10⁻⁶, SW1 ≈ 17 dB</p>
+<p><strong>Required SNR</strong> for <span class="arithmatex">\(P_d\)</span> = 0.9, <span class="arithmatex">\(P_{fa}\)</span> = 10⁻⁶, SW1 ≈ 17 dB</p>
 </li>
 <li>
 <p><strong>SNR Margin:</strong>
-\[
+$$
 M = 9.25 - 17 = -7.75 \text{ dB} \quad \text{(insufficient)}
-\]</p>
+$$</p>
 </li>
 </ol>
 <p>Need more power, more elements, or shorter range.</p>
@@ -3016,12 +3016,12 @@ M = 9.25 - 17 = -7.75 \text{ dB} \quad \text{(insufficient)}
 </thead>
 <tbody>
 <tr>
-<td>\(P_r\)</td>
-<td>\(R^{-4}\)</td>
+<td><span class="arithmatex">\(P_r\)</span></td>
+<td><span class="arithmatex">\(R^{-4}\)</span></td>
 </tr>
 <tr>
-<td>\(SNR\)</td>
-<td>\(R^{-4}\)</td>
+<td><span class="arithmatex">\(SNR\)</span></td>
+<td><span class="arithmatex">\(R^{-4}\)</span></td>
 </tr>
 <tr>
 <td>Double range</td>
@@ -3176,9 +3176,7 @@ M = 9.25 - 17 = -7.75 \text{ dB} \quad \text{(insufficient)}
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

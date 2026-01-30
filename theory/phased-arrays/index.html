@@ -2797,78 +2797,78 @@
 <p>A phased array is an antenna system that uses multiple radiating elements with controlled phase and amplitude to electronically steer the beam without mechanical movement.</p>
 <h2 id="array-factor">Array Factor<a class="headerlink" href="#array-factor" title="Permanent link">&para;</a></h2>
 <p>The array factor describes the radiation pattern contribution from element positioning:</p>
-<p>\[
+<div class="arithmatex">\[
 AF(\theta, \phi) = \sum_{n=1}^{N} a_n e^{j(k \mathbf{r}_n \cdot \hat{\mathbf{r}} + \alpha_n)}
-\]</p>
+\]</div>
 <p>Where:
-- \(a_n\) = amplitude weight of element \(n\)
-- \(k = 2\pi/\lambda\) = wavenumber
-- \(\mathbf{r}_n\) = position of element \(n\)
-- \(\hat{\mathbf{r}}\) = unit vector in observation direction
-- \(\alpha_n\) = phase of element \(n\)</p>
+- <span class="arithmatex">\(a_n\)</span> = amplitude weight of element <span class="arithmatex">\(n\)</span>
+- <span class="arithmatex">\(k = 2\pi/\lambda\)</span> = wavenumber
+- <span class="arithmatex">\(\mathbf{r}_n\)</span> = position of element <span class="arithmatex">\(n\)</span>
+- <span class="arithmatex">\(\hat{\mathbf{r}}\)</span> = unit vector in observation direction
+- <span class="arithmatex">\(\alpha_n\)</span> = phase of element <span class="arithmatex">\(n\)</span></p>
 <h3 id="linear-array">Linear Array<a class="headerlink" href="#linear-array" title="Permanent link">&para;</a></h3>
-<p>For a uniform linear array along the z-axis with spacing \(d\):</p>
-<p>\[
+<p>For a uniform linear array along the z-axis with spacing <span class="arithmatex">\(d\)</span>:</p>
+<div class="arithmatex">\[
 AF(\theta) = \sum_{n=0}^{N-1} e^{jn(kd\cos\theta + \beta)}
-\]</p>
-<p>Where \(\beta\) is the progressive phase shift.</p>
+\]</div>
+<p>Where <span class="arithmatex">\(\beta\)</span> is the progressive phase shift.</p>
 <p>Closed form:</p>
-<p>\[
+<div class="arithmatex">\[
 AF(\theta) = \frac{\sin(N\psi/2)}{\sin(\psi/2)}, \quad \psi = kd\cos\theta + \beta
-\]</p>
+\]</div>
 <h3 id="rectangular-planar-array">Rectangular Planar Array<a class="headerlink" href="#rectangular-planar-array" title="Permanent link">&para;</a></h3>
-<p>For an \(N_x \times N_y\) array:</p>
-<p>\[
+<p>For an <span class="arithmatex">\(N_x \times N_y\)</span> array:</p>
+<div class="arithmatex">\[
 AF(\theta, \phi) = AF_x(\theta, \phi) \cdot AF_y(\theta, \phi)
-\]</p>
-<p>\[
+\]</div>
+<div class="arithmatex">\[
 AF_x = \frac{\sin(N_x \psi_x / 2)}{\sin(\psi_x / 2)}, \quad \psi_x = kd_x \sin\theta\cos\phi + \beta_x
-\]</p>
-<p>\[
+\]</div>
+<div class="arithmatex">\[
 AF_y = \frac{\sin(N_y \psi_y / 2)}{\sin(\psi_y / 2)}, \quad \psi_y = kd_y \sin\theta\sin\phi + \beta_y
-\]</p>
+\]</div>
 <h2 id="antenna-gain">Antenna Gain<a class="headerlink" href="#antenna-gain" title="Permanent link">&para;</a></h2>
 <h3 id="directivity">Directivity<a class="headerlink" href="#directivity" title="Permanent link">&para;</a></h3>
 <p>The directivity is the ratio of radiation intensity in a given direction to the average:</p>
-<p>\[
+<div class="arithmatex">\[
 D = \frac{4\pi U(\theta, \phi)}{P_{rad}}
-\]</p>
+\]</div>
 <p>Peak directivity for a uniform array (boresight):</p>
-<p>\[
+<div class="arithmatex">\[
 D_0 \approx \frac{4\pi A_{eff}}{\lambda^2} = \frac{4\pi}{\lambda^2} \cdot N_x d_x \cdot N_y d_y \cdot \lambda^2 = 4\pi N_x d_x N_y d_y
-\]</p>
+\]</div>
 <h3 id="gain">Gain<a class="headerlink" href="#gain" title="Permanent link">&para;</a></h3>
 <p>Gain includes efficiency:</p>
-<p>\[
+<div class="arithmatex">\[
 G = \eta_a \cdot D
-\]</p>
-<p>Where aperture efficiency \(\eta_a\) typically ranges from 0.5 to 0.8.</p>
-<p>For uniform amplitude and half-wavelength spacing (\(d = 0.5\lambda\)):</p>
-<p>\[
+\]</div>
+<p>Where aperture efficiency <span class="arithmatex">\(\eta_a\)</span> typically ranges from 0.5 to 0.8.</p>
+<p>For uniform amplitude and half-wavelength spacing (<span class="arithmatex">\(d = 0.5\lambda\)</span>):</p>
+<div class="arithmatex">\[
 G \approx \eta_a \cdot \pi \cdot N_x \cdot N_y
-\]</p>
+\]</div>
 <p>In dB:</p>
-<p>\[
+<div class="arithmatex">\[
 G_{dB} = 10\log_{10}(\eta_a \cdot \pi \cdot N)
-\]</p>
-<p>For \(\eta_a = 0.65\) and \(N = 64\) elements:</p>
-<p>\[
+\]</div>
+<p>For <span class="arithmatex">\(\eta_a = 0.65\)</span> and <span class="arithmatex">\(N = 64\)</span> elements:</p>
+<div class="arithmatex">\[
 G_{dB} = 10\log_{10}(0.65 \cdot \pi \cdot 64) \approx 22.1 \text{ dB}
-\]</p>
+\]</div>
 <h2 id="beamwidth">Beamwidth<a class="headerlink" href="#beamwidth" title="Permanent link">&para;</a></h2>
 <h3 id="half-power-beamwidth-hpbw">Half-Power Beamwidth (HPBW)<a class="headerlink" href="#half-power-beamwidth-hpbw" title="Permanent link">&para;</a></h3>
 <p>For a uniform linear array:</p>
-<p>\[
+<div class="arithmatex">\[
 \theta_{3dB} \approx \frac{0.886 \lambda}{N d \cos\theta_0}
-\]</p>
-<p>At boresight (\(\theta_0 = 0\)) with \(d = 0.5\lambda\):</p>
-<p>\[
+\]</div>
+<p>At boresight (<span class="arithmatex">\(\theta_0 = 0\)</span>) with <span class="arithmatex">\(d = 0.5\lambda\)</span>:</p>
+<div class="arithmatex">\[
 \theta_{3dB} \approx \frac{1.77}{N} \text{ radians} = \frac{101°}{N}
-\]</p>
+\]</div>
 <p>For a rectangular array:</p>
-<p>\[
+<div class="arithmatex">\[
 \theta_{3dB,x} \approx \frac{101°}{N_x}, \quad \theta_{3dB,y} \approx \frac{101°}{N_y}
-\]</p>
+\]</div>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2898,19 +2898,19 @@ G_{dB} = 10\log_{10}(0.65 \cdot \pi \cdot 64) \approx 22.1 \text{ dB}
 </table>
 <h2 id="beam-steering">Beam Steering<a class="headerlink" href="#beam-steering" title="Permanent link">&para;</a></h2>
 <p>Electronic beam steering is achieved by applying a progressive phase shift:</p>
-<p>\[
+<div class="arithmatex">\[
 \beta_x = -kd_x \sin\theta_0 \cos\phi_0
-\]
-\[
+$$
+$$
 \beta_y = -kd_y \sin\theta_0 \sin\phi_0
-\]</p>
-<p>Where \((\theta_0, \phi_0)\) is the desired beam direction.</p>
+\]</div>
+<p>Where <span class="arithmatex">\((\theta_0, \phi_0)\)</span> is the desired beam direction.</p>
 <h3 id="scan-loss">Scan Loss<a class="headerlink" href="#scan-loss" title="Permanent link">&para;</a></h3>
 <p>When scanning off boresight, gain is reduced:</p>
-<p>\[
+<div class="arithmatex">\[
 G(\theta) \approx G_0 \cos^p(\theta)
-\]</p>
-<p>Where \(p\) depends on element pattern (typically \(p \approx 1.2-1.5\)).</p>
+\]</div>
+<p>Where <span class="arithmatex">\(p\)</span> depends on element pattern (typically <span class="arithmatex">\(p \approx 1.2-1.5\)</span>).</p>
 <p>Approximate scan loss:</p>
 <table>
 <thead>
@@ -2939,15 +2939,15 @@ G(\theta) \approx G_0 \cos^p(\theta)
 </tbody>
 </table>
 <h2 id="grating-lobes">Grating Lobes<a class="headerlink" href="#grating-lobes" title="Permanent link">&para;</a></h2>
-<p>Grating lobes appear when element spacing exceeds \(\lambda\). To avoid grating lobes when scanning to angle \(\theta_0\):</p>
-<p>\[
+<p>Grating lobes appear when element spacing exceeds <span class="arithmatex">\(\lambda\)</span>. To avoid grating lobes when scanning to angle <span class="arithmatex">\(\theta_0\)</span>:</p>
+<div class="arithmatex">\[
 d &lt; \frac{\lambda}{1 + |\sin\theta_0|}
-\]</p>
-<p>For \(\theta_0 = 60°\):</p>
-<p>\[
+\]</div>
+<p>For <span class="arithmatex">\(\theta_0 = 60°\)</span>:</p>
+<div class="arithmatex">\[
 d &lt; \frac{\lambda}{1 + \sin(60°)} = \frac{\lambda}{1.866} \approx 0.54\lambda
-\]</p>
-<p>This is why half-wavelength spacing (\(d = 0.5\lambda\)) is common.</p>
+\]</div>
+<p>This is why half-wavelength spacing (<span class="arithmatex">\(d = 0.5\lambda\)</span>) is common.</p>
 <h2 id="sidelobe-level">Sidelobe Level<a class="headerlink" href="#sidelobe-level" title="Permanent link">&para;</a></h2>
 <p>For a uniform amplitude array, the first sidelobe is approximately -13.2 dB below the main lobe.</p>
 <h3 id="tapering">Tapering<a class="headerlink" href="#tapering" title="Permanent link">&para;</a></h3>
@@ -2990,44 +2990,44 @@ d &lt; \frac{\lambda}{1 + \sin(60°)} = \frac{\lambda}{1.866} \approx 0.54\lambd
 </table>
 <h2 id="power-and-eirp">Power and EIRP<a class="headerlink" href="#power-and-eirp" title="Permanent link">&para;</a></h2>
 <h3 id="total-radiated-power">Total Radiated Power<a class="headerlink" href="#total-radiated-power" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 P_{rad} = N \cdot P_{elem} \cdot \eta_{feed}
-\]</p>
+\]</div>
 <p>Where:
-- \(N\) = number of elements
-- \(P_{elem}\) = power per element
-- \(\eta_{feed}\) = feed network efficiency</p>
+- <span class="arithmatex">\(N\)</span> = number of elements
+- <span class="arithmatex">\(P_{elem}\)</span> = power per element
+- <span class="arithmatex">\(\eta_{feed}\)</span> = feed network efficiency</p>
 <h3 id="eirp">EIRP<a class="headerlink" href="#eirp" title="Permanent link">&para;</a></h3>
 <p>Effective Isotropic Radiated Power:</p>
-<p>\[
+<div class="arithmatex">\[
 EIRP = P_{rad} \cdot G = N \cdot P_{elem} \cdot \eta_{feed} \cdot G
-\]</p>
+\]</div>
 <p>In dB:</p>
-<p>\[
+<div class="arithmatex">\[
 EIRP_{dBW} = P_{rad,dBW} + G_{dB}
-\]</p>
+\]</div>
 <h2 id="example-calculation">Example Calculation<a class="headerlink" href="#example-calculation" title="Permanent link">&para;</a></h2>
 <p>For an 8×8 array with:
-- \(d_x = d_y = 0.5\lambda\)
-- \(P_{elem} = 1\) W
-- \(\eta_a = 0.65\)
-- \(\eta_{feed} = 0.8\)</p>
+- <span class="arithmatex">\(d_x = d_y = 0.5\lambda\)</span>
+- <span class="arithmatex">\(P_{elem} = 1\)</span> W
+- <span class="arithmatex">\(\eta_a = 0.65\)</span>
+- <span class="arithmatex">\(\eta_{feed} = 0.8\)</span></p>
 <p><strong>Gain:</strong>
-\[
+$$
 G = 0.65 \cdot \pi \cdot 64 = 130.7 = 21.2 \text{ dB}
-\]</p>
+$$</p>
 <p><strong>Radiated Power:</strong>
-\[
+$$
 P_{rad} = 64 \cdot 1 \cdot 0.8 = 51.2 \text{ W} = 17.1 \text{ dBW}
-\]</p>
+$$</p>
 <p><strong>EIRP:</strong>
-\[
+$$
 EIRP = 17.1 + 21.2 = 38.3 \text{ dBW}
-\]</p>
+$$</p>
 <p><strong>Beamwidth:</strong>
-\[
+$$
 \theta_{3dB} \approx \frac{101°}{8} = 12.6°
-\]</p>
+$$</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../link-budget-equations/">Link Budget Equations</a></li>
@@ -3171,9 +3171,7 @@ EIRP = 17.1 + 21.2 = 38.3 \text{ dBW}
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

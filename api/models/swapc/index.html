@@ -4098,27 +4098,27 @@ Total_cost = Recurring_cost + NRE + Integration</p>
 </span></code></pre></div>
 <h2 id="power-equations">Power Equations<a class="headerlink" href="#power-equations" title="Permanent link">&para;</a></h2>
 <h3 id="rf-power">RF Power<a class="headerlink" href="#rf-power" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 P_{RF} = P_{elem} \times N
-\]</p>
+\]</div>
 <h3 id="dc-power">DC Power<a class="headerlink" href="#dc-power" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 P_{DC} = \frac{P_{RF}}{\eta_{PA}}
-\]</p>
+\]</div>
 <h3 id="prime-power">Prime Power<a class="headerlink" href="#prime-power" title="Permanent link">&para;</a></h3>
 <p>Prime power includes additional overhead (typically DC power plus auxiliaries):</p>
-<p>\[
+<div class="arithmatex">\[
 P_{prime} = P_{DC} \times (1 + overhead)
-\]</p>
+\]</div>
 <h2 id="cost-equations">Cost Equations<a class="headerlink" href="#cost-equations" title="Permanent link">&para;</a></h2>
 <h3 id="recurring-cost">Recurring Cost<a class="headerlink" href="#recurring-cost" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 C_{recurring} = C_{elem} \times N
-\]</p>
+\]</div>
 <h3 id="total-cost">Total Cost<a class="headerlink" href="#total-cost" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 C_{total} = C_{recurring} + C_{NRE} + C_{integration}
-\]</p>
+\]</div>
 <h2 id="trade-offs">Trade-offs<a class="headerlink" href="#trade-offs" title="Permanent link">&para;</a></h2>
 <h3 id="power-vs-array-size">Power vs. Array Size<a class="headerlink" href="#power-vs-array-size" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Power scales linearly with element count</span>
@@ -4275,9 +4275,7 @@ C_{total} = C_{recurring} + C_{NRE} + C_{integration}
       
         <script src="../../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

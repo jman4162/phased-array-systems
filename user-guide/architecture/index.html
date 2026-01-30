@@ -3201,14 +3201,14 @@
 </span></code></pre></div>
 <h3 id="power-calculations">Power Calculations<a class="headerlink" href="#power-calculations" title="Permanent link">&para;</a></h3>
 <p>Total transmit power:</p>
-<p>\[
+<div class="arithmatex">\[
 P_{tx,total} = P_{tx,elem} \times N_{elements}
-\]</p>
+\]</div>
 <p>DC power consumption:</p>
-<p>\[
+<div class="arithmatex">\[
 P_{DC} = \frac{P_{tx,total}}{\eta_{PA}}
-\]</p>
-<p>Where \(\eta_{PA}\) is the PA efficiency.</p>
+\]</div>
+<p>Where <span class="arithmatex">\(\eta_{PA}\)</span> is the PA efficiency.</p>
 <h2 id="costconfig">CostConfig<a class="headerlink" href="#costconfig" title="Permanent link">&para;</a></h2>
 <p>The <code>CostConfig</code> class defines cost model parameters.</p>
 <h3 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h3>
@@ -3251,13 +3251,13 @@ P_{DC} = \frac{P_{tx,total}}{\eta_{PA}}
 </span></code></pre></div>
 <h3 id="cost-calculations">Cost Calculations<a class="headerlink" href="#cost-calculations" title="Permanent link">&para;</a></h3>
 <p>Total recurring cost:</p>
-<p>\[
+<div class="arithmatex">\[
 C_{recurring} = C_{elem} \times N_{elements}
-\]</p>
+\]</div>
 <p>Total cost:</p>
-<p>\[
+<div class="arithmatex">\[
 C_{total} = C_{recurring} + C_{NRE} + C_{integration}
-\]</p>
+\]</div>
 <h2 id="architecture-class">Architecture Class<a class="headerlink" href="#architecture-class" title="Permanent link">&para;</a></h2>
 <p>The <code>Architecture</code> class combines all components.</p>
 <h3 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h3>
@@ -3367,7 +3367,7 @@ C_{total} = C_{recurring} + C_{NRE} + C_{integration}
 </span></code></pre></div>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="1-use-realistic-spacing">1. Use Realistic Spacing<a class="headerlink" href="#1-use-realistic-spacing" title="Permanent link">&para;</a></h3>
-<p>Half-wavelength spacing (\(d = 0.5\lambda\)) is typical:</p>
+<p>Half-wavelength spacing (<span class="arithmatex">\(d = 0.5\lambda\)</span>) is typical:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">ArrayConfig</span><span class="p">(</span><span class="n">dx_lambda</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">dy_lambda</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># Standard</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">ArrayConfig</span><span class="p">(</span><span class="n">dx_lambda</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">dy_lambda</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>  <span class="c1"># Wider (grating lobes possible)</span>
 </span></code></pre></div>
@@ -3529,9 +3529,7 @@ C_{total} = C_{recurring} + C_{NRE} + C_{integration}
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

@@ -3268,7 +3268,7 @@
 <h2 id="models">Models<a class="headerlink" href="#models" title="Permanent link">&para;</a></h2>
 <h3 id="q-how-is-antenna-gain-calculated">Q: How is antenna gain calculated?<a class="headerlink" href="#q-how-is-antenna-gain-calculated" title="Permanent link">&para;</a></h3>
 <p>If pre-computed antenna metrics aren't provided, gain is approximated:</p>
-<p>\[G \approx \eta \cdot 4\pi \cdot n_x d_x \cdot n_y d_y\]</p>
+<div class="arithmatex">\[G \approx \eta \cdot 4\pi \cdot n_x d_x \cdot n_y d_y\]</div>
 <p>For accurate patterns, use the full antenna adapter with <code>phased-array-modeling</code>.</p>
 <h3 id="q-what-propagation-models-are-supported">Q: What propagation models are supported?<a class="headerlink" href="#q-what-propagation-models-are-supported" title="Permanent link">&para;</a></h3>
 <p>Currently: Free Space Path Loss (FSPL).</p>
@@ -3470,9 +3470,7 @@
       
         <script src="../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

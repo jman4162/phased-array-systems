@@ -3670,32 +3670,32 @@ without full Architecture/Scenario objects.</p>
 </span></code></pre></div>
 <h2 id="link-budget-equations">Link Budget Equations<a class="headerlink" href="#link-budget-equations" title="Permanent link">&para;</a></h2>
 <h3 id="eirp">EIRP<a class="headerlink" href="#eirp" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 EIRP = P_{tx} + G_{tx} - L_{tx}
-\]</p>
+\]</div>
 <h3 id="path-loss">Path Loss<a class="headerlink" href="#path-loss" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 L_{path} = L_{FSPL} + L_{atm} + L_{rain} + L_{pol}
-\]</p>
+\]</div>
 <h3 id="free-space-path-loss_1">Free Space Path Loss<a class="headerlink" href="#free-space-path-loss_1" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 20 \log_{10}\left(\frac{4\pi d f}{c}\right)
-\]</p>
+\]</div>
 <h3 id="received-power">Received Power<a class="headerlink" href="#received-power" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 P_{rx} = EIRP - L_{path} + G_{rx}
-\]</p>
+\]</div>
 <h3 id="noise-power">Noise Power<a class="headerlink" href="#noise-power" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 N = 10 \log_{10}(kTB) + NF
-\]</p>
+\]</div>
 <h3 id="snr-and-margin">SNR and Margin<a class="headerlink" href="#snr-and-margin" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 SNR = P_{rx} - N
-\]
-\[
+$$
+$$
 Margin = SNR - SNR_{required}
-\]</p>
+\]</div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../../theory/link-budget-equations/">Theory: Link Budget Equations</a></li>
@@ -3839,9 +3839,7 @@ Margin = SNR - SNR_{required}
       
         <script src="../../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

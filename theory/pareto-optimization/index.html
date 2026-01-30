@@ -3120,18 +3120,18 @@
 <h2 id="multi-objective-optimization">Multi-Objective Optimization<a class="headerlink" href="#multi-objective-optimization" title="Permanent link">&para;</a></h2>
 <h3 id="problem-formulation">Problem Formulation<a class="headerlink" href="#problem-formulation" title="Permanent link">&para;</a></h3>
 <p>A multi-objective optimization problem:</p>
-<p>\[
+<div class="arithmatex">\[
 \begin{aligned}
-\text{minimize} \quad &amp; \mathbf{f}(\mathbf{x}) = [f_1(\mathbf{x}), f_2(\mathbf{x}), ..., f_k(\mathbf{x})] \
-\text{subject to} \quad &amp; \mathbf{g}(\mathbf{x}) \leq 0 \
+\text{minimize} \quad &amp; \mathbf{f}(\mathbf{x}) = [f_1(\mathbf{x}), f_2(\mathbf{x}), ..., f_k(\mathbf{x})] \\
+\text{subject to} \quad &amp; \mathbf{g}(\mathbf{x}) \leq 0 \\
 &amp; \mathbf{x} \in \mathcal{X}
 \end{aligned}
-\]</p>
+\]</div>
 <p>Where:
-- \(\mathbf{x}\) = design variables
-- \(\mathbf{f}\) = objective functions
-- \(\mathbf{g}\) = constraints
-- \(\mathcal{X}\) = feasible design space</p>
+- <span class="arithmatex">\(\mathbf{x}\)</span> = design variables
+- <span class="arithmatex">\(\mathbf{f}\)</span> = objective functions
+- <span class="arithmatex">\(\mathbf{g}\)</span> = constraints
+- <span class="arithmatex">\(\mathcal{X}\)</span> = feasible design space</p>
 <h3 id="single-vs-multi-objective">Single vs. Multi-Objective<a class="headerlink" href="#single-vs-multi-objective" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3157,10 +3157,10 @@
 </table>
 <h2 id="dominance">Dominance<a class="headerlink" href="#dominance" title="Permanent link">&para;</a></h2>
 <h3 id="definition">Definition<a class="headerlink" href="#definition" title="Permanent link">&para;</a></h3>
-<p>Design \(\mathbf{a}\) <strong>dominates</strong> design \(\mathbf{b}\) (written \(\mathbf{a} \prec \mathbf{b}\)) if:</p>
+<p>Design <span class="arithmatex">\(\mathbf{a}\)</span> <strong>dominates</strong> design <span class="arithmatex">\(\mathbf{b}\)</span> (written <span class="arithmatex">\(\mathbf{a} \prec \mathbf{b}\)</span>) if:</p>
 <ol>
-<li>\(f_i(\mathbf{a}) \leq f_i(\mathbf{b})\) for all objectives \(i\) (at least as good)</li>
-<li>\(f_j(\mathbf{a}) &lt; f_j(\mathbf{b})\) for at least one objective \(j\) (strictly better)</li>
+<li><span class="arithmatex">\(f_i(\mathbf{a}) \leq f_i(\mathbf{b})\)</span> for all objectives <span class="arithmatex">\(i\)</span> (at least as good)</li>
+<li><span class="arithmatex">\(f_j(\mathbf{a}) &lt; f_j(\mathbf{b})\)</span> for at least one objective <span class="arithmatex">\(j\)</span> (strictly better)</li>
 </ol>
 <h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
 <p>Consider cost minimization and EIRP maximization (converted to minimization as -EIRP):</p>
@@ -3203,7 +3203,7 @@
 <p>Design A dominates C because: cost(A) &lt; cost(C) and -EIRP(A) &lt; -EIRP(C).</p>
 <h2 id="pareto-optimality">Pareto Optimality<a class="headerlink" href="#pareto-optimality" title="Permanent link">&para;</a></h2>
 <h3 id="definition_1">Definition<a class="headerlink" href="#definition_1" title="Permanent link">&para;</a></h3>
-<p>A design \(\mathbf{x}^<em>\) is </em><em>Pareto optimal</em>* (or non-dominated) if there exists no other feasible design that dominates it.</p>
+<p>A design <span class="arithmatex">\(\mathbf{x}^*\)</span> is <strong>Pareto optimal</strong> (or non-dominated) if there exists no other feasible design that dominates it.</p>
 <p>The set of all Pareto optimal designs forms the <strong>Pareto frontier</strong> (or Pareto front).</p>
 <h3 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h3>
 <ol>
@@ -3212,9 +3212,9 @@
 <li><strong>Incomparable</strong>: No Pareto solution is better than another in all objectives</li>
 </ol>
 <h3 id="mathematical-definition">Mathematical Definition<a class="headerlink" href="#mathematical-definition" title="Permanent link">&para;</a></h3>
-<p>\[
-\mathcal{P} = {\mathbf{x}^<em> \in \mathcal{X} : \nexists \mathbf{x} \in \mathcal{X} \text{ such that } \mathbf{x} \prec \mathbf{x}^</em>}
-\]</p>
+<div class="arithmatex">\[
+\mathcal{P} = \{\mathbf{x}^* \in \mathcal{X} : \nexists \mathbf{x} \in \mathcal{X} \text{ such that } \mathbf{x} \prec \mathbf{x}^*\}
+\]</div>
 <h2 id="pareto-frontier">Pareto Frontier<a class="headerlink" href="#pareto-frontier" title="Permanent link">&para;</a></h2>
 <h3 id="characteristics">Characteristics<a class="headerlink" href="#characteristics" title="Permanent link">&para;</a></h3>
 <ul>
@@ -3234,10 +3234,10 @@
 <h2 id="ranking-methods">Ranking Methods<a class="headerlink" href="#ranking-methods" title="Permanent link">&para;</a></h2>
 <p>Since all Pareto solutions are optimal, additional criteria are needed to rank them.</p>
 <h3 id="weighted-sum">Weighted Sum<a class="headerlink" href="#weighted-sum" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 \min_{\mathbf{x}} \sum_{i=1}^{k} w_i f_i(\mathbf{x})
-\]</p>
-<p>Where \(\sum w_i = 1\).</p>
+\]</div>
+<p>Where <span class="arithmatex">\(\sum w_i = 1\)</span>.</p>
 <p>Advantages:
 - Simple
 - Single-objective problem</p>
@@ -3248,29 +3248,29 @@
 <p>Technique for Order Preference by Similarity to Ideal Solution.</p>
 <ol>
 <li>Normalize objectives</li>
-<li>Define ideal point: \(\mathbf{f}^+\) (best of each)</li>
-<li>Define anti-ideal: \(\mathbf{f}^-\) (worst of each)</li>
+<li>Define ideal point: <span class="arithmatex">\(\mathbf{f}^+\)</span> (best of each)</li>
+<li>Define anti-ideal: <span class="arithmatex">\(\mathbf{f}^-\)</span> (worst of each)</li>
 <li>Calculate distances:
-   \[
+   $$
    d^+ = \sqrt{\sum_i w_i (f_i - f_i^+)^2}
-   \]
-   \[
+   $$
+   $$
    d^- = \sqrt{\sum_i w_i (f_i - f_i^-)^2}
-   \]</li>
+   $$</li>
 <li>Rank by relative closeness:
-   \[
+   $$
    C = \frac{d^-}{d^+ + d^-}
-   \]</li>
+   $$</li>
 </ol>
-<p>Higher \(C\) is better (closer to ideal, farther from anti-ideal).</p>
+<p>Higher <span class="arithmatex">\(C\)</span> is better (closer to ideal, farther from anti-ideal).</p>
 <h2 id="hypervolume">Hypervolume<a class="headerlink" href="#hypervolume" title="Permanent link">&para;</a></h2>
 <p>The hypervolume indicator measures Pareto front quality.</p>
 <h3 id="definition_2">Definition<a class="headerlink" href="#definition_2" title="Permanent link">&para;</a></h3>
 <p>Volume of objective space dominated by the Pareto front, bounded by a reference point:</p>
-<p>\[
-HV = \text{Vol}\left(\bigcup_{i=1}^{|\mathcal{P}|} {\mathbf{f} : \mathbf{f}_i \prec \mathbf{f} \prec \mathbf{r}}\right)
-\]</p>
-<p>Where \(\mathbf{r}\) is the reference point.</p>
+<div class="arithmatex">\[
+HV = \text{Vol}\left(\bigcup_{i=1}^{|\mathcal{P}|} \{\mathbf{f} : \mathbf{f}_i \prec \mathbf{f} \prec \mathbf{r}\}\right)
+\]</div>
+<p>Where <span class="arithmatex">\(\mathbf{r}\)</span> is the reference point.</p>
 <h3 id="properties_1">Properties<a class="headerlink" href="#properties_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Larger hypervolume = better Pareto front</li>
@@ -3290,9 +3290,9 @@ HV = \text{Vol}\left(\bigcup_{i=1}^{|\mathcal{P}|} {\mathbf{f} : \mathbf{f}_i \p
 <p>The "knee" of the Pareto front represents designs with the best trade-off ratio.</p>
 <h3 id="detection">Detection<a class="headerlink" href="#detection" title="Permanent link">&para;</a></h3>
 <p>For normalized objectives, the knee minimizes:</p>
-<p>\[
+<div class="arithmatex">\[
 d = \sqrt{f_1^2 + f_2^2 + ... + f_k^2}
-\]</p>
+\]</div>
 <h3 id="significance">Significance<a class="headerlink" href="#significance" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Maximum "bang for buck"</li>
@@ -3301,15 +3301,15 @@ d = \sqrt{f_1^2 + f_2^2 + ... + f_k^2}
 </ul>
 <h2 id="algorithm-considerations">Algorithm Considerations<a class="headerlink" href="#algorithm-considerations" title="Permanent link">&para;</a></h2>
 <h3 id="pareto-extraction-complexity">Pareto Extraction Complexity<a class="headerlink" href="#pareto-extraction-complexity" title="Permanent link">&para;</a></h3>
-<p>For \(n\) designs and \(k\) objectives:
-- Naive: \(O(n^2 k)\)
-- Efficient algorithms: \(O(n \log^{k-1} n)\)</p>
+<p>For <span class="arithmatex">\(n\)</span> designs and <span class="arithmatex">\(k\)</span> objectives:
+- Naive: <span class="arithmatex">\(O(n^2 k)\)</span>
+- Efficient algorithms: <span class="arithmatex">\(O(n \log^{k-1} n)\)</span></p>
 <h3 id="epsilon-dominance">Epsilon-Dominance<a class="headerlink" href="#epsilon-dominance" title="Permanent link">&para;</a></h3>
 <p>Relaxed dominance for diversity:</p>
-<p>\(\mathbf{a}\) \(\varepsilon\)-dominates \(\mathbf{b}\) if:</p>
-<p>\[
+<p><span class="arithmatex">\(\mathbf{a}\)</span> <span class="arithmatex">\(\varepsilon\)</span>-dominates <span class="arithmatex">\(\mathbf{b}\)</span> if:</p>
+<div class="arithmatex">\[
 f_i(\mathbf{a}) \leq (1 + \varepsilon) f_i(\mathbf{b}) \quad \forall i
-\]</p>
+\]</div>
 <p>Reduces Pareto set size while maintaining coverage.</p>
 <h2 id="application-to-phased-arrays">Application to Phased Arrays<a class="headerlink" href="#application-to-phased-arrays" title="Permanent link">&para;</a></h2>
 <h3 id="common-objectives">Common Objectives<a class="headerlink" href="#common-objectives" title="Permanent link">&para;</a></h3>
@@ -3528,9 +3528,7 @@ f_i(\mathbf{a}) \leq (1 + \varepsilon) f_i(\mathbf{b}) \quad \forall i
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

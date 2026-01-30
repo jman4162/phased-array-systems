@@ -2817,46 +2817,46 @@
 <p>A link budget accounts for all gains and losses in a communications link, from transmitter to receiver.</p>
 <h2 id="link-budget-equation">Link Budget Equation<a class="headerlink" href="#link-budget-equation" title="Permanent link">&para;</a></h2>
 <p>The fundamental equation:</p>
-<p>\[
+<div class="arithmatex">\[
 P_{rx} = P_{tx} + G_{tx} - L_{tx} - L_{path} + G_{rx} - L_{rx}
-\]</p>
+\]</div>
 <p>All quantities in dB.</p>
 <h2 id="eirp-effective-isotropic-radiated-power">EIRP (Effective Isotropic Radiated Power)<a class="headerlink" href="#eirp-effective-isotropic-radiated-power" title="Permanent link">&para;</a></h2>
 <p>EIRP is the power that would be radiated by an isotropic antenna to produce the same field intensity:</p>
-<p>\[
+<div class="arithmatex">\[
 EIRP = P_{tx} + G_{tx} - L_{tx}
-\]</p>
+\]</div>
 <p>Where:
-- \(P_{tx}\) = Transmitter power output (dBW)
-- \(G_{tx}\) = Transmit antenna gain (dBi)
-- \(L_{tx}\) = Transmit losses (feed, radome, etc.) (dB)</p>
+- <span class="arithmatex">\(P_{tx}\)</span> = Transmitter power output (dBW)
+- <span class="arithmatex">\(G_{tx}\)</span> = Transmit antenna gain (dBi)
+- <span class="arithmatex">\(L_{tx}\)</span> = Transmit losses (feed, radome, etc.) (dB)</p>
 <h3 id="for-phased-arrays">For Phased Arrays<a class="headerlink" href="#for-phased-arrays" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 P_{tx} = 10\log_{10}(N \cdot P_{elem})
-\]</p>
-<p>Where \(N\) is element count and \(P_{elem}\) is power per element in watts.</p>
+\]</div>
+<p>Where <span class="arithmatex">\(N\)</span> is element count and <span class="arithmatex">\(P_{elem}\)</span> is power per element in watts.</p>
 <h2 id="path-loss">Path Loss<a class="headerlink" href="#path-loss" title="Permanent link">&para;</a></h2>
 <h3 id="free-space-path-loss-fspl">Free Space Path Loss (FSPL)<a class="headerlink" href="#free-space-path-loss-fspl" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 20\log_{10}\left(\frac{4\pi d f}{c}\right)
-\]</p>
+\]</div>
 <p>Or equivalently:</p>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 32.45 + 20\log_{10}(f_{MHz}) + 20\log_{10}(d_{km})
-\]</p>
+\]</div>
 <p>Or:</p>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 92.45 + 20\log_{10}(f_{GHz}) + 20\log_{10}(d_{km})
-\]</p>
+\]</div>
 <h3 id="example-10-ghz-100-km">Example: 10 GHz, 100 km<a class="headerlink" href="#example-10-ghz-100-km" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 L_{FSPL} = 92.45 + 20\log_{10}(10) + 20\log_{10}(100) = 92.45 + 20 + 40 = 152.45 \text{ dB}
-\]</p>
+\]</div>
 <h3 id="additional-losses">Additional Losses<a class="headerlink" href="#additional-losses" title="Permanent link">&para;</a></h3>
 <p>Total path loss:</p>
-<p>\[
+<div class="arithmatex">\[
 L_{path} = L_{FSPL} + L_{atm} + L_{rain} + L_{pol} + L_{misc}
-\]</p>
+\]</div>
 <table>
 <thead>
 <tr>
@@ -2880,60 +2880,60 @@ L_{path} = L_{FSPL} + L_{atm} + L_{rain} + L_{pol} + L_{misc}
 </tbody>
 </table>
 <h2 id="received-power">Received Power<a class="headerlink" href="#received-power" title="Permanent link">&para;</a></h2>
-<p>\[
+<div class="arithmatex">\[
 P_{rx} = EIRP - L_{path} + G_{rx}
-\]</p>
+\]</div>
 <h2 id="noise-power">Noise Power<a class="headerlink" href="#noise-power" title="Permanent link">&para;</a></h2>
 <h3 id="thermal-noise">Thermal Noise<a class="headerlink" href="#thermal-noise" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 N = kTB
-\]</p>
+\]</div>
 <p>Where:
-- \(k\) = Boltzmann constant = 1.38×10⁻²³ J/K
-- \(T\) = System noise temperature (K)
-- \(B\) = Bandwidth (Hz)</p>
+- <span class="arithmatex">\(k\)</span> = Boltzmann constant = 1.38×10⁻²³ J/K
+- <span class="arithmatex">\(T\)</span> = System noise temperature (K)
+- <span class="arithmatex">\(B\)</span> = Bandwidth (Hz)</p>
 <p>In dB:</p>
-<p>\[
+<div class="arithmatex">\[
 N_{dBW} = 10\log_{10}(kTB) = -228.6 + 10\log_{10}(T) + 10\log_{10}(B)
-\]</p>
+\]</div>
 <h3 id="system-noise-temperature">System Noise Temperature<a class="headerlink" href="#system-noise-temperature" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 T_{sys} = T_{ant} + T_{rx}
-\]</p>
+\]</div>
 <p>Where:</p>
-<p>\[
+<div class="arithmatex">\[
 T_{rx} = T_0(F - 1)
-\]</p>
+\]</div>
 <ul>
-<li>\(T_0\) = Reference temperature (290 K)</li>
-<li>\(F\) = Noise figure (linear)</li>
+<li><span class="arithmatex">\(T_0\)</span> = Reference temperature (290 K)</li>
+<li><span class="arithmatex">\(F\)</span> = Noise figure (linear)</li>
 </ul>
 <h3 id="noise-figure">Noise Figure<a class="headerlink" href="#noise-figure" title="Permanent link">&para;</a></h3>
-<p>\[
+<div class="arithmatex">\[
 F_{dB} = 10\log_{10}(F) = 10\log_{10}\left(1 + \frac{T_{rx}}{T_0}\right)
-\]</p>
+\]</div>
 <p>Total noise power including noise figure:</p>
-<p>\[
+<div class="arithmatex">\[
 N_{dBW} = 10\log_{10}(kT_0B) + NF_{dB}
-\]</p>
+\]</div>
 <h2 id="signal-to-noise-ratio">Signal-to-Noise Ratio<a class="headerlink" href="#signal-to-noise-ratio" title="Permanent link">&para;</a></h2>
-<p>\[
+<div class="arithmatex">\[
 SNR = P_{rx} - N
-\]</p>
+\]</div>
 <p>Expanding:</p>
-<p>\[
+<div class="arithmatex">\[
 SNR = EIRP - L_{path} + G_{rx} - 10\log_{10}(kT_0B) - NF
-\]</p>
+\]</div>
 <h2 id="link-margin">Link Margin<a class="headerlink" href="#link-margin" title="Permanent link">&para;</a></h2>
-<p>\[
+<div class="arithmatex">\[
 M = SNR - SNR_{required}
-\]</p>
+\]</div>
 <p>Positive margin indicates the link closes with room to spare.</p>
 <h2 id="gt-figure-of-merit">G/T Figure of Merit<a class="headerlink" href="#gt-figure-of-merit" title="Permanent link">&para;</a></h2>
 <p>For receive systems, G/T characterizes sensitivity:</p>
-<p>\[
+<div class="arithmatex">\[
 \frac{G}{T} = G_{rx} - 10\log_{10}(T_{sys})
-\]</p>
+\]</div>
 <p>Units: dB/K</p>
 <h2 id="complete-link-budget-example">Complete Link Budget Example<a class="headerlink" href="#complete-link-budget-example" title="Permanent link">&para;</a></h2>
 <p><strong>Given:</strong>
@@ -2951,51 +2951,51 @@ M = SNR - SNR_{required}
 <ol>
 <li>
 <p><strong>TX Power:</strong>
-\[
+$$
 P_{tx} = 10\log_{10}(64 \times 1) = 18.1 \text{ dBW}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>TX Gain:</strong>
-\[
+$$
 G_{tx} = 10\log_{10}(0.65 \times \pi \times 64) = 21.2 \text{ dB}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>EIRP:</strong>
-\[
+$$
 EIRP = 18.1 + 21.2 - 1.5 = 37.8 \text{ dBW}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>Path Loss:</strong>
-\[
+$$
 L_{path} = 152.4 + 0.5 = 152.9 \text{ dB}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>Received Power:</strong>
-\[
+$$
 P_{rx} = 37.8 - 152.9 + 30 = -85.1 \text{ dBW}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>Noise Power:</strong>
-\[
+$$
 N = 10\log_{10}(1.38 \times 10^{-23} \times 290 \times 10^7) + 3 = -131.0 \text{ dBW}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>SNR:</strong>
-\[
+$$
 SNR = -85.1 - (-131.0) = 45.9 \text{ dB}
-\]</p>
+$$</p>
 </li>
 <li>
 <p><strong>Link Margin:</strong>
-\[
+$$
 M = 45.9 - 10 = 35.9 \text{ dB}
-\]</p>
+$$</p>
 </li>
 </ol>
 <h2 id="trade-offs">Trade-offs<a class="headerlink" href="#trade-offs" title="Permanent link">&para;</a></h2>
@@ -3025,7 +3025,7 @@ M = 45.9 - 10 = 35.9 \text{ dB}
 <h3 id="reducing-path-loss">Reducing Path Loss<a class="headerlink" href="#reducing-path-loss" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Lower frequency (but larger antenna for same gain)</li>
-<li>Shorter range (\(L \propto d^2\))</li>
+<li>Shorter range (<span class="arithmatex">\(L \propto d^2\)</span>)</li>
 </ul>
 <h3 id="improving-receiver">Improving Receiver<a class="headerlink" href="#improving-receiver" title="Permanent link">&para;</a></h3>
 <table>
@@ -3193,9 +3193,7 @@ M = 45.9 - 10 = 35.9 \text{ dB}
       
         <script src="../../javascripts/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>
