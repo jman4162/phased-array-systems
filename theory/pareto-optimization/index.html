@@ -3127,11 +3127,13 @@
 &amp; \mathbf{x} \in \mathcal{X}
 \end{aligned}
 \]</div>
-<p>Where:
-- <span class="arithmatex">\(\mathbf{x}\)</span> = design variables
-- <span class="arithmatex">\(\mathbf{f}\)</span> = objective functions
-- <span class="arithmatex">\(\mathbf{g}\)</span> = constraints
-- <span class="arithmatex">\(\mathcal{X}\)</span> = feasible design space</p>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(\mathbf{x}\)</span> = design variables</li>
+<li><span class="arithmatex">\(\mathbf{f}\)</span> = objective functions</li>
+<li><span class="arithmatex">\(\mathbf{g}\)</span> = constraints</li>
+<li><span class="arithmatex">\(\mathcal{X}\)</span> = feasible design space</li>
+</ul>
 <h3 id="single-vs-multi-objective">Single vs. Multi-Objective<a class="headerlink" href="#single-vs-multi-objective" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3238,12 +3240,16 @@
 \min_{\mathbf{x}} \sum_{i=1}^{k} w_i f_i(\mathbf{x})
 \]</div>
 <p>Where <span class="arithmatex">\(\sum w_i = 1\)</span>.</p>
-<p>Advantages:
-- Simple
-- Single-objective problem</p>
-<p>Limitations:
-- Cannot find solutions on non-convex regions
-- Sensitive to weight choice</p>
+<p>Advantages:</p>
+<ul>
+<li>Simple</li>
+<li>Single-objective problem</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>Cannot find solutions on non-convex regions</li>
+<li>Sensitive to weight choice</li>
+</ul>
 <h3 id="topsis">TOPSIS<a class="headerlink" href="#topsis" title="Permanent link">&para;</a></h3>
 <p>Technique for Order Preference by Similarity to Ideal Solution.</p>
 <ol>
@@ -3301,9 +3307,11 @@ d = \sqrt{f_1^2 + f_2^2 + ... + f_k^2}
 </ul>
 <h2 id="algorithm-considerations">Algorithm Considerations<a class="headerlink" href="#algorithm-considerations" title="Permanent link">&para;</a></h2>
 <h3 id="pareto-extraction-complexity">Pareto Extraction Complexity<a class="headerlink" href="#pareto-extraction-complexity" title="Permanent link">&para;</a></h3>
-<p>For <span class="arithmatex">\(n\)</span> designs and <span class="arithmatex">\(k\)</span> objectives:
-- Naive: <span class="arithmatex">\(O(n^2 k)\)</span>
-- Efficient algorithms: <span class="arithmatex">\(O(n \log^{k-1} n)\)</span></p>
+<p>For <span class="arithmatex">\(n\)</span> designs and <span class="arithmatex">\(k\)</span> objectives:</p>
+<ul>
+<li>Naive: <span class="arithmatex">\(O(n^2 k)\)</span></li>
+<li>Efficient algorithms: <span class="arithmatex">\(O(n \log^{k-1} n)\)</span></li>
+</ul>
 <h3 id="epsilon-dominance">Epsilon-Dominance<a class="headerlink" href="#epsilon-dominance" title="Permanent link">&para;</a></h3>
 <p>Relaxed dominance for diversity:</p>
 <p><span class="arithmatex">\(\mathbf{a}\)</span> <span class="arithmatex">\(\varepsilon\)</span>-dominates <span class="arithmatex">\(\mathbf{b}\)</span> if:</p>

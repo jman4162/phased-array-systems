@@ -2800,12 +2800,14 @@
 <div class="arithmatex">\[
 AF(\theta, \phi) = \sum_{n=1}^{N} a_n e^{j(k \mathbf{r}_n \cdot \hat{\mathbf{r}} + \alpha_n)}
 \]</div>
-<p>Where:
-- <span class="arithmatex">\(a_n\)</span> = amplitude weight of element <span class="arithmatex">\(n\)</span>
-- <span class="arithmatex">\(k = 2\pi/\lambda\)</span> = wavenumber
-- <span class="arithmatex">\(\mathbf{r}_n\)</span> = position of element <span class="arithmatex">\(n\)</span>
-- <span class="arithmatex">\(\hat{\mathbf{r}}\)</span> = unit vector in observation direction
-- <span class="arithmatex">\(\alpha_n\)</span> = phase of element <span class="arithmatex">\(n\)</span></p>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(a_n\)</span> = amplitude weight of element <span class="arithmatex">\(n\)</span></li>
+<li><span class="arithmatex">\(k = 2\pi/\lambda\)</span> = wavenumber</li>
+<li><span class="arithmatex">\(\mathbf{r}_n\)</span> = position of element <span class="arithmatex">\(n\)</span></li>
+<li><span class="arithmatex">\(\hat{\mathbf{r}}\)</span> = unit vector in observation direction</li>
+<li><span class="arithmatex">\(\alpha_n\)</span> = phase of element <span class="arithmatex">\(n\)</span></li>
+</ul>
 <h3 id="linear-array">Linear Array<a class="headerlink" href="#linear-array" title="Permanent link">&para;</a></h3>
 <p>For a uniform linear array along the z-axis with spacing <span class="arithmatex">\(d\)</span>:</p>
 <div class="arithmatex">\[
@@ -2993,10 +2995,12 @@ d &lt; \frac{\lambda}{1 + \sin(60°)} = \frac{\lambda}{1.866} \approx 0.54\lambd
 <div class="arithmatex">\[
 P_{rad} = N \cdot P_{elem} \cdot \eta_{feed}
 \]</div>
-<p>Where:
-- <span class="arithmatex">\(N\)</span> = number of elements
-- <span class="arithmatex">\(P_{elem}\)</span> = power per element
-- <span class="arithmatex">\(\eta_{feed}\)</span> = feed network efficiency</p>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(N\)</span> = number of elements</li>
+<li><span class="arithmatex">\(P_{elem}\)</span> = power per element</li>
+<li><span class="arithmatex">\(\eta_{feed}\)</span> = feed network efficiency</li>
+</ul>
 <h3 id="eirp">EIRP<a class="headerlink" href="#eirp" title="Permanent link">&para;</a></h3>
 <p>Effective Isotropic Radiated Power:</p>
 <div class="arithmatex">\[
@@ -3007,11 +3011,13 @@ EIRP = P_{rad} \cdot G = N \cdot P_{elem} \cdot \eta_{feed} \cdot G
 EIRP_{dBW} = P_{rad,dBW} + G_{dB}
 \]</div>
 <h2 id="example-calculation">Example Calculation<a class="headerlink" href="#example-calculation" title="Permanent link">&para;</a></h2>
-<p>For an 8×8 array with:
-- <span class="arithmatex">\(d_x = d_y = 0.5\lambda\)</span>
-- <span class="arithmatex">\(P_{elem} = 1\)</span> W
-- <span class="arithmatex">\(\eta_a = 0.65\)</span>
-- <span class="arithmatex">\(\eta_{feed} = 0.8\)</span></p>
+<p>For an 8×8 array with:</p>
+<ul>
+<li><span class="arithmatex">\(d_x = d_y = 0.5\lambda\)</span></li>
+<li><span class="arithmatex">\(P_{elem} = 1\)</span> W</li>
+<li><span class="arithmatex">\(\eta_a = 0.65\)</span></li>
+<li><span class="arithmatex">\(\eta_{feed} = 0.8\)</span></li>
+</ul>
 <p><strong>Gain:</strong>
 $$
 G = 0.65 \cdot \pi \cdot 64 = 130.7 = 21.2 \text{ dB}

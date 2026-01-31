@@ -2826,10 +2826,12 @@ P_{rx} = P_{tx} + G_{tx} - L_{tx} - L_{path} + G_{rx} - L_{rx}
 <div class="arithmatex">\[
 EIRP = P_{tx} + G_{tx} - L_{tx}
 \]</div>
-<p>Where:
-- <span class="arithmatex">\(P_{tx}\)</span> = Transmitter power output (dBW)
-- <span class="arithmatex">\(G_{tx}\)</span> = Transmit antenna gain (dBi)
-- <span class="arithmatex">\(L_{tx}\)</span> = Transmit losses (feed, radome, etc.) (dB)</p>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(P_{tx}\)</span> = Transmitter power output (dBW)</li>
+<li><span class="arithmatex">\(G_{tx}\)</span> = Transmit antenna gain (dBi)</li>
+<li><span class="arithmatex">\(L_{tx}\)</span> = Transmit losses (feed, radome, etc.) (dB)</li>
+</ul>
 <h3 id="for-phased-arrays">For Phased Arrays<a class="headerlink" href="#for-phased-arrays" title="Permanent link">&para;</a></h3>
 <div class="arithmatex">\[
 P_{tx} = 10\log_{10}(N \cdot P_{elem})
@@ -2888,10 +2890,12 @@ P_{rx} = EIRP - L_{path} + G_{rx}
 <div class="arithmatex">\[
 N = kTB
 \]</div>
-<p>Where:
-- <span class="arithmatex">\(k\)</span> = Boltzmann constant = 1.38×10⁻²³ J/K
-- <span class="arithmatex">\(T\)</span> = System noise temperature (K)
-- <span class="arithmatex">\(B\)</span> = Bandwidth (Hz)</p>
+<p>Where:</p>
+<ul>
+<li><span class="arithmatex">\(k\)</span> = Boltzmann constant = 1.38×10⁻²³ J/K</li>
+<li><span class="arithmatex">\(T\)</span> = System noise temperature (K)</li>
+<li><span class="arithmatex">\(B\)</span> = Bandwidth (Hz)</li>
+</ul>
 <p>In dB:</p>
 <div class="arithmatex">\[
 N_{dBW} = 10\log_{10}(kTB) = -228.6 + 10\log_{10}(T) + 10\log_{10}(B)

@@ -3014,9 +3014,11 @@
         style B fill:#f9f,stroke:#333
         style C fill:#f9f,stroke:#333
     end</code></pre>
-<p>Design A is <strong>Pareto-optimal</strong> if there exists no other design that is:
-- Better in at least one objective
-- At least as good in all other objectives</p>
+<p>Design A is <strong>Pareto-optimal</strong> if there exists no other design that is:</p>
+<ul>
+<li>Better in at least one objective</li>
+<li>At least as good in all other objectives</li>
+</ul>
 <h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
 <p>Consider cost vs. performance:</p>
 <table>
@@ -3129,9 +3131,11 @@
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># Results sorted by rank</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">ranked</span><span class="p">[[</span><span class="s2">&quot;case_id&quot;</span><span class="p">,</span> <span class="s2">&quot;cost_usd&quot;</span><span class="p">,</span> <span class="s2">&quot;eirp_dbw&quot;</span><span class="p">,</span> <span class="s2">&quot;pareto_rank&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </span></code></pre></div>
-<p>Weight interpretation:
-- Higher weight = more important
-- Weights are normalized internally</p>
+<p>Weight interpretation:</p>
+<ul>
+<li>Higher weight = more important</li>
+<li>Weights are normalized internally</li>
+</ul>
 <h3 id="topsis-method">TOPSIS Method<a class="headerlink" href="#topsis-method" title="Permanent link">&para;</a></h3>
 <p>Technique for Order of Preference by Similarity to Ideal Solution:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">ranked</span> <span class="o">=</span> <span class="n">rank_pareto</span><span class="p">(</span>
@@ -3168,10 +3172,12 @@
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">hv</span> <span class="o">=</span> <span class="n">compute_hypervolume</span><span class="p">(</span><span class="n">pareto</span><span class="p">,</span> <span class="n">objectives</span><span class="p">)</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hypervolume: </span><span class="si">{</span><span class="n">hv</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Uses:
-- Compare different DOE runs
-- Track optimization progress
-- Evaluate Pareto front quality</p>
+<p>Uses:</p>
+<ul>
+<li>Compare different DOE runs</li>
+<li>Track optimization progress</li>
+<li>Evaluate Pareto front quality</li>
+</ul>
 <h3 id="reference-point">Reference Point<a class="headerlink" href="#reference-point" title="Permanent link">&para;</a></h3>
 <p>The hypervolume is computed relative to a reference point:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Custom reference (worst acceptable values)</span>

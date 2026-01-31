@@ -3046,10 +3046,12 @@
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">doe</span><span class="p">)</span><span class="si">}</span><span class="s2"> cases&quot;</span><span class="p">)</span>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">doe</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </span></code></pre></div>
-<p>LHS properties:
-- Space-filling: samples spread across all dimensions
-- Efficient: good coverage with fewer samples than grid
-- Reproducible with seed</p>
+<p>LHS properties:</p>
+<ul>
+<li>Space-filling: samples spread across all dimensions</li>
+<li>Efficient: good coverage with fewer samples than grid</li>
+<li>Reproducible with seed</li>
+</ul>
 <h3 id="random-sampling">Random Sampling<a class="headerlink" href="#random-sampling" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">doe</span> <span class="o">=</span> <span class="n">generate_doe</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 </span></code></pre></div>
