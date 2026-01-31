@@ -15,6 +15,7 @@ AF(\theta, \phi) = \sum_{n=1}^{N} a_n e^{j(k \mathbf{r}_n \cdot \hat{\mathbf{r}}
 $$
 
 Where:
+
 - $a_n$ = amplitude weight of element $n$
 - $k = 2\pi/\lambda$ = wavenumber
 - $\mathbf{r}_n$ = position of element $n$
@@ -199,6 +200,7 @@ P_{rad} = N \cdot P_{elem} \cdot \eta_{feed}
 $$
 
 Where:
+
 - $N$ = number of elements
 - $P_{elem}$ = power per element
 - $\eta_{feed}$ = feed network efficiency
@@ -220,6 +222,7 @@ $$
 ## Example Calculation
 
 For an 8×8 array with:
+
 - $d_x = d_y = 0.5\lambda$
 - $P_{elem} = 1$ W
 - $\eta_a = 0.65$

@@ -67,6 +67,7 @@ SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B_n L_s}
 $$
 
 Where:
+
 - $P_t$ = Peak transmit power (W)
 - $G$ = Antenna gain (linear)
 - $\lambda$ = Wavelength (m)

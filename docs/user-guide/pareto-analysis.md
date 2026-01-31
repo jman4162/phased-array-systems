@@ -20,6 +20,7 @@ graph LR
 ```
 
 Design A is **Pareto-optimal** if there exists no other design that is:
+
 - Better in at least one objective
 - At least as good in all other objectives
 
@@ -109,6 +110,7 @@ print(ranked[["case_id", "cost_usd", "eirp_dbw", "pareto_rank"]].head())
 ```
 
 Weight interpretation:
+
 - Higher weight = more important
 - Weights are normalized internally
 
@@ -167,6 +169,7 @@ print(f"Hypervolume: {hv:.2e}")
 ```
 
 Uses:
+
 - Compare different DOE runs
 - Track optimization progress
 - Evaluate Pareto front quality

@@ -25,6 +25,7 @@ EIRP = P_{tx} + G_{tx} - L_{tx}
 $$
 
 Where:
+
 - $P_{tx}$ = Transmitter power output (dBW)
 - $G_{tx}$ = Transmit antenna gain (dBi)
 - $L_{tx}$ = Transmit losses (feed, radome, etc.) (dB)
@@ -92,6 +93,7 @@ N = kTB
 $$
 
 Where:
+
 - $k$ = Boltzmann constant = 1.38×10⁻²³ J/K
 - $T$ = System noise temperature (K)
 - $B$ = Bandwidth (Hz)

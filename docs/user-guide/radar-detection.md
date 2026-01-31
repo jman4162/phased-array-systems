@@ -21,6 +21,7 @@ SNR = \frac{P_t G^2 \lambda^2 \sigma}{(4\pi)^3 R^4 k T_s B_n L_s}
 $$
 
 Where:
+
 - $P_t$ = Peak transmit power (W)
 - $G$ = Antenna gain (linear)
 - $\lambda$ = Wavelength (m)
@@ -86,6 +87,7 @@ print(f"SNR Margin: {metrics['snr_margin_db']:.1f} dB")
 ### Required SNR Calculation
 
 The required SNR depends on:
+
 - Desired detection probability (Pd)
 - False alarm probability (Pfa)
 - Target fluctuation model (Swerling)
@@ -318,6 +320,7 @@ PA = P_t \cdot A_{eff} = P_t \cdot \frac{G \lambda^2}{4\pi}
 $$
 
 Trade off between:
+
 - More power (higher cost, heat)
 - Larger aperture (more elements, higher cost)
 
@@ -332,6 +335,7 @@ Trade off between:
 ### Integration Time
 
 More pulses = better SNR, but:
+
 - Longer dwell time per beam position
 - Target motion limits coherent integration
 - Faster scan requires fewer pulses

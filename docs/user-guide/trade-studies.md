@@ -114,6 +114,7 @@ print(doe.head())
 ```
 
 LHS properties:
+
 - Space-filling: samples spread across all dimensions
 - Efficient: good coverage with fewer samples than grid
 - Reproducible with seed

@@ -21,6 +21,7 @@ P_{rx} = EIRP - L_{path} + G_{rx}
 $$
 
 Where:
+
 - $P_{rx}$ = Received power (dBW)
 - $EIRP$ = Effective Isotropic Radiated Power (dBW)
 - $L_{path}$ = Total path loss (dB)
@@ -33,6 +34,7 @@ EIRP = P_{tx} + G_{tx} - L_{tx}
 $$
 
 Where:
+
 - $P_{tx}$ = Total transmit power (dBW)
 - $G_{tx}$ = Transmit antenna gain (dBi)
 - $L_{tx}$ = Transmit losses (feed + system)
@@ -48,6 +50,7 @@ N = 10 \log_{10}(kTB) + NF
 $$
 
 Where:
+
 - $k$ = Boltzmann constant (1.38×10⁻²³ J/K)
 - $T$ = Noise temperature (K)
 - $B$ = Bandwidth (Hz)

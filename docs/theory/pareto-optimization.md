@@ -21,6 +21,7 @@ $$
 $$
 
 Where:
+
 - $\mathbf{x}$ = design variables
 - $\mathbf{f}$ = objective functions
 - $\mathbf{g}$ = constraints
@@ -109,10 +110,12 @@ $$
 Where $\sum w_i = 1$.
 
 Advantages:
+
 - Simple
 - Single-objective problem
 
 Limitations:
+
 - Cannot find solutions on non-convex regions
 - Sensitive to weight choice
 
@@ -192,6 +195,7 @@ $$
 ### Pareto Extraction Complexity
 
 For $n$ designs and $k$ objectives:
+
 - Naive: $O(n^2 k)$
 - Efficient algorithms: $O(n \log^{k-1} n)$
 
