@@ -1,55 +1,44 @@
 """Model blocks for system analysis."""
 
 from phased_array_systems.models.base import ModelBlock
-
-# RF cascade models
-from phased_array_systems.models.rf import (
-    # Noise figure
-    friis_noise_figure,
-    noise_figure_to_temp,
-    noise_temp_to_figure,
-    system_noise_temperature,
-    # Gain
-    cascade_gain,
-    cascade_gain_db,
-    # Dynamic range
-    cascade_iip3,
-    cascade_oip3,
-    sfdr_from_iip3,
-    sfdr_from_oip3,
-    mds_from_noise_figure,
-    # Complete cascade
-    RFStage,
-    cascade_analysis,
-)
-
-# Digital array models
 from phased_array_systems.models.digital import (
-    # Converters
+    Dwell,
+    Function,
+    Timeline,
+    adc_dynamic_range,
+    beam_bandwidth_product,
+    beamformer_operations,
+    channelizer_output_rate,
+    dac_output_power,
+    digital_beamformer_data_rate,
     enob_to_sfdr,
-    sfdr_to_enob,
     enob_to_snr,
-    snr_to_enob,
+    interleaved_timeline,
+    max_signal_bandwidth,
+    max_simultaneous_beams,
+    max_update_rate,
+    processing_margin,
     quantization_noise_floor,
     sample_rate_for_bandwidth,
-    max_signal_bandwidth,
-    adc_dynamic_range,
-    dac_output_power,
-    # Bandwidth
-    beam_bandwidth_product,
-    max_simultaneous_beams,
-    digital_beamformer_data_rate,
-    channelizer_output_rate,
-    processing_margin,
-    beamformer_operations,
-    # Scheduling
-    Dwell,
-    Timeline,
-    Function,
-    timeline_utilization,
-    max_update_rate,
     search_timeline,
-    interleaved_timeline,
+    sfdr_to_enob,
+    snr_to_enob,
+    timeline_utilization,
+)
+from phased_array_systems.models.rf import (
+    RFStage,
+    cascade_analysis,
+    cascade_gain,
+    cascade_gain_db,
+    cascade_iip3,
+    cascade_oip3,
+    friis_noise_figure,
+    mds_from_noise_figure,
+    noise_figure_to_temp,
+    noise_temp_to_figure,
+    sfdr_from_iip3,
+    sfdr_from_oip3,
+    system_noise_temperature,
 )
 
 __all__ = [

@@ -16,11 +16,9 @@ References:
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Literal
-
-import math
 
 
 class Function(str, Enum):
@@ -304,14 +302,13 @@ def interleaved_timeline(
         func = func_spec["function"]
         time_budget_ms = frame_time_ms * func_spec["time_percent"] / 100
         dwell_time_us = func_spec["dwell_time_us"]
-        dwells_per_burst = func_spec.get("dwells_per_burst", 1)
 
         # How many dwells fit in budget?
         dwell_time_ms = dwell_time_us / 1000
         n_dwells = int(time_budget_ms / dwell_time_ms)
 
         # Create dwells (simple placeholder positions)
-        for i in range(n_dwells):
+        for _ in range(n_dwells):
             dwell = Dwell(
                 function=func,
                 duration_us=dwell_time_us,

@@ -24,8 +24,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Literal
-
 
 # Physical constants
 T0 = 290.0  # Reference temperature in Kelvin
