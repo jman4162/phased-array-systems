@@ -8,30 +8,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Core dependency:** `phased-array-modeling>=1.2.0` (provides array geometries, steering, tapering, impairments, and pattern visualization)
 
-**Project status:** Design phase (no code implemented yet). See `package_design_and_requirements.txt` for the complete SDD.
+**Project status:** v0.4.0 - All 4 implementation phases complete. See `package_design_and_requirements.txt` for the original SDD.
 
 ## Build & Development Commands
 
 ```bash
-# Installation (once implemented)
-pip install phased-array-systems
-pip install phased-array-systems[dev]       # Development deps (pytest, ruff, mypy)
-pip install phased-array-systems[plotting]  # Visualization (plotly, kaleido)
+# Installation
+pip install -e .                            # Editable install
+pip install -e ".[dev]"                     # Development deps (pytest, ruff, mypy)
+pip install -e ".[plotting]"                # Visualization (plotly, kaleido)
 
 # Testing
-pytest tests/
-pytest tests/test_comms_link_budget.py -v
-pytest tests/ --cov=phased_array_systems
+pytest tests/                               # Run all tests
+pytest tests/test_comms_link_budget.py -v   # Run specific test file
+pytest tests/ --cov=phased_array_systems    # With coverage
 
 # Linting & Formatting
 ruff check .
 ruff format .
 mypy src/phased_array_systems
 
-# CLI (planned)
-pasys run config.yaml      # Single case evaluation
-pasys doe config.yaml      # DOE batch study
-pasys pareto results.parquet --x cost_usd --y eirp_dbw
+# CLI
+pasys run config.yaml                       # Single case evaluation
+pasys doe config.yaml                       # DOE batch study
+pasys pareto results.parquet --x cost_usd --y eirp_dbw  # Pareto analysis
+pasys report results.parquet -o report.html # Generate HTML report
 ```
 
 ## Architecture
@@ -88,10 +89,32 @@ Config (YAML/JSON) → Pydantic validation → [Architecture + Scenario + Requir
 
 ## Implementation Phases
 
-1. **Phase 1 (MVP):** Schemas, config loader, requirements verification, antenna adapter, comms link budget
-2. **Phase 2:** DOE generator, batch runner with resume, Pareto extraction, plots, Parquet export
-3. **Phase 3:** Radar equation, detection threshold helpers, radar trade examples
-4. **Phase 4:** CLI (`pasys`), HTML/Markdown report generation, PyPI publish
+All phases are complete as of v0.4.0:
+
+1. **Phase 1 (MVP):** ✅ Complete
+   - Pydantic schemas for Architecture, Scenario, RequirementSet
+   - YAML/JSON config loader with validation
+   - Requirements verification with pass/fail and margin reporting
+   - Antenna adapter wrapping `phased-array-modeling`
+   - Comms link budget model (EIRP, path loss, SNR, margins)
+
+2. **Phase 2:** ✅ Complete
+   - DOE generator with full-factorial and Latin hypercube sampling
+   - Batch runner with parallel execution and resume capability
+   - Pareto extraction for multi-objective optimization
+   - Interactive plots (Pareto fronts, scatter matrices)
+   - Parquet/CSV export for results
+
+3. **Phase 3:** ✅ Complete
+   - Radar equation model (SNR, detection range)
+   - Detection threshold helpers (PD/PFA calculations)
+   - Integration gain for pulse integration
+   - Radar trade study examples
+
+4. **Phase 4:** ✅ Complete
+   - `pasys` CLI with run, doe, pareto, and report commands
+   - HTML and Markdown report generation
+   - Ready for PyPI publish
 
 ## Future Goals
 
