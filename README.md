@@ -112,6 +112,7 @@ pareto = extract_pareto(results, [
 See the `examples/` directory:
 - `01_comms_single_case.py` - Single case evaluation
 - `02_comms_doe_trade.py` - Full DOE trade study workflow
+- `03_radar_detection_trade.py` - Radar detection analysis and trade study
 
 ### Tutorial Notebook
 
@@ -129,6 +130,9 @@ phased_array_systems/
 ├── models/
 │   ├── antenna/      # Phased array adapter and metrics
 │   ├── comms/        # Link budget, propagation models
+│   ├── radar/        # Radar equation, detection, integration
+│   ├── rf/           # Cascaded RF chain analysis (NF, IIP3, SFDR)
+│   ├── digital/      # ADC/DAC, bandwidth, scheduling models
 │   └── swapc/        # Power and cost models
 ├── trades/           # DOE, batch runner, Pareto analysis
 ├── viz/              # Plotting utilities
@@ -178,6 +182,23 @@ Full documentation is available at **[jman4162.github.io/phased-array-systems](h
 - [API Reference](https://jman4162.github.io/phased-array-systems/api/) - Complete API documentation
 - [Theory](https://jman4162.github.io/phased-array-systems/theory/) - Background equations and theory
 
+## Interactive Demo
+
+[![Streamlit App](https://img.shields.io/badge/Streamlit-Demo-FF4B4B?logo=streamlit)](https://phased-array-systems.streamlit.app)
+
+Try the interactive Streamlit demo app featuring:
+- **Single Case Calculator**: Evaluate array configurations with real-time metrics
+- **Trade Study**: DOE generation with Pareto optimization
+- **RF Cascade Analyzer**: Cascaded noise figure, gain, and linearity analysis
+- **Radar Detection**: SNR calculation and detection probability curves
+
+Run locally:
+```bash
+cd app
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
 ## Citation
 
 If you use phased-array-systems in academic work, please cite:
@@ -185,8 +206,8 @@ If you use phased-array-systems in academic work, please cite:
 ```bibtex
 @software{phased_array_systems,
   title = {phased-array-systems: Phased Array Antenna System Design and Optimization},
-  author = {{phased-array-systems contributors}},
-  year = {2024},
+  author = {John Hodge},
+  year = {2026},
   url = {https://github.com/jman4162/phased-array-systems}
 }
 ```
