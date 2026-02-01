@@ -29,6 +29,8 @@ class ModelBlock(Protocol):
 | [Antenna](antenna.md) | Array metrics and `phased-array-modeling` adapter |
 | [Communications](comms.md) | Link budget calculations |
 | [Radar](radar.md) | Radar equation and detection |
+| [Digital](digital.md) | ADC/DAC, bandwidth, timeline scheduling |
+| [RF](rf.md) | Noise figure, gain cascade, dynamic range |
 | [SWaP-C](swapc.md) | Size, Weight, Power, and Cost |
 
 ## Canonical Metrics

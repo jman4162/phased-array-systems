@@ -151,6 +151,8 @@ nav:
       - Antenna: api/models/antenna.md
       - Communications: api/models/comms.md
       - Radar: api/models/radar.md
+      - Digital: api/models/digital.md
+      - RF: api/models/rf.md
       - SWaP-C: api/models/swapc.md
     - Trades: api/trades.md
     - Visualization: api/viz.md

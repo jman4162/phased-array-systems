@@ -13,6 +13,8 @@ phased_array_systems/
 │   ├── antenna/      # Antenna metrics
 │   ├── comms/        # Link budget
 │   ├── radar/        # Radar detection
+│   ├── digital/      # Digital array (ADC/DAC, bandwidth, scheduling)
+│   ├── rf/           # RF cascade (noise figure, gain, dynamic range)
 │   └── swapc/        # SWaP-C models
 ├── trades/           # DOE and Pareto
 ├── viz/              # Visualization
@@ -33,6 +35,8 @@ phased_array_systems/
 - [Antenna](models/antenna.md) - Antenna adapter and metrics
 - [Communications](models/comms.md) - Link budget model
 - [Radar](models/radar.md) - Radar equation and detection
+- [Digital](models/digital.md) - ADC/DAC, bandwidth, timeline scheduling
+- [RF](models/rf.md) - Noise figure, gain cascade, dynamic range
 - [SWaP-C](models/swapc.md) - Power and cost models
 
 ### Trade Studies
