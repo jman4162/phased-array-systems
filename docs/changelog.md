@@ -6,6 +6,17 @@ For the full changelog, see:
 
 ## Recent Changes
 
+### [0.4.0] - 2026-02-01
+
+**Added:**
+- Digital array model for digital beamforming calculations
+- RF cascade model for noise figure and gain cascade analysis
+- Comprehensive MkDocs documentation site with API reference, user guides, and tutorials
+
+**Fixed:**
+- Ruff linting errors in models module
+- MathJax rendering in documentation
+
 ### [0.3.0] - 2024-01-15
 
 **Added:**
