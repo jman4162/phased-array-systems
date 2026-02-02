@@ -10,6 +10,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Project status:** v0.4.0 - All 4 implementation phases complete. See `package_design_and_requirements.txt` for the original SDD.
 
+## Git Attribution
+
+All GitHub commits and attributions for this repository should be attributed to:
+
+- **Name:** John Hodge
+- **GitHub:** jman4162
+- **Email:** jah70@vt.edu
+
 ## Build & Development Commands
 
 ```bash
