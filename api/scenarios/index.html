@@ -1726,6 +1726,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#phased_array_systems.scenarios.radar.RadarDetectionScenario.range_resolution_m" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;range_resolution_m
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2634,6 +2645,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#phased_array_systems.scenarios.radar.RadarDetectionScenario.range_resolution_m" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;range_resolution_m
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3129,8 +3151,8 @@ satellite communications link budget calculation.</p>
 
         <p>Scenario for radar detection analysis.</p>
 <p>Defines the operating conditions for monostatic radar detection,
-including target characteristics, detection requirements, and
-pulse integration parameters.</p>
+including target characteristics, detection requirements, pulse
+integration parameters, clutter environment, and propagation effects.</p>
 
 
 <table>
@@ -3281,6 +3303,202 @@ pulse integration parameters.</p>
               </p>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.clutter_type">clutter_type</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Type of clutter environment</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="phased_array_systems.scenarios.radar.ClutterType">ClutterType</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.sea_state">sea_state</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Sea state for sea clutter (0-6 Douglas scale)</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="int">int</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.terrain_type">terrain_type</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Terrain type for ground clutter</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="phased_array_systems.scenarios.radar.TerrainType">TerrainType</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.rain_rate_mm_hr">rain_rate_mm_hr</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Rain rate for rain clutter/attenuation</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.grazing_angle_deg">grazing_angle_deg</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Grazing angle for clutter calculations</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span> | None</code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.antenna_height_m">antenna_height_m</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Antenna height above surface</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.target_height_m">target_height_m</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Target height above surface</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.polarization">polarization</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Antenna polarization</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="phased_array_systems.scenarios.radar.PolarizationType">PolarizationType</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.cfar_type">cfar_type</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>CFAR detector type</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="phased_array_systems.scenarios.radar.CFARType">CFARType</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.cfar_ref_cells">cfar_ref_cells</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Number of CFAR reference cells</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="int">int</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.cfar_guard_cells">cfar_guard_cells</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Number of CFAR guard cells</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="int">int</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.include_atmos_loss">include_atmos_loss</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Include atmospheric attenuation</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="bool">bool</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.temperature_c">temperature_c</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Ambient temperature for atmos model</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.radar.RadarDetectionScenario.humidity_pct">humidity_pct</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Relative humidity for atmos model</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -3345,6 +3563,30 @@ pulse integration parameters.</p>
     <div class="doc doc-contents ">
 
         <p>Target RCS in square meters.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="phased_array_systems.scenarios.radar.RadarDetectionScenario.range_resolution_m" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">range_resolution_m</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#phased_array_systems.scenarios.radar.RadarDetectionScenario.range_resolution_m" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">range_resolution_m</span><span class="p">:</span> <span class="n"><span title="float">float</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Range resolution in meters (c / 2B).</p>
 
     </div>
 
