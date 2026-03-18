@@ -254,10 +254,7 @@ class RadarModel:
             )
 
         # Integrated SCNR (use SCNR when clutter is present, SNR otherwise)
-        if scenario.clutter_type != "none":
-            effective_snr_single = scnr_db
-        else:
-            effective_snr_single = snr_single_db
+        effective_snr_single = scnr_db if scenario.clutter_type != "none" else snr_single_db
 
         snr_integrated_db = effective_snr_single + integration_gain_db - cfar_loss
 

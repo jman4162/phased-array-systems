@@ -95,12 +95,7 @@ def os_cfar_threshold_factor(
     # alpha ≈ (n_ref - k + 1) / k * Pfa^(-1/(n_ref-k+1)) - 1
     m = n_ref - k + 1
 
-    if m == 1:
-        # Special case: selecting maximum (like GO-CFAR)
-        alpha = pfa ** (-1.0 / n_ref) - 1
-    else:
-        # General case
-        alpha = m / k * (pfa ** (-1.0 / m) - 1)
+    alpha = pfa ** (-1.0 / n_ref) - 1 if m == 1 else m / k * (pfa ** (-1.0 / m) - 1)
 
     return alpha
 

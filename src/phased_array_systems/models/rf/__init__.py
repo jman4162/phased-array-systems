@@ -15,6 +15,21 @@ from phased_array_systems.models.rf.cascade import (
     sfdr_from_oip3,
     system_noise_temperature,
 )
+from phased_array_systems.models.rf.reliability import (
+    ArrayReliabilityResult,
+    TRMReliabilitySpec,
+    analyze_array_reliability,
+    array_mtbf,
+    availability,
+    degraded_gain,
+    degraded_sidelobe,
+    expected_failures,
+    max_failures_for_spec,
+    plot_availability_vs_mtbf,
+    plot_degradation_curves,
+    prob_failed_elements,
+    trm_mtbf,
+)
 
 __all__ = [
     # Noise figure
@@ -34,4 +49,18 @@ __all__ = [
     # Complete cascade
     "RFStage",
     "cascade_analysis",
+    # TRM Reliability
+    "trm_mtbf",
+    "array_mtbf",
+    "prob_failed_elements",
+    "expected_failures",
+    "availability",
+    "degraded_gain",
+    "degraded_sidelobe",
+    "max_failures_for_spec",
+    "TRMReliabilitySpec",
+    "ArrayReliabilityResult",
+    "analyze_array_reliability",
+    "plot_degradation_curves",
+    "plot_availability_vs_mtbf",
 ]

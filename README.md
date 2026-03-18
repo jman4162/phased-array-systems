@@ -4,6 +4,7 @@
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://jman4162.github.io/phased-array-systems)
 [![Streamlit App](https://img.shields.io/badge/Streamlit-Live_Demo-FF4B4B?logo=streamlit)](https://phased-array-systems.streamlit.app)
 [![PyPI version](https://badge.fury.io/py/phased-array-systems.svg)](https://badge.fury.io/py/phased-array-systems)
+[![Downloads](https://img.shields.io/pypi/dm/phased-array-systems)](https://pypi.org/project/phased-array-systems/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

@@ -406,7 +406,7 @@ class TestSeaClutter:
 
     def test_sea_clutter_rcs_includes_cell_area(self):
         """Clutter RCS scales with resolution cell area."""
-        sigma0 = sea_clutter_sigma0(3, 5.0, 10e9)
+        sea_clutter_sigma0(3, 5.0, 10e9)
         rcs_small = sea_clutter_rcs(3, 5.0, 10e9, 100.0)
         rcs_large = sea_clutter_rcs(3, 5.0, 10e9, 1000.0)
         # 10x larger cell should give ~10 dB more clutter
