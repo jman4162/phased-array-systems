@@ -177,7 +177,7 @@ class BatchRunner:
                         self._save_cache(results, cache_path)
 
         elapsed = time.perf_counter() - start_time
-        print(f"Completed {remaining} cases in {elapsed:.1f}s ({elapsed/remaining:.3f}s/case)")
+        print(f"Completed {remaining} cases in {elapsed:.1f}s ({elapsed / remaining:.3f}s/case)")
 
         # Final save
         if cache_path is not None:
@@ -187,9 +187,7 @@ class BatchRunner:
         result_df = pd.DataFrame(results)
 
         # Ensure consistent column order
-        cols = list(cases.columns) + [
-            c for c in result_df.columns if c not in cases.columns
-        ]
+        cols = list(cases.columns) + [c for c in result_df.columns if c not in cases.columns]
         result_df = result_df[[c for c in cols if c in result_df.columns]]
 
         return result_df
@@ -216,8 +214,9 @@ def default_architecture_builder(case_row: dict) -> Architecture:
         Architecture object
     """
     # Filter out non-architecture keys
-    arch_keys = {k: v for k, v in case_row.items()
-                 if k.startswith(("array.", "rf.", "cost.")) or k == "name"}
+    arch_keys = {
+        k: v for k, v in case_row.items() if k.startswith(("array.", "rf.", "cost.")) or k == "name"
+    }
 
     return Architecture.from_flat(arch_keys)
 

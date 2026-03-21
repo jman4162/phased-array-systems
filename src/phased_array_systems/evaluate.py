@@ -69,6 +69,65 @@ def evaluate_case(
     cost_metrics = cost_model.evaluate(arch, scenario, context)
     metrics.update(cost_metrics)
 
+    # RF cascade analysis (if rx_stages configured)
+    if arch.rf.rx_stages:
+        from phased_array_systems.models.rf.cascade import RFStage, cascade_analysis
+
+        stages = [
+            RFStage(
+                name=s.get("name", f"stage_{i}"),
+                gain_db=s["gain_db"],
+                noise_figure_db=s["nf_db"],
+                iip3_dbm=s.get("iip3_dbm", 100.0),
+                p1db_dbm=s.get("p1db_dbm", 100.0),
+            )
+            for i, s in enumerate(arch.rf.rx_stages)
+        ]
+        bw = getattr(scenario, "bandwidth_hz", 1e6)
+        cascade_metrics = cascade_analysis(stages, bandwidth_hz=bw)
+        metrics.update(
+            {
+                "cascade_nf_db": cascade_metrics["total_nf_db"],
+                "cascade_gain_db": cascade_metrics["total_gain_db"],
+                "cascade_iip3_dbm": cascade_metrics["iip3_dbm"],
+                "cascade_oip3_dbm": cascade_metrics["oip3_dbm"],
+                "cascade_mds_dbm": cascade_metrics["mds_dbm"],
+                "cascade_sfdr_db": cascade_metrics["sfdr_db"],
+            }
+        )
+        # Override NF in context so link budget uses cascaded value
+        context["cascade_nf_db"] = cascade_metrics["total_nf_db"]
+
+    # Reliability analysis (if configured)
+    if arch.reliability is not None:
+        from phased_array_systems.models.rf.reliability import (
+            TRMReliabilitySpec,
+            analyze_array_reliability,
+        )
+
+        spec = TRMReliabilitySpec(
+            component_mtbfs=arch.reliability.component_mtbfs,
+            operating_temp_c=arch.reliability.operating_temp_c,
+            mttr_hours=arch.reliability.mttr_hours,
+            mission_hours=arch.reliability.mission_hours,
+        )
+        original_sll = metrics.get("sll_db", -30.0)
+        result = analyze_array_reliability(
+            arch.array.n_elements,
+            spec,
+            original_sll_db=original_sll,
+        )
+        metrics.update(
+            {
+                "trm_mtbf_hours": result.trm_mtbf_hours,
+                "array_mtbf_hours": result.array_mtbf_hours,
+                "expected_failed_elements": result.expected_failures,
+                "array_availability": result.availability,
+                "max_failures_for_spec": float(result.max_failures_for_spec),
+                "prob_meeting_spec": result.prob_meeting_spec,
+            }
+        )
+
     # Evaluate scenario-specific models
     if isinstance(scenario, CommsLinkScenario):
         comms_model = CommsLinkModel()
@@ -85,7 +144,9 @@ def evaluate_case(
         metrics["verification.passes"] = 1.0 if report.passes else 0.0
         metrics["verification.must_pass_count"] = float(report.must_pass_count)
         metrics["verification.must_total_count"] = float(report.must_total_count)
-        metrics["verification.failed_ids"] = ",".join(report.failed_ids) if report.failed_ids else ""
+        metrics["verification.failed_ids"] = (
+            ",".join(report.failed_ids) if report.failed_ids else ""
+        )
 
     # Add timing metadata
     elapsed = time.perf_counter() - start_time

@@ -307,6 +307,76 @@ def trade_space_plot(
     return fig
 
 
+def tornado_plot(
+    sensitivities: pd.DataFrame,
+    metric_key: str,
+    ax: plt.Axes | None = None,
+    figsize: tuple[float, float] = (10, 6),
+    title: str | None = None,
+) -> plt.Figure:
+    """Create a tornado diagram showing parameter sensitivity for one metric.
+
+    Args:
+        sensitivities: Output of compute_sensitivity_coefficients()
+        metric_key: Which metric to plot (e.g., "g_peak_db")
+        ax: Optional existing Axes to plot on
+        figsize: Figure size
+        title: Plot title
+
+    Returns:
+        matplotlib Figure object
+    """
+    # Filter to the target metric
+    data = sensitivities[sensitivities["metric"] == metric_key].copy()
+    if data.empty:
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = ax.figure
+        ax.text(
+            0.5,
+            0.5,
+            f"No data for metric: {metric_key}",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
+        return fig
+
+    # Sort by absolute sensitivity (most impactful at top)
+    data = data.sort_values("sensitivity", ascending=True)
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.figure
+
+    y_pos = np.arange(len(data))
+    baseline = data["baseline"].iloc[0]
+
+    # Draw bars: left side = metric_min, right side = metric_max
+    lefts = data["metric_min"].values - baseline
+    rights = data["metric_max"].values - baseline
+
+    colors_left = ["#2196F3" if v < 0 else "#FF5722" for v in lefts]
+    colors_right = ["#FF5722" if v > 0 else "#2196F3" for v in rights]
+
+    ax.barh(y_pos, lefts, align="center", color=colors_left, alpha=0.8, height=0.6)
+    ax.barh(y_pos, rights, align="center", color=colors_right, alpha=0.8, height=0.6)
+
+    # Reference line at zero (baseline)
+    ax.axvline(x=0, color="black", linewidth=0.8)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(data["parameter"].values)
+    ax.set_xlabel(f"Change in {metric_key} from baseline ({baseline:.2f})")
+    ax.set_title(title or f"Sensitivity Tornado: {metric_key}")
+    ax.grid(True, axis="x", alpha=0.3)
+
+    fig.tight_layout()
+    return fig
+
+
 def save_figure(
     fig: plt.Figure,
     path: str,

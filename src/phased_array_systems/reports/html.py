@@ -277,7 +277,9 @@ class HTMLReport(ReportGenerator):
             elif feasible_pct >= 20:
                 feasible_class = "warning"
 
-        feasible_display = f"{n_feasible} ({feasible_pct:.1f}%)" if isinstance(n_feasible, int) else n_feasible
+        feasible_display = (
+            f"{n_feasible} ({feasible_pct:.1f}%)" if isinstance(n_feasible, int) else n_feasible
+        )
 
         return f"""
         <div class="card">
@@ -303,9 +305,7 @@ class HTMLReport(ReportGenerator):
         </div>
         """
 
-    def _generate_table_section(
-        self, results: pd.DataFrame, columns: dict[str, list[str]]
-    ) -> str:
+    def _generate_table_section(self, results: pd.DataFrame, columns: dict[str, list[str]]) -> str:
         """Generate results table section.
 
         Args:
@@ -331,8 +331,29 @@ class HTMLReport(ReportGenerator):
 
         # Add key output columns
         key_outputs = [
-            "g_peak_db", "eirp_dbw", "snr_rx_db", "link_margin_db",
-            "snr_margin_db", "detection_range_m", "cost_usd", "prime_power_w"
+            # Core
+            "g_peak_db",
+            "eirp_dbw",
+            "snr_rx_db",
+            "link_margin_db",
+            "snr_margin_db",
+            "detection_range_m",
+            "cost_usd",
+            "prime_power_w",
+            # Antenna advanced
+            "sll_db",
+            "taper_type",
+            "taper_loss_db",
+            "grating_lobe_risk",
+            # Propagation
+            "atmospheric_loss_computed_db",
+            "rain_loss_computed_db",
+            # RF cascade
+            "cascade_nf_db",
+            "cascade_sfdr_db",
+            # Reliability
+            "array_availability",
+            "trm_mtbf_hours",
         ]
         for col in key_outputs:
             if col in results.columns and col not in display_cols:
@@ -365,7 +386,11 @@ class HTMLReport(ReportGenerator):
         table_rows = "\n".join(rows)
         n_shown = len(display_df)
         n_total = len(results)
-        showing_text = f"Showing {n_shown} of {n_total} cases" if n_shown < n_total else f"Showing all {n_total} cases"
+        showing_text = (
+            f"Showing {n_shown} of {n_total} cases"
+            if n_shown < n_total
+            else f"Showing all {n_total} cases"
+        )
 
         return f"""
         <div class="card">
@@ -399,15 +424,31 @@ class HTMLReport(ReportGenerator):
         # Identify key numeric output columns
         output_cols = columns.get("output", [])
         numeric_outputs = [
-            col for col in output_cols
+            col
+            for col in output_cols
             if col in results.columns and pd.api.types.is_numeric_dtype(results[col])
         ]
 
         # Prioritize certain metrics
         priority_metrics = [
-            "g_peak_db", "eirp_dbw", "snr_rx_db", "link_margin_db",
-            "snr_margin_db", "detection_range_m", "cost_usd", "prime_power_w",
-            "dc_power_w", "n_elements"
+            "g_peak_db",
+            "eirp_dbw",
+            "snr_rx_db",
+            "link_margin_db",
+            "snr_margin_db",
+            "detection_range_m",
+            "cost_usd",
+            "prime_power_w",
+            "dc_power_w",
+            "n_elements",
+            "sll_db",
+            "taper_loss_db",
+            "atmospheric_loss_computed_db",
+            "rain_loss_computed_db",
+            "cascade_nf_db",
+            "cascade_sfdr_db",
+            "array_availability",
+            "trm_mtbf_hours",
         ]
 
         display_metrics = []
@@ -446,7 +487,7 @@ class HTMLReport(ReportGenerator):
         <div class="card">
             <h2>Metric Statistics</h2>
             <div class="metric-stats">
-                {''.join(metric_cards)}
+                {"".join(metric_cards)}
             </div>
         </div>
         """

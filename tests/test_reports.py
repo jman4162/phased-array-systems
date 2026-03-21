@@ -12,18 +12,20 @@ from phased_array_systems.reports import HTMLReport, MarkdownReport, ReportConfi
 @pytest.fixture
 def sample_results():
     """Create sample results DataFrame for testing."""
-    return pd.DataFrame({
-        "case_id": ["case_001", "case_002", "case_003", "case_004", "case_005"],
-        "array.nx": [8, 8, 16, 16, 32],
-        "array.ny": [8, 8, 16, 16, 32],
-        "rf.tx_power_w_per_elem": [5.0, 10.0, 5.0, 10.0, 5.0],
-        "g_peak_db": [25.1, 25.1, 31.2, 31.2, 37.3],
-        "eirp_dbw": [42.1, 45.1, 51.2, 54.2, 61.3],
-        "link_margin_db": [3.5, 6.5, 12.6, 15.6, 22.7],
-        "cost_usd": [50000, 55000, 150000, 160000, 500000],
-        "prime_power_w": [500, 800, 1500, 2500, 5000],
-        "verification.passes": [1.0, 1.0, 1.0, 1.0, 0.0],
-    })
+    return pd.DataFrame(
+        {
+            "case_id": ["case_001", "case_002", "case_003", "case_004", "case_005"],
+            "array.nx": [8, 8, 16, 16, 32],
+            "array.ny": [8, 8, 16, 16, 32],
+            "rf.tx_power_w_per_elem": [5.0, 10.0, 5.0, 10.0, 5.0],
+            "g_peak_db": [25.1, 25.1, 31.2, 31.2, 37.3],
+            "eirp_dbw": [42.1, 45.1, 51.2, 54.2, 61.3],
+            "link_margin_db": [3.5, 6.5, 12.6, 15.6, 22.7],
+            "cost_usd": [50000, 55000, 150000, 160000, 500000],
+            "prime_power_w": [500, 800, 1500, 2500, 5000],
+            "verification.passes": [1.0, 1.0, 1.0, 1.0, 0.0],
+        }
+    )
 
 
 class TestReportConfig:

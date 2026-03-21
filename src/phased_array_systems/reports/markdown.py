@@ -72,7 +72,9 @@ class MarkdownReport(ReportGenerator):
         if metadata.get("author"):
             meta_items.append(f"**Author:** {metadata['author']}")
         meta_items.append(f"**Generated:** {metadata.get('generated_at', 'N/A')}")
-        meta_items.append(f"**Version:** phased-array-systems v{metadata.get('generator_version', 'N/A')}")
+        meta_items.append(
+            f"**Version:** phased-array-systems v{metadata.get('generator_version', 'N/A')}"
+        )
 
         lines.append("\n" + " | ".join(meta_items))
 
@@ -111,9 +113,7 @@ class MarkdownReport(ReportGenerator):
 
         return "\n".join(lines)
 
-    def _generate_table_section(
-        self, results: pd.DataFrame, columns: dict[str, list[str]]
-    ) -> str:
+    def _generate_table_section(self, results: pd.DataFrame, columns: dict[str, list[str]]) -> str:
         """Generate results table section.
 
         Args:
@@ -142,8 +142,21 @@ class MarkdownReport(ReportGenerator):
 
         # Add key output columns
         key_outputs = [
-            "g_peak_db", "eirp_dbw", "link_margin_db",
-            "snr_margin_db", "cost_usd"
+            "g_peak_db",
+            "eirp_dbw",
+            "link_margin_db",
+            "snr_margin_db",
+            "cost_usd",
+            "prime_power_w",
+            "sll_db",
+            "taper_loss_db",
+            "grating_lobe_risk",
+            "atmospheric_loss_computed_db",
+            "rain_loss_computed_db",
+            "cascade_nf_db",
+            "cascade_sfdr_db",
+            "array_availability",
+            "trm_mtbf_hours",
         ]
         for col in key_outputs:
             if col in results.columns and col not in display_cols:
@@ -201,14 +214,29 @@ class MarkdownReport(ReportGenerator):
         # Identify key numeric output columns
         output_cols = columns.get("output", [])
         numeric_outputs = [
-            col for col in output_cols
+            col
+            for col in output_cols
             if col in results.columns and pd.api.types.is_numeric_dtype(results[col])
         ]
 
         # Prioritize certain metrics
         priority_metrics = [
-            "g_peak_db", "eirp_dbw", "snr_rx_db", "link_margin_db",
-            "snr_margin_db", "detection_range_m", "cost_usd", "prime_power_w"
+            "g_peak_db",
+            "eirp_dbw",
+            "snr_rx_db",
+            "link_margin_db",
+            "snr_margin_db",
+            "detection_range_m",
+            "cost_usd",
+            "prime_power_w",
+            "sll_db",
+            "taper_loss_db",
+            "atmospheric_loss_computed_db",
+            "rain_loss_computed_db",
+            "cascade_nf_db",
+            "cascade_sfdr_db",
+            "array_availability",
+            "trm_mtbf_hours",
         ]
 
         display_metrics = []
@@ -216,9 +244,9 @@ class MarkdownReport(ReportGenerator):
             if m in numeric_outputs:
                 display_metrics.append(m)
 
-        # Add remaining metrics up to 8 total
+        # Add remaining metrics up to 16 total
         for m in numeric_outputs:
-            if m not in display_metrics and len(display_metrics) < 8:
+            if m not in display_metrics and len(display_metrics) < 16:
                 display_metrics.append(m)
 
         if not display_metrics:

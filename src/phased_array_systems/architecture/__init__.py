@@ -4,6 +4,7 @@ from phased_array_systems.architecture.config import (
     Architecture,
     ArrayConfig,
     CostConfig,
+    ReliabilityConfig,
     RFChainConfig,
 )
 
@@ -12,4 +13,5 @@ __all__ = [
     "ArrayConfig",
     "CostConfig",
     "RFChainConfig",
+    "ReliabilityConfig",
 ]

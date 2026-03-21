@@ -54,7 +54,7 @@ def main():
         rx_noise_temp_k=290.0,
     )
 
-    print(f"\nScenario: {scenario.freq_hz/1e9:.1f} GHz, {scenario.range_m/1e3:.0f} km range")
+    print(f"\nScenario: {scenario.freq_hz / 1e9:.1f} GHz, {scenario.range_m / 1e3:.0f} km range")
 
     # =========================================================================
     # 2. Define Requirements
@@ -293,7 +293,9 @@ def main():
         best = ranked_pareto.iloc[0]
         print("\n  Best compromise design (equal weights):")
         print(f"    Case ID: {best['case_id']}")
-        print(f"    Array size: {int(best['array.nx'])}x{int(best['array.ny'])} ({int(best['n_elements'])} elements)")
+        print(
+            f"    Array size: {int(best['array.nx'])}x{int(best['array.ny'])} ({int(best['n_elements'])} elements)"
+        )
         print(f"    TX power/element: {best['rf.tx_power_w_per_elem']:.2f} W")
         print(f"    EIRP: {best['eirp_dbw']:.1f} dBW")
         print(f"    Link margin: {best['link_margin_db']:.1f} dB")

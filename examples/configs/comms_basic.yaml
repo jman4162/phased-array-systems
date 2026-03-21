@@ -13,12 +13,28 @@ architecture:
     dx_lambda: 0.5
     dy_lambda: 0.5
     scan_limit_deg: 60.0
+    taper_type: taylor           # Amplitude taper (uniform/taylor/chebyshev/hamming/cosine/gaussian)
+    taper_sll_db: -25.0          # Target sidelobe level for taper
+    element_cos_exp: 1.5         # Element pattern cosine exponent
   rf:
     tx_power_w_per_elem: 1.0
     pa_efficiency: 0.3
     noise_figure_db: 3.0
     feed_loss_db: 1.0
     system_loss_db: 0.0
+    rx_stages:                   # Multi-stage RX chain for cascade analysis
+      - name: LNA
+        gain_db: 20.0
+        nf_db: 1.5
+        iip3_dbm: -10.0
+      - name: Filter
+        gain_db: -2.0
+        nf_db: 2.0
+        iip3_dbm: 50.0
+      - name: Mixer
+        gain_db: 10.0
+        nf_db: 8.0
+        iip3_dbm: 5.0
   cost:
     cost_per_elem_usd: 100.0
     nre_usd: 10000.0
@@ -34,7 +50,8 @@ scenario:
   scan_angle_deg: 0.0
   rx_antenna_gain_db: 0.0  # Isotropic receive antenna
   rx_noise_temp_k: 290.0
-  path_loss_model: fspl
+  path_loss_model: fspl     # fspl/two_ray/log_distance
+  rain_rate_mmh: 10.0       # Computed rain attenuation (mm/hr)
 
 # Requirements
 requirements:

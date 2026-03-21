@@ -221,7 +221,7 @@ def cascade_iip3(
             - total_gain_db: Cascaded gain
     """
     if not stages:
-        return {"iip3_dbm": float('inf'), "oip3_dbm": float('inf'), "total_gain_db": 0}
+        return {"iip3_dbm": float("inf"), "oip3_dbm": float("inf"), "total_gain_db": 0}
 
     # Convert to linear (mW)
     gains_linear = [10 ** (g / 10) for g, _ in stages]

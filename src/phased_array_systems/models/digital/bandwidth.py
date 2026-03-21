@@ -161,7 +161,7 @@ def processing_margin(
             - headroom_percent: Remaining capacity
     """
     margin_ratio = available_throughput_gops / required_throughput_gops
-    margin_db = 10 * math.log10(margin_ratio) if margin_ratio > 0 else float('-inf')
+    margin_db = 10 * math.log10(margin_ratio) if margin_ratio > 0 else float("-inf")
     utilization_percent = (required_throughput_gops / available_throughput_gops) * 100
     headroom_percent = 100 - utilization_percent
 

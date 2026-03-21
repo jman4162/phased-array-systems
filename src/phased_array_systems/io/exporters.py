@@ -158,8 +158,11 @@ def get_export_metadata(path: str | Path) -> dict | None:
 
         meta = pq.read_metadata(path)
         if meta.schema.metadata:
-            return {k.decode(): v.decode() for k, v in meta.schema.metadata.items()
-                    if k.decode().startswith(("export_", "package_", "n_"))}
+            return {
+                k.decode(): v.decode()
+                for k, v in meta.schema.metadata.items()
+                if k.decode().startswith(("export_", "package_", "n_"))
+            }
         return None
 
     elif suffix == ".json":

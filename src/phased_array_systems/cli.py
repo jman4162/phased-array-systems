@@ -25,9 +25,7 @@ Examples:
   pasys pareto results.parquet -x cost_usd -y eirp_dbw
         """,
     )
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {__version__}"
-    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -68,6 +66,14 @@ Examples:
     )
     report_parser.add_argument("--title", type=str, help="Report title")
 
+    # pasys sensitivity <config>
+    sens_parser = subparsers.add_parser("sensitivity", help="Run OAT sensitivity analysis")
+    sens_parser.add_argument("config", type=Path, help="Config file (YAML/JSON)")
+    sens_parser.add_argument("-o", "--output", type=Path, help="Output file (CSV/Parquet)")
+    sens_parser.add_argument("-n", "--steps", type=int, default=5, help="Steps per parameter")
+    sens_parser.add_argument("--plot", action="store_true", help="Generate tornado plots")
+    sens_parser.add_argument("--metric", type=str, default="g_peak_db", help="Metric for plot")
+
     # pasys pareto <results>
     pareto_parser = subparsers.add_parser("pareto", help="Extract Pareto frontier")
     pareto_parser.add_argument("results", type=Path, help="Results file")
@@ -91,12 +97,52 @@ def print_metrics_table(metrics: dict[str, Any], title: str = "Metrics") -> None
             group = "Metadata"
         elif key.startswith("verification."):
             group = "Verification"
-        elif key in ("g_peak_db", "beamwidth_az_deg", "beamwidth_el_deg", "sll_db", "directivity_db"):
+        elif key in (
+            "g_peak_db",
+            "beamwidth_az_deg",
+            "beamwidth_el_deg",
+            "sll_db",
+            "directivity_db",
+            "taper_type",
+            "taper_loss_db",
+            "grating_lobe_risk",
+            "scan_loss_db",
+            "n_elements",
+        ):
             group = "Antenna"
         elif key in ("eirp_dbw", "path_loss_db", "snr_rx_db", "link_margin_db", "rx_power_dbw"):
             group = "Link Budget"
-        elif key in ("snr_single_pulse_db", "snr_integrated_db", "snr_margin_db", "detection_range_m"):
+        elif key in (
+            "atmospheric_loss_computed_db",
+            "rain_loss_computed_db",
+            "fspl_db",
+        ):
+            group = "Propagation"
+        elif key in (
+            "snr_single_pulse_db",
+            "snr_integrated_db",
+            "snr_margin_db",
+            "detection_range_m",
+        ):
             group = "Radar"
+        elif key in (
+            "cascade_nf_db",
+            "cascade_gain_db",
+            "cascade_iip3_dbm",
+            "cascade_oip3_dbm",
+            "cascade_sfdr_db",
+            "cascade_mds_dbm",
+        ):
+            group = "RF Cascade"
+        elif key in (
+            "trm_mtbf_hours",
+            "array_mtbf_hours",
+            "expected_failed_elements",
+            "array_availability",
+            "max_failures_for_spec",
+            "prob_meeting_spec",
+        ):
+            group = "Reliability"
         elif key in ("cost_usd", "recurring_cost_usd", "total_cost_usd"):
             group = "Cost"
         elif key in ("rf_power_w", "dc_power_w", "prime_power_w"):
@@ -141,10 +187,13 @@ def cmd_run(args: argparse.Namespace) -> int:
         print_metrics_table(metrics, f"Results for {args.config.name}")
     elif args.format == "json":
         # Convert non-serializable values
-        safe_metrics = {k: (v if not isinstance(v, float) or v == v else None) for k, v in metrics.items()}
+        safe_metrics = {
+            k: (v if not isinstance(v, float) or v == v else None) for k, v in metrics.items()
+        }
         print(json.dumps(safe_metrics, indent=2))
     elif args.format == "yaml":
         import yaml
+
         print(yaml.dump(dict(metrics), default_flow_style=False))
 
     if args.output:
@@ -221,7 +270,7 @@ def cmd_doe(args: argparse.Namespace) -> int:
     n_feasible = (results.get("verification.passes", 0) == 1.0).sum()
 
     print(f"\nCompleted: {n_total} cases")
-    print(f"Feasible: {n_feasible} ({n_feasible/n_total*100:.1f}%)")
+    print(f"Feasible: {n_feasible} ({n_feasible / n_total * 100:.1f}%)")
 
     # Export
     output_dir = args.output or Path("./results")
@@ -329,6 +378,7 @@ def cmd_pareto(args: argparse.Namespace) -> int:
     # Plot if requested
     if args.plot:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
@@ -353,6 +403,95 @@ def cmd_pareto(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sensitivity(args: argparse.Namespace) -> int:
+    """Execute OAT sensitivity analysis."""
+    from phased_array_systems.io import load_config
+    from phased_array_systems.trades.sensitivity import (
+        compute_sensitivity_coefficients,
+        oat_sensitivity,
+    )
+
+    if not args.config.exists():
+        print(f"Error: Config file not found: {args.config}", file=sys.stderr)
+        return 1
+
+    try:
+        config = load_config(args.config)
+    except Exception as e:
+        print(f"Error loading config: {e}", file=sys.stderr)
+        return 1
+
+    arch = config.get_architecture()
+    scenario = config.get_scenario()
+    requirements = config.get_requirement_set()
+
+    if scenario is None:
+        print("Error: Config must define a scenario", file=sys.stderr)
+        return 1
+
+    # Build param_ranges from design_space if available
+    design_space_config = getattr(config, "design_space", None)
+    param_ranges: dict[str, list[float]] = {}
+
+    if design_space_config is not None:
+        for var in design_space_config.get("variables", []):
+            if var.get("type") == "continuous" and "low" in var and "high" in var:
+                param_ranges[var["name"]] = [var["low"], var["high"]]
+    else:
+        print("Warning: No design_space in config; using default parameter ranges")
+        param_ranges = {
+            "array.nx": [4, 32],
+            "array.ny": [4, 32],
+            "rf.tx_power_w_per_elem": [0.1, 10.0],
+        }
+
+    print(f"Running OAT sensitivity: {len(param_ranges)} parameters, {args.steps} steps each")
+
+    sweep_df = oat_sensitivity(
+        arch,
+        scenario,
+        param_ranges,
+        requirements=requirements,
+        n_steps=args.steps,
+    )
+    coeffs = compute_sensitivity_coefficients(sweep_df)
+
+    # Display results
+    print(f"\nSensitivity Coefficients (metric: {args.metric})")
+    print("=" * 60)
+    metric_coeffs = coeffs[coeffs["metric"] == args.metric].sort_values(
+        "sensitivity", ascending=False
+    )
+    for _, row in metric_coeffs.iterrows():
+        print(
+            f"  {row['parameter']:30s}  S={row['sensitivity']:.4f}  "
+            f"[{row['metric_min']:.2f} .. {row['metric_max']:.2f}]"
+        )
+
+    # Save if requested
+    if args.output:
+        if str(args.output).endswith(".parquet"):
+            sweep_df.to_parquet(args.output, index=False)
+        else:
+            sweep_df.to_csv(args.output, index=False)
+        print(f"\nResults saved to: {args.output}")
+
+    # Plot if requested
+    if args.plot:
+        import matplotlib
+
+        matplotlib.use("Agg")
+
+        from phased_array_systems.viz.plots import tornado_plot
+
+        fig = tornado_plot(coeffs, args.metric)
+        plot_path = Path("sensitivity_tornado.png")
+        fig.savefig(plot_path, dpi=150, bbox_inches="tight")
+        print(f"Tornado plot saved to: {plot_path}")
+
+    return 0
+
+
 def main() -> int:
     """Main entry point."""
     parser = create_parser()
@@ -367,6 +506,7 @@ def main() -> int:
         "doe": cmd_doe,
         "report": cmd_report,
         "pareto": cmd_pareto,
+        "sensitivity": cmd_sensitivity,
     }
 
     return commands[args.command](args)

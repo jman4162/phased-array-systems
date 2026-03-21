@@ -5,7 +5,13 @@ from typing import Any
 
 from phased_array_systems.architecture import Architecture
 from phased_array_systems.constants import K_B, W_TO_DBW
-from phased_array_systems.models.comms.propagation import compute_fspl
+from phased_array_systems.models.comms.propagation import (
+    compute_atmospheric_loss,
+    compute_fspl,
+    compute_log_distance_path_loss,
+    compute_rain_loss,
+    compute_two_ray_path_loss,
+)
 from phased_array_systems.scenarios import CommsLinkScenario
 from phased_array_systems.types import MetricsDict
 
@@ -71,8 +77,7 @@ class CommsLinkModel:
             # Approximate gain for uniform array
             # G = 4*pi*A/lambda^2 ≈ pi * nx * dx * ny * dy * 4
             aperture_area_lambda_sq = (
-                arch.array.nx * arch.array.dx_lambda *
-                arch.array.ny * arch.array.dy_lambda
+                arch.array.nx * arch.array.dx_lambda * arch.array.ny * arch.array.dy_lambda
             )
             g_tx_linear = 4 * math.pi * aperture_area_lambda_sq
             g_tx_db = 10 * math.log10(g_tx_linear)
@@ -87,14 +92,44 @@ class CommsLinkModel:
         # EIRP
         eirp_dbw = tx_power_total_dbw + g_tx_db - tx_loss_db
 
-        # Path loss
+        # Path loss (core propagation model)
         if scenario.path_loss_model == "fspl":
             path_loss_db = compute_fspl(scenario.freq_hz, scenario.range_m)
+        elif scenario.path_loss_model == "log_distance":
+            path_loss_db = compute_log_distance_path_loss(
+                scenario.freq_hz,
+                scenario.range_m,
+                n=scenario.path_loss_exponent,
+            )
+        elif scenario.path_loss_model == "two_ray":
+            # Two-ray requires TX/RX heights; use defaults if not available
+            h_tx = getattr(scenario, "h_tx_m", 10.0)
+            h_rx = getattr(scenario, "h_rx_m", 2.0)
+            path_loss_db = compute_two_ray_path_loss(
+                scenario.freq_hz,
+                scenario.range_m,
+                h_tx,
+                h_rx,
+            )
         else:
             raise ValueError(f"Unknown path loss model: {scenario.path_loss_model}")
 
-        # Add extra losses
-        total_path_loss_db = path_loss_db + scenario.total_extra_loss_db
+        # Computed atmospheric and rain losses
+        atmo_loss_db = compute_atmospheric_loss(
+            scenario.freq_hz,
+            scenario.range_m,
+            elevation_deg=scenario.elevation_deg,
+        )
+        rain_computed_db = compute_rain_loss(
+            scenario.freq_hz,
+            scenario.range_m,
+            rain_rate_mmh=scenario.rain_rate_mmh,
+        )
+
+        # Total losses: computed propagation + computed atmo/rain + manual overrides
+        total_path_loss_db = (
+            path_loss_db + atmo_loss_db + rain_computed_db + scenario.total_extra_loss_db
+        )
 
         # Receive antenna gain (isotropic if not specified)
         g_rx_db = scenario.rx_antenna_gain_db if scenario.rx_antenna_gain_db is not None else 0.0
@@ -106,8 +141,9 @@ class CommsLinkModel:
         noise_power_w = K_B * scenario.rx_noise_temp_k * scenario.bandwidth_hz
         noise_power_dbw = W_TO_DBW(noise_power_w)
 
-        # Add receiver noise figure
-        noise_power_dbw += arch.rf.noise_figure_db
+        # Add receiver noise figure (use cascaded NF if available)
+        nf_db = context.get("cascade_nf_db", arch.rf.noise_figure_db)
+        noise_power_dbw += nf_db
 
         # SNR
         snr_rx_db = rx_power_dbw - noise_power_dbw
@@ -122,6 +158,8 @@ class CommsLinkModel:
             "eirp_dbw": eirp_dbw,
             "path_loss_db": total_path_loss_db,
             "fspl_db": path_loss_db,
+            "atmospheric_loss_computed_db": atmo_loss_db,
+            "rain_loss_computed_db": rain_computed_db,
             "g_rx_db": g_rx_db,
             "rx_power_dbw": rx_power_dbw,
             "noise_power_dbw": noise_power_dbw,

@@ -780,8 +780,12 @@ class TestRadarModelWithClutter:
         )
 
         model = RadarModel()
-        metrics_no_clutter = model.evaluate(sample_architecture, scenario_no_clutter, {"beamwidth_az_deg": 3.0})
-        metrics_with_clutter = model.evaluate(sample_architecture, scenario_with_clutter, {"beamwidth_az_deg": 3.0})
+        metrics_no_clutter = model.evaluate(
+            sample_architecture, scenario_no_clutter, {"beamwidth_az_deg": 3.0}
+        )
+        metrics_with_clutter = model.evaluate(
+            sample_architecture, scenario_with_clutter, {"beamwidth_az_deg": 3.0}
+        )
 
         # With clutter, SNR margin and detection range should be lower
         assert metrics_with_clutter["snr_margin_db"] < metrics_no_clutter["snr_margin_db"]

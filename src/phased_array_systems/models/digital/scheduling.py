@@ -127,7 +127,9 @@ def timeline_utilization(timeline: Timeline) -> dict[str, float]:
     for func in Function:
         time_ms = timeline.time_for_function(func)
         by_function[func.value] = time_ms
-        by_function_percent[func.value] = (time_ms / timeline.frame_time_ms * 100) if timeline.frame_time_ms > 0 else 0
+        by_function_percent[func.value] = (
+            (time_ms / timeline.frame_time_ms * 100) if timeline.frame_time_ms > 0 else 0
+        )
 
     return {
         "total_utilization": utilization,
@@ -168,7 +170,7 @@ def max_update_rate(
     frame_time_us = n_beam_positions * time_per_position_us
     frame_time_ms = frame_time_us / 1000
     scan_time_s = frame_time_us / 1e6
-    update_rate_hz = 1 / scan_time_s if scan_time_s > 0 else float('inf')
+    update_rate_hz = 1 / scan_time_s if scan_time_s > 0 else float("inf")
 
     return {
         "n_beam_positions": n_beam_positions,

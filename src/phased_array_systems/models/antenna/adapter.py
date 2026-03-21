@@ -1,5 +1,6 @@
 """Adapter wrapping phased-array-modeling for consistent metric extraction."""
 
+import logging
 from typing import Any
 
 import numpy as np
@@ -13,16 +14,57 @@ from phased_array_systems.models.antenna.metrics import (
 )
 from phased_array_systems.types import MetricsDict, Scenario
 
-# Try to import phased-array-modeling, fall back to stub if not available
+logger = logging.getLogger(__name__)
+
+# Try to import phased-array-modeling (actual package name: phased_array)
 try:
-    from phased_array_modeling import (
-        RectangularArray,
-        compute_array_factor,
+    from phased_array import (
+        chebyshev_taper_2d,
+        compute_taper_efficiency,
+        cosine_taper_2d,
+        create_rectangular_array,
+        element_pattern,
+        gaussian_taper_2d,
+        hamming_taper_2d,
+        quantize_phase,
+        simulate_element_failures,
+        steering_vector,
+        taylor_taper_2d,
+        total_pattern,
     )
 
     HAS_PAM = True
 except ImportError:
     HAS_PAM = False
+
+
+def _build_taper_weights(taper_type: str, nx: int, ny: int, sll_db: float) -> np.ndarray:
+    """Build 2D taper weights array.
+
+    Args:
+        taper_type: Taper type name
+        nx: Number of elements in x
+        ny: Number of elements in y
+        sll_db: Target sidelobe level (dB, negative) for taylor/chebyshev
+
+    Returns:
+        1D array of taper weights (length nx*ny)
+    """
+    if taper_type == "uniform":
+        return np.ones(nx * ny)
+    elif taper_type == "taylor":
+        return taylor_taper_2d(nx, ny, sidelobe_dB=sll_db).ravel()
+    elif taper_type == "chebyshev":
+        return chebyshev_taper_2d(nx, ny, sidelobe_dB=sll_db).ravel()
+    elif taper_type == "hamming":
+        return hamming_taper_2d(nx, ny).ravel()
+    elif taper_type == "cosine":
+        return cosine_taper_2d(nx, ny).ravel()
+    elif taper_type == "gaussian":
+        return gaussian_taper_2d(nx, ny).ravel()
+    else:
+        logger.warning("Unknown taper type '%s', using uniform", taper_type)
+        return np.ones(nx * ny)
 
 
 class PhasedArrayAdapter:
@@ -62,83 +104,133 @@ class PhasedArrayAdapter:
         Args:
             arch: Architecture configuration
             scenario: Scenario with frequency and scan angle info
-            context: Additional context (unused)
+            context: Additional context (may contain failure_rate for degradation)
 
         Returns:
-            Dictionary with antenna metrics:
-                - g_peak_db: Peak array gain (dB)
-                - beamwidth_az_deg: Azimuth beamwidth (degrees)
-                - beamwidth_el_deg: Elevation beamwidth (degrees)
-                - sll_db: Peak sidelobe level (dB, negative)
-                - scan_loss_db: Scan loss at operating angle (dB)
-                - directivity_db: Array directivity (dB)
-                - n_elements: Number of array elements
+            Dictionary with antenna metrics
         """
-        # Extract scan angle from scenario if available
         scan_angle_deg = getattr(scenario, "scan_angle_deg", 0.0)
 
         if HAS_PAM:
-            return self._evaluate_with_pam(arch, scenario, scan_angle_deg)
+            return self._evaluate_with_pam(arch, scenario, scan_angle_deg, context)
         else:
             return self._evaluate_analytical(arch, scenario, scan_angle_deg)
 
     def _evaluate_with_pam(
-        self, arch: Architecture, scenario: Scenario, scan_angle_deg: float
+        self,
+        arch: Architecture,
+        scenario: Scenario,
+        scan_angle_deg: float,
+        context: dict[str, Any],
     ) -> MetricsDict:
         """Evaluate using phased-array-modeling library."""
         wavelength_m = scenario.wavelength_m if hasattr(scenario, "wavelength_m") else None
 
         if wavelength_m is None:
             from phased_array_systems.constants import C
+
             wavelength_m = C / scenario.freq_hz
 
-        # Create array object
-        array = RectangularArray(
-            nx=arch.array.nx,
-            ny=arch.array.ny,
-            dx=arch.array.dx_lambda * wavelength_m,
-            dy=arch.array.dy_lambda * wavelength_m,
-        )
+        nx = arch.array.nx
+        ny = arch.array.ny
 
-        # Compute array factor over theta range
-        theta_deg = np.linspace(-90, 90, 361)
+        # 1. Create array geometry (dx/dy are in wavelengths, library converts to meters)
+        geom = create_rectangular_array(
+            nx, ny, arch.array.dx_lambda, arch.array.dy_lambda, wavelength=wavelength_m
+        )
+        k = 2 * np.pi / wavelength_m
+
+        # 2. Build taper weights
+        taper_type = getattr(arch.array, "taper_type", "uniform")
+        taper_sll_db = getattr(arch.array, "taper_sll_db", -30.0)
+        taper_weights = _build_taper_weights(taper_type, nx, ny, taper_sll_db)
+
+        # Compute taper efficiency
+        taper_eff = compute_taper_efficiency(taper_weights)
+        taper_loss_db = -10 * np.log10(taper_eff) if taper_eff > 0 else 0.0
+
+        # 3. Apply steering vector
+        scan_phi_deg = 0.0  # Azimuth plane scan
+        sv = steering_vector(k, geom.x, geom.y, scan_angle_deg, scan_phi_deg)
+        weights = taper_weights * sv
+
+        # 4. Apply impairments pipeline
+        phase_bits = getattr(arch.array, "phase_bits", None)
+        quantization_applied = False
+        if phase_bits is not None:
+            weights = quantize_phase(weights, n_bits=phase_bits)
+            quantization_applied = True
+
+        failure_rate = context.get("failure_rate", 0.0)
+        n_failed = 0
+        if failure_rate > 0:
+            seed = context.get("meta.seed")
+            weights, fail_mask = simulate_element_failures(weights, failure_rate, seed=seed)
+            n_failed = int(np.sum(fail_mask == 0))
+
+        # 5. Compute patterns using total_pattern (includes element pattern)
+        theta_deg = np.linspace(-90, 90, 721)
         theta_rad = np.radians(theta_deg)
 
-        # Compute AF at phi=0 (azimuth cut)
-        af_az = compute_array_factor(
-            array,
-            theta_rad,
-            phi=0,
-            wavelength=wavelength_m,
-            scan_theta=np.radians(scan_angle_deg),
-            scan_phi=0,
-        )
-        af_az_db = 20 * np.log10(np.abs(af_az) + 1e-12)
-        af_az_db = af_az_db - np.max(af_az_db)  # Normalize to peak
+        element_cos_exp = getattr(arch.array, "element_cos_exp", 1.5)
 
-        # Compute AF at phi=90 (elevation cut)
-        af_el = compute_array_factor(
-            array,
+        # Azimuth cut (phi=0)
+        phi_az = np.zeros_like(theta_rad)
+        tp_az = total_pattern(
             theta_rad,
-            phi=np.pi / 2,
-            wavelength=wavelength_m,
-            scan_theta=np.radians(scan_angle_deg),
-            scan_phi=0,
+            phi_az,
+            geom.x,
+            geom.y,
+            weights,
+            k,
+            element_pattern_func=element_pattern,
+            cos_exp_theta=element_cos_exp,
         )
-        af_el_db = 20 * np.log10(np.abs(af_el) + 1e-12)
-        af_el_db = af_el_db - np.max(af_el_db)
+        tp_az_db = 20 * np.log10(np.abs(tp_az) + 1e-12)
+        tp_az_db = tp_az_db - np.max(tp_az_db)  # Normalize to peak
 
-        # Extract metrics
-        beamwidth_az = compute_beamwidth(af_az_db, theta_deg)
-        beamwidth_el = compute_beamwidth(af_el_db, theta_deg)
-        sll = compute_sidelobe_level(af_az_db, theta_deg)
+        # Elevation cut (phi=90)
+        phi_el = np.full_like(theta_rad, np.pi / 2)
+        tp_el = total_pattern(
+            theta_rad,
+            phi_el,
+            geom.x,
+            geom.y,
+            weights,
+            k,
+            element_pattern_func=element_pattern,
+            cos_exp_theta=element_cos_exp,
+        )
+        tp_el_db = 20 * np.log10(np.abs(tp_el) + 1e-12)
+        tp_el_db = tp_el_db - np.max(tp_el_db)
+
+        # 6. Extract metrics from computed patterns
+        beamwidth_az = compute_beamwidth(tp_az_db, theta_deg)
+        beamwidth_el = compute_beamwidth(tp_el_db, theta_deg)
+        sll = compute_sidelobe_level(tp_az_db, theta_deg)
         scan_loss = compute_scan_loss(scan_angle_deg)
         directivity = compute_directivity_rectangular(
-            arch.array.nx, arch.array.ny, arch.array.dx_lambda, arch.array.dy_lambda
+            nx, ny, arch.array.dx_lambda, arch.array.dy_lambda
         )
-        g_peak = directivity - scan_loss  # Account for scan loss
+        g_peak = directivity - scan_loss - taper_loss_db
 
-        return {
+        # 7. Grating lobe check
+        from phased_array_systems.models.antenna.grating import check_grating_lobes
+
+        grating_info = check_grating_lobes(
+            arch.array.dx_lambda, arch.array.dy_lambda, arch.array.scan_limit_deg
+        )
+        if grating_info["grating_lobe_risk"]:
+            logger.warning(
+                "Grating lobe risk detected: dx=%.2f, dy=%.2f lambda, "
+                "max safe spacing=%.3f lambda at scan_limit=%.1f deg",
+                arch.array.dx_lambda,
+                arch.array.dy_lambda,
+                grating_info["max_safe_spacing_lambda"],
+                arch.array.scan_limit_deg,
+            )
+
+        metrics: MetricsDict = {
             "g_peak_db": g_peak,
             "beamwidth_az_deg": beamwidth_az,
             "beamwidth_el_deg": beamwidth_el,
@@ -146,7 +238,23 @@ class PhasedArrayAdapter:
             "scan_loss_db": scan_loss,
             "directivity_db": directivity,
             "n_elements": arch.array.n_elements,
+            "taper_type": taper_type,
+            "taper_efficiency": taper_eff,
+            "taper_loss_db": taper_loss_db,
+            "element_pattern_applied": True,
+            "element_cos_exp": element_cos_exp,
+            "grating_lobe_risk": grating_info["grating_lobe_risk"],
+            "max_safe_spacing_lambda": grating_info["max_safe_spacing_lambda"],
         }
+
+        if quantization_applied:
+            metrics["phase_quantization_bits"] = phase_bits
+
+        if failure_rate > 0:
+            metrics["n_failed_elements"] = n_failed
+            metrics["failure_rate"] = failure_rate
+
+        return metrics
 
     def _evaluate_analytical(
         self, arch: Architecture, scenario: Scenario, scan_angle_deg: float

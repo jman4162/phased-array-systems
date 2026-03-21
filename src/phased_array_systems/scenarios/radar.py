@@ -53,9 +53,7 @@ class RadarDetectionScenario(ScenarioBase):
     rx_noise_temp_k: float = Field(
         default=290.0, gt=0, description="Receiver noise temperature (K)"
     )
-    pfa: float = Field(
-        default=1e-6, gt=0, lt=1, description="Probability of false alarm"
-    )
+    pfa: float = Field(default=1e-6, gt=0, lt=1, description="Probability of false alarm")
     pd_required: float = Field(
         default=0.9, gt=0, lt=1, description="Required probability of detection"
     )
@@ -68,18 +66,12 @@ class RadarDetectionScenario(ScenarioBase):
     )
 
     # Clutter parameters
-    clutter_type: ClutterType = Field(
-        default="none", description="Type of clutter environment"
-    )
-    sea_state: int = Field(
-        default=3, ge=0, le=6, description="Sea state (0-6 Douglas scale)"
-    )
+    clutter_type: ClutterType = Field(default="none", description="Type of clutter environment")
+    sea_state: int = Field(default=3, ge=0, le=6, description="Sea state (0-6 Douglas scale)")
     terrain_type: TerrainType = Field(
         default="rural", description="Terrain type for ground clutter"
     )
-    rain_rate_mm_hr: float = Field(
-        default=0.0, ge=0, description="Rain rate (mm/hour)"
-    )
+    rain_rate_mm_hr: float = Field(default=0.0, ge=0, description="Rain rate (mm/hour)")
     grazing_angle_deg: float | None = Field(
         default=None,
         ge=0.1,
@@ -89,34 +81,20 @@ class RadarDetectionScenario(ScenarioBase):
     antenna_height_m: float = Field(
         default=10.0, ge=0, description="Antenna height above surface (m)"
     )
-    target_height_m: float = Field(
-        default=0.0, ge=0, description="Target height above surface (m)"
-    )
-    polarization: PolarizationType = Field(
-        default="HH", description="Antenna polarization"
-    )
+    target_height_m: float = Field(default=0.0, ge=0, description="Target height above surface (m)")
+    polarization: PolarizationType = Field(default="HH", description="Antenna polarization")
 
     # CFAR parameters
-    cfar_type: CFARType = Field(
-        default="none", description="CFAR detector type"
-    )
-    cfar_ref_cells: int = Field(
-        default=16, ge=2, description="Number of CFAR reference cells"
-    )
+    cfar_type: CFARType = Field(default="none", description="CFAR detector type")
+    cfar_ref_cells: int = Field(default=16, ge=2, description="Number of CFAR reference cells")
     cfar_guard_cells: int = Field(
         default=2, ge=0, description="Number of CFAR guard cells per side"
     )
 
     # Propagation parameters
-    include_atmos_loss: bool = Field(
-        default=False, description="Include atmospheric attenuation"
-    )
-    temperature_c: float = Field(
-        default=15.0, description="Ambient temperature (Celsius)"
-    )
-    humidity_pct: float = Field(
-        default=50.0, ge=0, le=100, description="Relative humidity (%)"
-    )
+    include_atmos_loss: bool = Field(default=False, description="Include atmospheric attenuation")
+    temperature_c: float = Field(default=15.0, description="Ambient temperature (Celsius)")
+    humidity_pct: float = Field(default=50.0, ge=0, le=100, description="Relative humidity (%)")
 
     @computed_field  # type: ignore[prop-decorator]
     @property

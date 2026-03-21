@@ -95,9 +95,7 @@ class TestSubarrayConstraints:
         """Test that constraint can be disabled."""
         # This would fail with constraint enabled (10, 12 not powers of 2)
         config = ArrayConfig(
-            nx=10, ny=12,
-            max_subarray_nx=8, max_subarray_ny=8,
-            enforce_subarray_constraint=False
+            nx=10, ny=12, max_subarray_nx=8, max_subarray_ny=8, enforce_subarray_constraint=False
         )
         assert config.nx == 10
         assert config.ny == 12
@@ -106,10 +104,7 @@ class TestSubarrayConstraints:
 
     def test_custom_subarray_size_power_of_two(self):
         """Test custom sub-array sizes (must be powers of two)."""
-        config = ArrayConfig(
-            nx=16, ny=16,
-            max_subarray_nx=4, max_subarray_ny=4
-        )
+        config = ArrayConfig(nx=16, ny=16, max_subarray_nx=4, max_subarray_ny=4)
         assert config.n_subarrays_x == 4
         assert config.n_subarrays_y == 4
         assert config.n_subarrays == 16
@@ -118,10 +113,12 @@ class TestSubarrayConstraints:
         """Test that non-rectangular geometries skip constraint validation."""
         # This would fail for rectangular with constraint enforced
         config = ArrayConfig(
-            nx=10, ny=12,
+            nx=10,
+            ny=12,
             geometry="circular",
-            max_subarray_nx=8, max_subarray_ny=8,
-            enforce_subarray_constraint=True
+            max_subarray_nx=8,
+            max_subarray_ny=8,
+            enforce_subarray_constraint=True,
         )
         assert config.nx == 10
         assert config.ny == 12

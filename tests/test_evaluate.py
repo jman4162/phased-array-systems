@@ -6,6 +6,7 @@ from phased_array_systems.architecture import (
     Architecture,
     ArrayConfig,
     CostConfig,
+    ReliabilityConfig,
     RFChainConfig,
 )
 from phased_array_systems.evaluate import (
@@ -190,9 +191,7 @@ class TestEvaluateCaseWithReport:
             ]
         )
 
-    def test_returns_tuple(
-        self, sample_architecture, sample_scenario, sample_requirements
-    ):
+    def test_returns_tuple(self, sample_architecture, sample_scenario, sample_requirements):
         """Test that function returns both metrics and report."""
         metrics, report = evaluate_case_with_report(
             sample_architecture,
@@ -204,9 +203,7 @@ class TestEvaluateCaseWithReport:
         assert hasattr(report, "passes")
         assert hasattr(report, "results")
 
-    def test_report_has_results(
-        self, sample_architecture, sample_scenario, sample_requirements
-    ):
+    def test_report_has_results(self, sample_architecture, sample_scenario, sample_requirements):
         """Test that report contains individual results."""
         metrics, report = evaluate_case_with_report(
             sample_architecture,
@@ -217,3 +214,162 @@ class TestEvaluateCaseWithReport:
         assert len(report.results) == 1
         assert report.results[0].requirement.id == "REQ-001"
         assert report.results[0].actual_value is not None
+
+
+class TestRFCascadeIntegration:
+    """Tests for RF cascade integration in evaluate_case."""
+
+    @pytest.fixture
+    def cascade_architecture(self):
+        return Architecture(
+            array=ArrayConfig(nx=8, ny=8, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(
+                tx_power_w_per_elem=1.0,
+                noise_figure_db=3.0,
+                feed_loss_db=1.0,
+                rx_stages=[
+                    {"name": "LNA", "gain_db": 20.0, "nf_db": 2.0, "iip3_dbm": -10.0},
+                    {"name": "Filter", "gain_db": -3.0, "nf_db": 3.0, "iip3_dbm": 50.0},
+                    {"name": "IF_Amp", "gain_db": 15.0, "nf_db": 8.0, "iip3_dbm": 5.0},
+                ],
+            ),
+            cost=CostConfig(cost_per_elem_usd=100.0),
+        )
+
+    @pytest.fixture
+    def sample_scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def test_cascade_metrics_present(self, cascade_architecture, sample_scenario):
+        """Test that cascade metrics appear in output."""
+        metrics = evaluate_case(cascade_architecture, sample_scenario)
+        assert "cascade_nf_db" in metrics
+        assert "cascade_gain_db" in metrics
+        assert "cascade_iip3_dbm" in metrics
+        assert "cascade_oip3_dbm" in metrics
+        assert "cascade_mds_dbm" in metrics
+        assert "cascade_sfdr_db" in metrics
+
+    def test_cascade_nf_reasonable(self, cascade_architecture, sample_scenario):
+        """Cascaded NF should be dominated by first stage but higher."""
+        metrics = evaluate_case(cascade_architecture, sample_scenario)
+        # First stage NF is 2.0 dB; cascaded should be slightly higher
+        assert metrics["cascade_nf_db"] > 2.0
+        # But not dramatically higher due to LNA gain
+        assert metrics["cascade_nf_db"] < 5.0
+
+    def test_cascade_gain_is_sum(self, cascade_architecture, sample_scenario):
+        """Cascade gain should equal sum of stage gains."""
+        metrics = evaluate_case(cascade_architecture, sample_scenario)
+        expected_gain = 20.0 + (-3.0) + 15.0  # 32 dB
+        assert metrics["cascade_gain_db"] == pytest.approx(expected_gain)
+
+    def test_no_rx_stages_no_cascade_metrics(self, sample_scenario):
+        """Without rx_stages, no cascade metrics should appear."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "cascade_nf_db" not in metrics
+
+    def test_cascade_nf_affects_link_budget(self, sample_scenario):
+        """Cascaded NF override should change link margin vs scalar NF."""
+        # Architecture with scalar NF=3 dB
+        arch_scalar = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, noise_figure_db=3.0),
+        )
+        # Architecture with high cascaded NF via rx_stages
+        arch_cascade = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(
+                tx_power_w_per_elem=1.0,
+                noise_figure_db=3.0,
+                rx_stages=[
+                    {"name": "LNA", "gain_db": 10.0, "nf_db": 5.0},
+                    {"name": "Mixer", "gain_db": 5.0, "nf_db": 12.0},
+                ],
+            ),
+        )
+        m_scalar = evaluate_case(arch_scalar, sample_scenario)
+        m_cascade = evaluate_case(arch_cascade, sample_scenario)
+
+        # Higher NF from cascade -> worse SNR -> lower margin
+        assert m_cascade["cascade_nf_db"] > 3.0
+        assert m_cascade["link_margin_db"] < m_scalar["link_margin_db"]
+
+
+class TestReliabilityIntegration:
+    """Tests for reliability integration in evaluate_case."""
+
+    @pytest.fixture
+    def reliability_architecture(self):
+        return Architecture(
+            array=ArrayConfig(nx=8, ny=8, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            reliability=ReliabilityConfig(
+                operating_temp_c=85.0,
+                mttr_hours=8.0,
+                mission_hours=8760.0,
+            ),
+        )
+
+    @pytest.fixture
+    def sample_scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def test_reliability_metrics_present(self, reliability_architecture, sample_scenario):
+        """Test that all reliability metrics appear."""
+        metrics = evaluate_case(reliability_architecture, sample_scenario)
+        assert "trm_mtbf_hours" in metrics
+        assert "array_mtbf_hours" in metrics
+        assert "expected_failed_elements" in metrics
+        assert "array_availability" in metrics
+        assert "max_failures_for_spec" in metrics
+        assert "prob_meeting_spec" in metrics
+
+    def test_no_reliability_config_no_metrics(self, sample_scenario):
+        """Without reliability config, no reliability metrics."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "trm_mtbf_hours" not in metrics
+
+    def test_availability_between_0_and_1(self, reliability_architecture, sample_scenario):
+        """Availability should be a valid fraction."""
+        metrics = evaluate_case(reliability_architecture, sample_scenario)
+        assert 0.0 < metrics["array_availability"] <= 1.0
+
+    def test_prob_meeting_spec_between_0_and_1(self, reliability_architecture, sample_scenario):
+        """Prob meeting spec should be a valid fraction."""
+        metrics = evaluate_case(reliability_architecture, sample_scenario)
+        assert 0.0 <= metrics["prob_meeting_spec"] <= 1.0
+
+    def test_higher_temp_lower_mtbf(self, sample_scenario):
+        """Higher operating temp should reduce TRM MTBF."""
+        arch_cool = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            reliability=ReliabilityConfig(operating_temp_c=55.0),
+        )
+        arch_hot = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            reliability=ReliabilityConfig(operating_temp_c=125.0),
+        )
+        m_cool = evaluate_case(arch_cool, sample_scenario)
+        m_hot = evaluate_case(arch_hot, sample_scenario)
+        assert m_hot["trm_mtbf_hours"] < m_cool["trm_mtbf_hours"]

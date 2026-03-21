@@ -150,7 +150,17 @@ class TestCLICommands:
     def test_pareto_missing_file(self):
         """Test pareto command with missing file."""
         result = subprocess.run(
-            [sys.executable, "-m", "phased_array_systems.cli", "pareto", "nonexistent.parquet", "-x", "cost", "-y", "eirp"],
+            [
+                sys.executable,
+                "-m",
+                "phased_array_systems.cli",
+                "pareto",
+                "nonexistent.parquet",
+                "-x",
+                "cost",
+                "-y",
+                "eirp",
+            ],
             capture_output=True,
             text=True,
         )

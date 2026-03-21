@@ -63,13 +63,13 @@ def compute_taper_loss(taper: NDArray[np.floating]) -> float:
         return 0.0
 
     sum_weights = np.sum(taper)
-    sum_weights_sq = np.sum(taper ** 2)
+    sum_weights_sq = np.sum(taper**2)
 
     if sum_weights_sq == 0:
-        return float('inf')
+        return float("inf")
 
-    efficiency = (sum_weights ** 2) / (n * sum_weights_sq)
-    loss_db = -10 * math.log10(efficiency) if efficiency > 0 else float('inf')
+    efficiency = (sum_weights**2) / (n * sum_weights_sq)
+    loss_db = -10 * math.log10(efficiency) if efficiency > 0 else float("inf")
 
     return max(0.0, loss_db)
 
@@ -99,17 +99,17 @@ def compute_taper_efficiency(taper: NDArray[np.floating]) -> float:
         return 1.0
 
     sum_weights = np.sum(taper)
-    sum_weights_sq = np.sum(taper ** 2)
+    sum_weights_sq = np.sum(taper**2)
 
     if sum_weights_sq == 0:
         return 0.0
 
-    return (sum_weights ** 2) / (n * sum_weights_sq)
+    return (sum_weights**2) / (n * sum_weights_sq)
 
 
 def taper_loss_from_sll(
     target_sll_db: float,
-    taper_type: Literal['taylor', 'chebyshev', 'hamming', 'cosine', 'gaussian'] = 'taylor',
+    taper_type: Literal["taylor", "chebyshev", "hamming", "cosine", "gaussian"] = "taylor",
 ) -> float:
     """Estimate taper loss from target sidelobe level.
 
@@ -139,7 +139,7 @@ def taper_loss_from_sll(
     # Ensure positive value for calculations
     sll = abs(target_sll_db)
 
-    if taper_type == 'taylor':
+    if taper_type == "taylor":
         # Taylor window: loss increases roughly as 0.02 * (SLL - 13)
         # -13.2 dB (uniform) -> 0 dB loss
         # -30 dB -> ~0.5-0.8 dB loss
@@ -149,22 +149,22 @@ def taper_loss_from_sll(
         loss = 0.02 * (sll - 13.2) + 0.15 * ((sll - 13.2) / 20) ** 2
         return min(loss, 3.0)
 
-    elif taper_type == 'chebyshev':
+    elif taper_type == "chebyshev":
         # Chebyshev (Dolph): slightly more efficient than Taylor
         if sll <= 13.2:
             return 0.0
         loss = 0.018 * (sll - 13.2) + 0.12 * ((sll - 13.2) / 20) ** 2
         return min(loss, 2.5)
 
-    elif taper_type == 'hamming':
+    elif taper_type == "hamming":
         # Hamming: fixed ~-42 dB SLL, ~1.34 dB loss
         return 1.34
 
-    elif taper_type == 'cosine':
+    elif taper_type == "cosine":
         # Cosine (Hann): ~-32 dB SLL, ~1.76 dB loss
         return 1.76
 
-    elif taper_type == 'gaussian':
+    elif taper_type == "gaussian":
         # Gaussian: loss depends on sigma parameter
         # For typical sigma giving -30 to -40 dB SLL
         if sll <= 20:
@@ -227,10 +227,10 @@ def beamformer_noise_factor(
 
     sum_weights = np.sum(taper)
     if sum_weights == 0:
-        return float('inf')
+        return float("inf")
 
     # Weighted noise temperature
-    t_eff = np.sum((taper ** 2) * component_temps_k) / (sum_weights ** 2)
+    t_eff = np.sum((taper**2) * component_temps_k) / (sum_weights**2)
 
     # Noise factor relative to reference
     # F = 1 + T_eff / T_ref for excess noise
@@ -239,12 +239,12 @@ def beamformer_noise_factor(
     if t_uniform == 0:
         return 1.0
 
-    return t_eff / t_uniform * n / (sum_weights ** 2 / np.sum(taper ** 2))
+    return t_eff / t_uniform * n / (sum_weights**2 / np.sum(taper**2))
 
 
 def estimate_taper_parameters(
     target_sll_db: float,
-    taper_type: Literal['taylor', 'chebyshev'] = 'taylor',
+    taper_type: Literal["taylor", "chebyshev"] = "taylor",
 ) -> dict:
     """Estimate taper parameters to achieve target sidelobe level.
 
@@ -269,7 +269,7 @@ def estimate_taper_parameters(
     """
     sll = abs(target_sll_db)
 
-    if taper_type == 'taylor':
+    if taper_type == "taylor":
         # Recommended nbar increases with SLL
         if sll <= 25:
             nbar = 3
@@ -286,18 +286,18 @@ def estimate_taper_parameters(
         bw_factor = 1.0 + 0.008 * (sll - 13.2)
 
         return {
-            'nbar': nbar,
-            'estimated_loss_db': taper_loss_from_sll(target_sll_db, 'taylor'),
-            'beamwidth_factor': min(bw_factor, 1.5),
+            "nbar": nbar,
+            "estimated_loss_db": taper_loss_from_sll(target_sll_db, "taylor"),
+            "beamwidth_factor": min(bw_factor, 1.5),
         }
 
-    elif taper_type == 'chebyshev':
+    elif taper_type == "chebyshev":
         # Chebyshev has no nbar parameter
         bw_factor = 1.0 + 0.007 * (sll - 13.2)
 
         return {
-            'estimated_loss_db': taper_loss_from_sll(target_sll_db, 'chebyshev'),
-            'beamwidth_factor': min(bw_factor, 1.4),
+            "estimated_loss_db": taper_loss_from_sll(target_sll_db, "chebyshev"),
+            "beamwidth_factor": min(bw_factor, 1.4),
         }
 
     else:
@@ -340,12 +340,12 @@ def aperture_efficiency_components(
 
     # Phase efficiency: exp(-sigma_phi^2) where sigma in radians
     sigma_phi = math.radians(phase_error_rms_deg)
-    eta_phase = math.exp(-sigma_phi ** 2)
+    eta_phase = math.exp(-(sigma_phi**2))
 
     # Amplitude error efficiency
     # Approximate: 1 - (sigma_A)^2 where sigma_A is linear RMS error
     sigma_a_linear = (10 ** (amplitude_error_rms_db / 20)) - 1
-    eta_amp = max(0, 1 - sigma_a_linear ** 2)
+    eta_amp = max(0, 1 - sigma_a_linear**2)
 
     # Blockage efficiency
     eta_blockage = (1 - blockage_fraction) ** 2
@@ -354,10 +354,10 @@ def aperture_efficiency_components(
     eta_total = eta_illum * eta_phase * eta_amp * eta_blockage
 
     return {
-        'illumination_efficiency': eta_illum,
-        'phase_efficiency': eta_phase,
-        'amplitude_error_efficiency': eta_amp,
-        'blockage_efficiency': eta_blockage,
-        'total_efficiency': eta_total,
-        'total_loss_db': -10 * math.log10(eta_total) if eta_total > 0 else float('inf'),
+        "illumination_efficiency": eta_illum,
+        "phase_efficiency": eta_phase,
+        "amplitude_error_efficiency": eta_amp,
+        "blockage_efficiency": eta_blockage,
+        "total_efficiency": eta_total,
+        "total_loss_db": -10 * math.log10(eta_total) if eta_total > 0 else float("inf"),
     }

@@ -66,7 +66,9 @@ def main():
 
     print(f"\nArchitecture: {architecture.name}")
     print(f"  Array: {array_config.nx}x{array_config.ny} = {architecture.n_elements} elements")
-    print(f"  Sub-arrays: {array_config.n_subarrays_x}x{array_config.n_subarrays_y} = {array_config.n_subarrays} total")
+    print(
+        f"  Sub-arrays: {array_config.n_subarrays_x}x{array_config.n_subarrays_y} = {array_config.n_subarrays} total"
+    )
     print(f"  TX Power/Element: {rf_config.tx_power_w_per_elem} W")
     print(f"  Total TX Power: {architecture.n_elements * rf_config.tx_power_w_per_elem} W")
 
@@ -137,7 +139,9 @@ def main():
 
     print(f"\nRequirements: {len(requirements)} defined")
     for req in requirements:
-        print(f"  [{req.severity.upper()}] {req.id}: {req.name} ({req.metric_key} {req.op} {req.value})")
+        print(
+            f"  [{req.severity.upper()}] {req.id}: {req.name} ({req.metric_key} {req.op} {req.value})"
+        )
 
     # =========================================================================
     # 4. Evaluate the Case
@@ -199,7 +203,7 @@ def main():
         else:
             print(f"  [{status_str}] {req.id}: {result.error}")
 
-    print(f"\nRuntime: {metrics['meta.runtime_s']*1000:.2f} ms")
+    print(f"\nRuntime: {metrics['meta.runtime_s'] * 1000:.2f} ms")
     print("\n" + "=" * 60)
 
     return metrics, report

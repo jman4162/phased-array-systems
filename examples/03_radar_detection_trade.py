@@ -62,7 +62,7 @@ def main():
         rx_noise_temp_k=290.0,
     )
 
-    print(f"\nScenario: {scenario.freq_hz/1e9:.1f} GHz, {scenario.range_m/1e3:.0f} km range")
+    print(f"\nScenario: {scenario.freq_hz / 1e9:.1f} GHz, {scenario.range_m / 1e3:.0f} km range")
     print(f"  Target RCS: {scenario.target_rcs_dbsm} dBsm ({scenario.target_rcs_m2:.1f} m²)")
     print(f"  Detection: Pd={scenario.pd_required}, Pfa={scenario.pfa:.0e}")
     print(f"  Integration: {scenario.n_pulses} pulses ({scenario.integration_type})")
@@ -132,7 +132,7 @@ def main():
     print(f"  SNR (integrated): {metrics['snr_integrated_db']:.1f} dB")
     print(f"  SNR Required: {metrics['snr_required_db']:.1f} dB")
     print(f"  SNR Margin: {metrics['snr_margin_db']:.1f} dB")
-    print(f"  Detection Range: {metrics['detection_range_m']/1e3:.1f} km")
+    print(f"  Detection Range: {metrics['detection_range_m'] / 1e3:.1f} km")
     print(f"  Cost: ${metrics['cost_usd']:,.0f}")
     print(f"\n  Requirements: {'PASS' if report.passes else 'FAIL'}")
 
@@ -247,7 +247,7 @@ def main():
         print(
             f"  {row['case_id']}: "
             f"Array={int(row['array.nx'])}x{int(row['array.ny'])}, "
-            f"Range={row['detection_range_m']/1e3:.1f} km, "
+            f"Range={row['detection_range_m'] / 1e3:.1f} km, "
             f"Margin={row['snr_margin_db']:.1f} dB, "
             f"Cost=${row['cost_usd']:,.0f}"
         )
@@ -278,9 +278,7 @@ def main():
     print("  Saved: pareto_cost_range.png")
 
     # Pareto plot: Cost vs SNR Margin
-    pareto_snr = extract_pareto(
-        feasible, [("cost_usd", "minimize"), ("snr_margin_db", "maximize")]
-    )
+    pareto_snr = extract_pareto(feasible, [("cost_usd", "minimize"), ("snr_margin_db", "maximize")])
     fig2 = pareto_plot(
         results,
         x="cost_usd",
@@ -364,7 +362,7 @@ def main():
         print(f"    TX power/element: {best['rf.tx_power_w_per_elem']:.1f} W")
         print(f"    Peak power: {best['peak_power_w']:.0f} W")
         print(f"    SNR margin: {best['snr_margin_db']:.1f} dB")
-        print(f"    Detection range: {best['detection_range_m']/1e3:.1f} km")
+        print(f"    Detection range: {best['detection_range_m'] / 1e3:.1f} km")
         print(f"    Total cost: ${best['cost_usd']:,.0f}")
         print(f"    Prime power: {best['prime_power_w']:.0f} W")
 

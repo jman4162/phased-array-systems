@@ -49,14 +49,31 @@ class ArrayConfig(BaseModel):
         default=True, description="Enforce power-of-two sub-array constraint"
     )
 
+    # Taper configuration
+    taper_type: Literal["uniform", "taylor", "chebyshev", "hamming", "cosine", "gaussian"] = Field(
+        default="uniform", description="Amplitude taper type"
+    )
+    taper_sll_db: float = Field(
+        default=-30.0, le=-10, description="Target SLL for taper (dB, negative)"
+    )
+
+    # Element pattern configuration
+    element_cos_exp: float = Field(
+        default=1.5, ge=0, description="Cosine exponent for element pattern (0=isotropic)"
+    )
+
+    # Impairments
+    phase_bits: int | None = Field(
+        default=None, ge=1, le=16, description="Phase shifter quantization bits (None=ideal)"
+    )
+
     @field_validator("max_subarray_nx", "max_subarray_ny")
     @classmethod
     def validate_power_of_two(cls, v: int) -> int:
         """Validate that max sub-array dimensions are powers of two."""
         if not is_power_of_two(v):
             raise ValueError(
-                f"max_subarray value {v} must be a power of 2 "
-                f"(valid values: {VALID_POWERS_OF_TWO})"
+                f"max_subarray value {v} must be a power of 2 (valid values: {VALID_POWERS_OF_TWO})"
             )
         return v
 
@@ -159,15 +176,15 @@ class RFChainConfig(BaseModel):
     """
 
     tx_power_w_per_elem: float = Field(gt=0, description="TX power per element (W)")
-    pa_efficiency: float = Field(
-        default=0.3, gt=0, le=1, description="PA efficiency (0-1)"
-    )
-    noise_figure_db: float = Field(
-        default=3.0, ge=0, description="Noise figure (dB)"
-    )
+    pa_efficiency: float = Field(default=0.3, gt=0, le=1, description="PA efficiency (0-1)")
+    noise_figure_db: float = Field(default=3.0, ge=0, description="Noise figure (dB)")
     n_tx_beams: int = Field(default=1, ge=1, description="Number of TX beams")
     feed_loss_db: float = Field(default=1.0, ge=0, description="Feed network loss (dB)")
     system_loss_db: float = Field(default=0.0, ge=0, description="Additional system losses (dB)")
+    rx_stages: list[dict[str, float | str]] | None = Field(
+        default=None,
+        description="RX chain stages: list of {name, gain_db, nf_db, iip3_dbm, p1db_dbm}",
+    )
 
     @field_validator("pa_efficiency")
     @classmethod
@@ -188,9 +205,33 @@ class CostConfig(BaseModel):
 
     cost_per_elem_usd: float = Field(default=100.0, ge=0, description="Cost per element (USD)")
     nre_usd: float = Field(default=0.0, ge=0, description="NRE cost (USD)")
-    integration_cost_usd: float = Field(
-        default=0.0, ge=0, description="Integration cost (USD)"
+    integration_cost_usd: float = Field(default=0.0, ge=0, description="Integration cost (USD)")
+
+
+class ReliabilityConfig(BaseModel):
+    """Configuration for reliability analysis.
+
+    Attributes:
+        component_mtbfs: Component name -> MTBF hours
+        operating_temp_c: Operating junction temperature (Celsius)
+        mttr_hours: Mean time to repair (hours)
+        mission_hours: Mission duration (hours)
+    """
+
+    component_mtbfs: dict[str, float] = Field(
+        default_factory=lambda: {
+            "lna": 500_000,
+            "pa": 250_000,
+            "phase_shifter": 2_000_000,
+            "attenuator": 3_000_000,
+            "switch": 1_000_000,
+            "control_asic": 1_000_000,
+        },
+        description="Component name -> MTBF hours",
     )
+    operating_temp_c: float = Field(default=85.0, description="Operating temperature (C)")
+    mttr_hours: float = Field(default=8.0, ge=0, description="Mean time to repair (hours)")
+    mission_hours: float = Field(default=8760.0, gt=0, description="Mission duration (hours)")
 
 
 class Architecture(BaseModel):
@@ -209,6 +250,9 @@ class Architecture(BaseModel):
     array: ArrayConfig
     rf: RFChainConfig
     cost: CostConfig = Field(default_factory=CostConfig)
+    reliability: ReliabilityConfig | None = Field(
+        default=None, description="Reliability analysis configuration"
+    )
     name: str | None = Field(default=None, description="Architecture name")
 
     @property
@@ -222,11 +266,14 @@ class Architecture(BaseModel):
         Useful for DOE case generation where we need flat parameter names.
         """
         flat = {}
-        for prefix, config in [
+        configs: list[tuple[str, BaseModel]] = [
             ("array", self.array),
             ("rf", self.rf),
             ("cost", self.cost),
-        ]:
+        ]
+        if self.reliability is not None:
+            configs.append(("reliability", self.reliability))
+        for prefix, config in configs:
             for key, value in config.model_dump().items():
                 flat[f"{prefix}.{key}"] = value
         if self.name:
@@ -246,6 +293,7 @@ class Architecture(BaseModel):
         array_dict = {}
         rf_dict = {}
         cost_dict = {}
+        reliability_dict = {}
         name = None
 
         for key, value in flat_dict.items():
@@ -257,10 +305,13 @@ class Architecture(BaseModel):
                 rf_dict[key.replace("rf.", "")] = value
             elif key.startswith("cost."):
                 cost_dict[key.replace("cost.", "")] = value
+            elif key.startswith("reliability."):
+                reliability_dict[key.replace("reliability.", "")] = value
 
         return cls(
             array=ArrayConfig(**array_dict),
             rf=RFChainConfig(**rf_dict),
             cost=CostConfig(**cost_dict) if cost_dict else CostConfig(),
+            reliability=ReliabilityConfig(**reliability_dict) if reliability_dict else None,
             name=name,
         )

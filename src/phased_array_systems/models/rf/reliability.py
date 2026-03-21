@@ -30,6 +30,7 @@ from numpy.typing import NDArray
 
 # ============== MTBF Calculations ==============
 
+
 def trm_mtbf(
     component_mtbfs: dict[str, float],
     operating_temp_c: float = 85.0,
@@ -68,7 +69,7 @@ def trm_mtbf(
         where Ea is activation energy, k is Boltzmann constant.
     """
     if not component_mtbfs:
-        return float('inf')
+        return float("inf")
 
     # Boltzmann constant in eV/K
     k_boltzmann = 8.617e-5
@@ -78,15 +79,14 @@ def trm_mtbf(
     t_ref_k = temp_reference_c + 273.15
 
     # Arrhenius acceleration factor
-    exponent = (activation_energy_ev / k_boltzmann) * (1/t_ref_k - 1/t_op_k)
+    exponent = (activation_energy_ev / k_boltzmann) * (1 / t_ref_k - 1 / t_op_k)
     acceleration_factor = math.exp(exponent)
 
     # Apply temperature derating to all components
-    derated_mtbfs = {name: mtbf / acceleration_factor
-                     for name, mtbf in component_mtbfs.items()}
+    derated_mtbfs = {name: mtbf / acceleration_factor for name, mtbf in component_mtbfs.items()}
 
     # Series reliability: 1/MTBF_total = sum(1/MTBF_i)
-    failure_rate_sum = sum(1/mtbf for mtbf in derated_mtbfs.values())
+    failure_rate_sum = sum(1 / mtbf for mtbf in derated_mtbfs.values())
 
     return 1 / failure_rate_sum
 
@@ -94,7 +94,7 @@ def trm_mtbf(
 def array_mtbf(
     trm_mtbf_hours: float,
     n_elements: int,
-    redundancy: str = 'none',
+    redundancy: str = "none",
     spare_count: int = 0,
 ) -> float:
     """Calculate array-level MTBF for given redundancy scheme.
@@ -124,22 +124,22 @@ def array_mtbf(
             Uses sum of failure rates up to k failures
     """
     if n_elements <= 0:
-        return float('inf')
+        return float("inf")
 
-    if redundancy == 'none':
+    if redundancy == "none":
         # First failure kills the array
         return trm_mtbf_hours / n_elements
 
-    elif redundancy == 'graceful' or redundancy == 'k_of_n':
+    elif redundancy == "graceful" or redundancy == "k_of_n":
         # K-of-N redundancy: array works with up to k failures
         k = spare_count
 
         if k >= n_elements:
-            return float('inf')  # More spares than elements
+            return float("inf")  # More spares than elements
 
         # For exponential failures, time to (k+1)th failure
         # MTBF = MTBF_trm * sum(1/i, i=n-k to n)
-        harmonic_sum = sum(1/i for i in range(n_elements - k, n_elements + 1))
+        harmonic_sum = sum(1 / i for i in range(n_elements - k, n_elements + 1))
         return trm_mtbf_hours * harmonic_sum
 
     else:
@@ -147,6 +147,7 @@ def array_mtbf(
 
 
 # ============== Failure Probability ==============
+
 
 def prob_failed_elements(
     n_elements: int,
@@ -180,7 +181,8 @@ def prob_failed_elements(
     # Binomial distribution
     k = np.arange(n_elements + 1)
     from scipy.special import comb
-    probs = comb(n_elements, k, exact=False) * (p_fail ** k) * (p_survive ** (n_elements - k))
+
+    probs = comb(n_elements, k, exact=False) * (p_fail**k) * (p_survive ** (n_elements - k))
 
     return probs
 
@@ -234,10 +236,11 @@ def availability(
 
 # ============== Graceful Degradation ==============
 
+
 def degraded_gain(
     n_elements: int,
     n_failed: int,
-    failure_pattern: str = 'random',
+    failure_pattern: str = "random",
 ) -> float:
     """Estimate gain reduction due to failed elements.
 
@@ -262,32 +265,32 @@ def degraded_gain(
         This is approximate; actual loss depends on failed element positions.
     """
     if n_failed >= n_elements:
-        return float('-inf')
+        return float("-inf")
 
     if n_failed == 0:
         return 0.0
 
     surviving_ratio = (n_elements - n_failed) / n_elements
 
-    if failure_pattern == 'random':
+    if failure_pattern == "random":
         # Power is proportional to (sum of weights)^2
         # For random failures, expect ~(N-k)^2 / N^2 gain
-        gain_ratio = surviving_ratio ** 2
-    elif failure_pattern == 'clustered':
+        gain_ratio = surviving_ratio**2
+    elif failure_pattern == "clustered":
         # Worst case: larger gain loss due to pattern disruption
         # Add penalty factor
         penalty = 1.0 + 0.5 * (n_failed / n_elements)
-        gain_ratio = (surviving_ratio ** 2) / penalty
-    elif failure_pattern == 'edge':
+        gain_ratio = (surviving_ratio**2) / penalty
+    elif failure_pattern == "edge":
         # Best case: edge elements contribute less
         # Slight improvement over random
         improvement = 1.0 + 0.2 * (n_failed / n_elements)
-        gain_ratio = min(1.0, (surviving_ratio ** 2) * improvement)
+        gain_ratio = min(1.0, (surviving_ratio**2) * improvement)
     else:
         raise ValueError(f"Unknown failure pattern: {failure_pattern}")
 
     if gain_ratio <= 0:
-        return float('-inf')
+        return float("-inf")
 
     return 10 * math.log10(gain_ratio)
 
@@ -296,7 +299,7 @@ def degraded_sidelobe(
     n_elements: int,
     n_failed: int,
     original_sll_db: float = -13.2,
-    failure_pattern: str = 'random',
+    failure_pattern: str = "random",
 ) -> float:
     """Estimate sidelobe level increase due to failed elements.
 
@@ -333,14 +336,14 @@ def degraded_sidelobe(
 
     # Failed elements contribute noise-like sidelobes
     # Noise power ~ n_failed / n_surviving^2 (relative to main beam)
-    if failure_pattern == 'random':
-        noise_power = n_failed / (n_surviving ** 2)
-    elif failure_pattern == 'clustered':
+    if failure_pattern == "random":
+        noise_power = n_failed / (n_surviving**2)
+    elif failure_pattern == "clustered":
         # Clustered failures cause higher sidelobe increase
-        noise_power = 1.5 * n_failed / (n_surviving ** 2)
-    elif failure_pattern == 'edge':
+        noise_power = 1.5 * n_failed / (n_surviving**2)
+    elif failure_pattern == "edge":
         # Edge failures have less impact on sidelobes
-        noise_power = 0.7 * n_failed / (n_surviving ** 2)
+        noise_power = 0.7 * n_failed / (n_surviving**2)
     else:
         raise ValueError(f"Unknown failure pattern: {failure_pattern}")
 
@@ -383,8 +386,8 @@ def max_failures_for_spec(
     max_failures = 0
 
     for n_failed in range(n_elements):
-        gain_loss = -degraded_gain(n_elements, n_failed, 'random')  # Make positive
-        new_sll = degraded_sidelobe(n_elements, n_failed, original_sll_db, 'random')
+        gain_loss = -degraded_gain(n_elements, n_failed, "random")  # Make positive
+        new_sll = degraded_sidelobe(n_elements, n_failed, original_sll_db, "random")
         sll_increase = new_sll - original_sll_db
 
         if gain_loss > gain_margin_db or sll_increase > sll_margin_db:
@@ -397,6 +400,7 @@ def max_failures_for_spec(
 
 # ============== Data Classes ==============
 
+
 @dataclass
 class TRMReliabilitySpec:
     """Specification for TRM reliability analysis.
@@ -407,14 +411,17 @@ class TRMReliabilitySpec:
         mttr_hours: Mean time to repair
         mission_hours: Expected mission/deployment duration
     """
-    component_mtbfs: dict[str, float] = field(default_factory=lambda: {
-        'lna': 500_000,
-        'pa': 250_000,
-        'phase_shifter': 2_000_000,
-        'attenuator': 3_000_000,
-        'switch': 1_000_000,
-        'control_asic': 1_000_000,
-    })
+
+    component_mtbfs: dict[str, float] = field(
+        default_factory=lambda: {
+            "lna": 500_000,
+            "pa": 250_000,
+            "phase_shifter": 2_000_000,
+            "attenuator": 3_000_000,
+            "switch": 1_000_000,
+            "control_asic": 1_000_000,
+        }
+    )
     operating_temp_c: float = 85.0
     mttr_hours: float = 8.0
     mission_hours: float = 50_000.0  # ~5.7 years
@@ -432,6 +439,7 @@ class ArrayReliabilityResult:
         max_failures_for_spec: Maximum failures meeting spec
         prob_meeting_spec: Probability of meeting spec at end of mission
     """
+
     trm_mtbf_hours: float
     array_mtbf_hours: float
     expected_failures: float
@@ -470,7 +478,7 @@ def analyze_array_reliability(
 
     # Calculate array MTBF (with graceful degradation)
     max_fail = max_failures_for_spec(n_elements, gain_margin_db, sll_margin_db, original_sll_db)
-    arr_mtbf = array_mtbf(calculated_trm_mtbf, n_elements, 'k_of_n', spare_count=max_fail)
+    arr_mtbf = array_mtbf(calculated_trm_mtbf, n_elements, "k_of_n", spare_count=max_fail)
 
     # Expected failures at end of mission
     exp_fail = expected_failures(n_elements, calculated_trm_mtbf, spec.mission_hours)
@@ -480,7 +488,7 @@ def analyze_array_reliability(
 
     # Probability of meeting spec at end of mission
     probs = prob_failed_elements(n_elements, calculated_trm_mtbf, spec.mission_hours)
-    prob_meet_spec = float(np.sum(probs[:max_fail + 1]))
+    prob_meet_spec = float(np.sum(probs[: max_fail + 1]))
 
     return ArrayReliabilityResult(
         trm_mtbf_hours=calculated_trm_mtbf,
@@ -493,6 +501,7 @@ def analyze_array_reliability(
 
 
 # ============== Visualization Helpers ==============
+
 
 def plot_degradation_curves(
     n_elements: int,
@@ -513,29 +522,29 @@ def plot_degradation_curves(
     """
     import matplotlib.pyplot as plt
 
-    if ax is None or not hasattr(ax, '__len__'):
+    if ax is None or not hasattr(ax, "__len__"):
         fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
     failures = np.arange(0, max_failures + 1)
-    gain_losses = [degraded_gain(n_elements, n, 'random') for n in failures]
-    sll_values = [degraded_sidelobe(n_elements, n, original_sll_db, 'random') for n in failures]
+    gain_losses = [degraded_gain(n_elements, n, "random") for n in failures]
+    sll_values = [degraded_sidelobe(n_elements, n, original_sll_db, "random") for n in failures]
 
     # Gain plot
-    ax[0].plot(failures, gain_losses, 'b-', linewidth=2)
-    ax[0].set_xlabel('Number of Failed Elements')
-    ax[0].set_ylabel('Gain Loss (dB)')
-    ax[0].set_title(f'Gain Degradation ({n_elements} elements)')
+    ax[0].plot(failures, gain_losses, "b-", linewidth=2)
+    ax[0].set_xlabel("Number of Failed Elements")
+    ax[0].set_ylabel("Gain Loss (dB)")
+    ax[0].set_title(f"Gain Degradation ({n_elements} elements)")
     ax[0].grid(True, alpha=0.3)
-    ax[0].axhline(y=-1, color='r', linestyle='--', label='-1 dB margin')
+    ax[0].axhline(y=-1, color="r", linestyle="--", label="-1 dB margin")
     ax[0].legend()
 
     # Sidelobe plot
-    ax[1].plot(failures, sll_values, 'r-', linewidth=2)
-    ax[1].set_xlabel('Number of Failed Elements')
-    ax[1].set_ylabel('Sidelobe Level (dB)')
-    ax[1].set_title(f'Sidelobe Degradation ({n_elements} elements)')
+    ax[1].plot(failures, sll_values, "r-", linewidth=2)
+    ax[1].set_xlabel("Number of Failed Elements")
+    ax[1].set_ylabel("Sidelobe Level (dB)")
+    ax[1].set_title(f"Sidelobe Degradation ({n_elements} elements)")
     ax[1].grid(True, alpha=0.3)
-    ax[1].axhline(y=original_sll_db + 3, color='b', linestyle='--', label='+3 dB margin')
+    ax[1].axhline(y=original_sll_db + 3, color="b", linestyle="--", label="+3 dB margin")
     ax[1].legend()
 
     plt.tight_layout()
@@ -574,12 +583,15 @@ def plot_availability_vs_mtbf(
         avail = 1 - (exp_fail / n_elements)
         availabilities.append(max(0, avail))
 
-    ax.semilogx(mtbf_range, availabilities, 'b-', linewidth=2)
-    ax.axhline(y=target_availability, color='r', linestyle='--',
-               label=f'Target: {target_availability:.0%}')
-    ax.set_xlabel('TRM MTBF (hours)')
-    ax.set_ylabel('Array Availability')
-    ax.set_title(f'Array Availability vs TRM MTBF\n({n_elements} elements, {mission_hours:,.0f} hour mission)')
+    ax.semilogx(mtbf_range, availabilities, "b-", linewidth=2)
+    ax.axhline(
+        y=target_availability, color="r", linestyle="--", label=f"Target: {target_availability:.0%}"
+    )
+    ax.set_xlabel("TRM MTBF (hours)")
+    ax.set_ylabel("Array Availability")
+    ax.set_title(
+        f"Array Availability vs TRM MTBF\n({n_elements} elements, {mission_hours:,.0f} hour mission)"
+    )
     ax.grid(True, alpha=0.3)
     ax.legend()
     ax.set_ylim(0.8, 1.01)

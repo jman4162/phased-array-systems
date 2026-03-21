@@ -45,10 +45,16 @@ def compute_beamwidth(
         return float("nan")
 
     # Linear interpolation for more accurate crossing points
-    left_angle = np.interp(threshold, [pattern_db[left_idx], pattern_db[left_idx + 1]],
-                           [angles_deg[left_idx], angles_deg[left_idx + 1]])
-    right_angle = np.interp(threshold, [pattern_db[right_idx], pattern_db[right_idx - 1]],
-                            [angles_deg[right_idx], angles_deg[right_idx - 1]])
+    left_angle = np.interp(
+        threshold,
+        [pattern_db[left_idx], pattern_db[left_idx + 1]],
+        [angles_deg[left_idx], angles_deg[left_idx + 1]],
+    )
+    right_angle = np.interp(
+        threshold,
+        [pattern_db[right_idx], pattern_db[right_idx - 1]],
+        [angles_deg[right_idx], angles_deg[right_idx - 1]],
+    )
 
     return abs(right_angle - left_angle)
 
@@ -140,9 +146,7 @@ def compute_array_gain(n_elements: int, element_gain_db: float = 0.0) -> float:
     return element_gain_db + array_factor_db
 
 
-def compute_directivity_rectangular(
-    nx: int, ny: int, dx_lambda: float, dy_lambda: float
-) -> float:
+def compute_directivity_rectangular(nx: int, ny: int, dx_lambda: float, dy_lambda: float) -> float:
     """Estimate directivity for a rectangular array.
 
     Uses the approximation: D = pi * (2*nx*dx) * (2*ny*dy) for large arrays.

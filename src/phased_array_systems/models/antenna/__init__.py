@@ -1,6 +1,7 @@
 """Antenna modeling adapter wrapping phased-array-modeling."""
 
 from phased_array_systems.models.antenna.adapter import PhasedArrayAdapter
+from phased_array_systems.models.antenna.grating import check_grating_lobes
 from phased_array_systems.models.antenna.metrics import (
     compute_array_gain,
     compute_beamwidth,
@@ -33,4 +34,6 @@ __all__ = [
     "beamformer_noise_factor",
     "estimate_taper_parameters",
     "aperture_efficiency_components",
+    # Grating lobe detection
+    "check_grating_lobes",
 ]

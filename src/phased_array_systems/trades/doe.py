@@ -139,7 +139,9 @@ def augment_doe(
             except ValueError:
                 pass
 
-    new_ids = [f"case_{i:05d}" for i in range(max_existing_id + 1, max_existing_id + 1 + n_additional)]
+    new_ids = [
+        f"case_{i:05d}" for i in range(max_existing_id + 1, max_existing_id + 1 + n_additional)
+    ]
     new_doe["case_id"] = new_ids
 
     # Combine
