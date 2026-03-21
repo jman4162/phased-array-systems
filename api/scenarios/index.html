@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://raw.githubusercontent.com/jman4162/phased-array-systems/main/docs/assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -3029,7 +3029,49 @@ satellite communications link budget calculation.</p>
               <p>
                   <span class="doc-attribute-annotation">
                     <b>TYPE:</b>
-                      <code><span title="typing.Literal">Literal</span>[&#39;fspl&#39;]</code>
+                      <code><span title="typing.Literal">Literal</span>[&#39;fspl&#39;, &#39;two_ray&#39;, &#39;log_distance&#39;]</code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.comms.CommsLinkScenario.path_loss_exponent">path_loss_exponent</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Path loss exponent for log-distance model</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.comms.CommsLinkScenario.rain_rate_mmh">rain_rate_mmh</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Rain rate for rain attenuation (mm/hr)</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="phased_array_systems.scenarios.comms.CommsLinkScenario.elevation_deg">elevation_deg</span></code></td>
+            <td class="doc-attribute-details">
+              <div class="doc-md-description">
+                <p>Link elevation angle for atmospheric model (degrees)</p>
+              </div>
+              <p>
+                  <span class="doc-attribute-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="float">float</span></code>
                   </span>
               </p>
             </td>

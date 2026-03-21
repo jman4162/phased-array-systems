@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://raw.githubusercontent.com/jman4162/phased-array-systems/main/docs/assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -3276,10 +3276,7 @@ N = Noise power = kTB</p>
 <span class="normal"><a href="#__codelineno-0-323">323</a></span>
 <span class="normal"><a href="#__codelineno-0-324">324</a></span>
 <span class="normal"><a href="#__codelineno-0-325">325</a></span>
-<span class="normal"><a href="#__codelineno-0-326">326</a></span>
-<span class="normal"><a href="#__codelineno-0-327">327</a></span>
-<span class="normal"><a href="#__codelineno-0-328">328</a></span>
-<span class="normal"><a href="#__codelineno-0-329">329</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+<span class="normal"><a href="#__codelineno-0-326">326</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
 </span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="bp">self</span><span class="p">,</span>
 </span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="n">arch</span><span class="p">:</span> <span class="n">Architecture</span><span class="p">,</span>
 </span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="n">scenario</span><span class="p">:</span> <span class="n">RadarDetectionScenario</span><span class="p">,</span>
@@ -3475,79 +3472,76 @@ N = Noise power = kTB</p>
 </span><span id="__span-0-254"><a id="__codelineno-0-254" name="__codelineno-0-254"></a>        <span class="p">)</span>
 </span><span id="__span-0-255"><a id="__codelineno-0-255" name="__codelineno-0-255"></a>
 </span><span id="__span-0-256"><a id="__codelineno-0-256" name="__codelineno-0-256"></a>    <span class="c1"># Integrated SCNR (use SCNR when clutter is present, SNR otherwise)</span>
-</span><span id="__span-0-257"><a id="__codelineno-0-257" name="__codelineno-0-257"></a>    <span class="k">if</span> <span class="n">scenario</span><span class="o">.</span><span class="n">clutter_type</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-</span><span id="__span-0-258"><a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="n">effective_snr_single</span> <span class="o">=</span> <span class="n">scnr_db</span>
-</span><span id="__span-0-259"><a id="__codelineno-0-259" name="__codelineno-0-259"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a>        <span class="n">effective_snr_single</span> <span class="o">=</span> <span class="n">snr_single_db</span>
-</span><span id="__span-0-261"><a id="__codelineno-0-261" name="__codelineno-0-261"></a>
-</span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a>    <span class="n">snr_integrated_db</span> <span class="o">=</span> <span class="n">effective_snr_single</span> <span class="o">+</span> <span class="n">integration_gain_db</span> <span class="o">-</span> <span class="n">cfar_loss</span>
-</span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a>
-</span><span id="__span-0-264"><a id="__codelineno-0-264" name="__codelineno-0-264"></a>    <span class="c1"># Required SNR for Pd/Pfa using Albersheim&#39;s equation</span>
-</span><span id="__span-0-265"><a id="__codelineno-0-265" name="__codelineno-0-265"></a>    <span class="n">snr_required_db</span> <span class="o">=</span> <span class="n">albersheim_snr</span><span class="p">(</span>
-</span><span id="__span-0-266"><a id="__codelineno-0-266" name="__codelineno-0-266"></a>        <span class="n">pd</span><span class="o">=</span><span class="n">scenario</span><span class="o">.</span><span class="n">pd_required</span><span class="p">,</span>
-</span><span id="__span-0-267"><a id="__codelineno-0-267" name="__codelineno-0-267"></a>        <span class="n">pfa</span><span class="o">=</span><span class="n">scenario</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span>
-</span><span id="__span-0-268"><a id="__codelineno-0-268" name="__codelineno-0-268"></a>        <span class="n">n_pulses</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Integration gain already applied</span>
-</span><span id="__span-0-269"><a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="p">)</span>
+</span><span id="__span-0-257"><a id="__codelineno-0-257" name="__codelineno-0-257"></a>    <span class="n">effective_snr_single</span> <span class="o">=</span> <span class="n">scnr_db</span> <span class="k">if</span> <span class="n">scenario</span><span class="o">.</span><span class="n">clutter_type</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="n">snr_single_db</span>
+</span><span id="__span-0-258"><a id="__codelineno-0-258" name="__codelineno-0-258"></a>
+</span><span id="__span-0-259"><a id="__codelineno-0-259" name="__codelineno-0-259"></a>    <span class="n">snr_integrated_db</span> <span class="o">=</span> <span class="n">effective_snr_single</span> <span class="o">+</span> <span class="n">integration_gain_db</span> <span class="o">-</span> <span class="n">cfar_loss</span>
+</span><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a>
+</span><span id="__span-0-261"><a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="c1"># Required SNR for Pd/Pfa using Albersheim&#39;s equation</span>
+</span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a>    <span class="n">snr_required_db</span> <span class="o">=</span> <span class="n">albersheim_snr</span><span class="p">(</span>
+</span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a>        <span class="n">pd</span><span class="o">=</span><span class="n">scenario</span><span class="o">.</span><span class="n">pd_required</span><span class="p">,</span>
+</span><span id="__span-0-264"><a id="__codelineno-0-264" name="__codelineno-0-264"></a>        <span class="n">pfa</span><span class="o">=</span><span class="n">scenario</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span>
+</span><span id="__span-0-265"><a id="__codelineno-0-265" name="__codelineno-0-265"></a>        <span class="n">n_pulses</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Integration gain already applied</span>
+</span><span id="__span-0-266"><a id="__codelineno-0-266" name="__codelineno-0-266"></a>    <span class="p">)</span>
+</span><span id="__span-0-267"><a id="__codelineno-0-267" name="__codelineno-0-267"></a>
+</span><span id="__span-0-268"><a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="c1"># SNR margin</span>
+</span><span id="__span-0-269"><a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="n">snr_margin_db</span> <span class="o">=</span> <span class="n">snr_integrated_db</span> <span class="o">-</span> <span class="n">snr_required_db</span>
 </span><span id="__span-0-270"><a id="__codelineno-0-270" name="__codelineno-0-270"></a>
-</span><span id="__span-0-271"><a id="__codelineno-0-271" name="__codelineno-0-271"></a>    <span class="c1"># SNR margin</span>
-</span><span id="__span-0-272"><a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="n">snr_margin_db</span> <span class="o">=</span> <span class="n">snr_integrated_db</span> <span class="o">-</span> <span class="n">snr_required_db</span>
-</span><span id="__span-0-273"><a id="__codelineno-0-273" name="__codelineno-0-273"></a>
-</span><span id="__span-0-274"><a id="__codelineno-0-274" name="__codelineno-0-274"></a>    <span class="c1"># Achieved Pd at the given range</span>
-</span><span id="__span-0-275"><a id="__codelineno-0-275" name="__codelineno-0-275"></a>    <span class="n">pd_achieved</span> <span class="o">=</span> <span class="n">compute_pd_from_snr</span><span class="p">(</span>
-</span><span id="__span-0-276"><a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="n">snr_integrated_db</span><span class="p">,</span>
-</span><span id="__span-0-277"><a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="n">scenario</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span>
-</span><span id="__span-0-278"><a id="__codelineno-0-278" name="__codelineno-0-278"></a>        <span class="n">swerling</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># Non-fluctuating</span>
-</span><span id="__span-0-279"><a id="__codelineno-0-279" name="__codelineno-0-279"></a>        <span class="n">n_pulses</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Already integrated</span>
-</span><span id="__span-0-280"><a id="__codelineno-0-280" name="__codelineno-0-280"></a>        <span class="n">integration</span><span class="o">=</span><span class="s2">&quot;coherent&quot;</span><span class="p">,</span>  <span class="c1"># SNR already includes integration</span>
-</span><span id="__span-0-281"><a id="__codelineno-0-281" name="__codelineno-0-281"></a>    <span class="p">)</span>
-</span><span id="__span-0-282"><a id="__codelineno-0-282" name="__codelineno-0-282"></a>
-</span><span id="__span-0-283"><a id="__codelineno-0-283" name="__codelineno-0-283"></a>    <span class="c1"># Detection range (range where margin = 0)</span>
-</span><span id="__span-0-284"><a id="__codelineno-0-284" name="__codelineno-0-284"></a>    <span class="c1"># From radar equation: R^4 proportional to SNR</span>
-</span><span id="__span-0-285"><a id="__codelineno-0-285" name="__codelineno-0-285"></a>    <span class="c1"># R_det / R = (SNR_integrated / SNR_required)^(1/4)</span>
-</span><span id="__span-0-286"><a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="c1"># In dB: R_det = R * 10^(margin_dB / 40)</span>
-</span><span id="__span-0-287"><a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="n">detection_range_m</span> <span class="o">=</span> <span class="n">range_m</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="n">snr_margin_db</span> <span class="o">/</span> <span class="mi">40</span><span class="p">)</span> <span class="k">if</span> <span class="n">snr_margin_db</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">40</span> <span class="k">else</span> <span class="mf">0.0</span>
-</span><span id="__span-0-288"><a id="__codelineno-0-288" name="__codelineno-0-288"></a>
-</span><span id="__span-0-289"><a id="__codelineno-0-289" name="__codelineno-0-289"></a>    <span class="k">return</span> <span class="p">{</span>
-</span><span id="__span-0-290"><a id="__codelineno-0-290" name="__codelineno-0-290"></a>        <span class="c1"># Power</span>
-</span><span id="__span-0-291"><a id="__codelineno-0-291" name="__codelineno-0-291"></a>        <span class="s2">&quot;peak_power_w&quot;</span><span class="p">:</span> <span class="n">peak_power_w</span><span class="p">,</span>
-</span><span id="__span-0-292"><a id="__codelineno-0-292" name="__codelineno-0-292"></a>        <span class="s2">&quot;peak_power_dbw&quot;</span><span class="p">:</span> <span class="n">peak_power_dbw</span><span class="p">,</span>
-</span><span id="__span-0-293"><a id="__codelineno-0-293" name="__codelineno-0-293"></a>        <span class="c1"># Antenna</span>
-</span><span id="__span-0-294"><a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="s2">&quot;g_ant_db&quot;</span><span class="p">:</span> <span class="n">g_ant_db</span><span class="p">,</span>
-</span><span id="__span-0-295"><a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="c1"># Target/Environment</span>
-</span><span id="__span-0-296"><a id="__codelineno-0-296" name="__codelineno-0-296"></a>        <span class="s2">&quot;wavelength_m&quot;</span><span class="p">:</span> <span class="n">wavelength_m</span><span class="p">,</span>
-</span><span id="__span-0-297"><a id="__codelineno-0-297" name="__codelineno-0-297"></a>        <span class="s2">&quot;target_rcs_dbsm&quot;</span><span class="p">:</span> <span class="n">rcs_dbsm</span><span class="p">,</span>
-</span><span id="__span-0-298"><a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="s2">&quot;target_rcs_m2&quot;</span><span class="p">:</span> <span class="n">rcs_m2</span><span class="p">,</span>
-</span><span id="__span-0-299"><a id="__codelineno-0-299" name="__codelineno-0-299"></a>        <span class="s2">&quot;range_m&quot;</span><span class="p">:</span> <span class="n">range_m</span><span class="p">,</span>
-</span><span id="__span-0-300"><a id="__codelineno-0-300" name="__codelineno-0-300"></a>        <span class="s2">&quot;grazing_angle_deg&quot;</span><span class="p">:</span> <span class="n">grazing_angle</span><span class="p">,</span>
-</span><span id="__span-0-301"><a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="c1"># Noise</span>
-</span><span id="__span-0-302"><a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="s2">&quot;noise_power_dbw&quot;</span><span class="p">:</span> <span class="n">noise_power_dbw</span><span class="p">,</span>
-</span><span id="__span-0-303"><a id="__codelineno-0-303" name="__codelineno-0-303"></a>        <span class="s2">&quot;system_loss_db&quot;</span><span class="p">:</span> <span class="n">system_loss_db</span><span class="p">,</span>
-</span><span id="__span-0-304"><a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="c1"># Propagation losses</span>
-</span><span id="__span-0-305"><a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="s2">&quot;atmos_loss_db&quot;</span><span class="p">:</span> <span class="n">atmos_loss</span><span class="p">,</span>
-</span><span id="__span-0-306"><a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="s2">&quot;rain_loss_db&quot;</span><span class="p">:</span> <span class="n">rain_loss</span><span class="p">,</span>
-</span><span id="__span-0-307"><a id="__codelineno-0-307" name="__codelineno-0-307"></a>        <span class="s2">&quot;propagation_loss_db&quot;</span><span class="p">:</span> <span class="n">propagation_loss_db</span><span class="p">,</span>
-</span><span id="__span-0-308"><a id="__codelineno-0-308" name="__codelineno-0-308"></a>        <span class="c1"># Clutter</span>
-</span><span id="__span-0-309"><a id="__codelineno-0-309" name="__codelineno-0-309"></a>        <span class="s2">&quot;clutter_type&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">clutter_type</span><span class="p">,</span>
-</span><span id="__span-0-310"><a id="__codelineno-0-310" name="__codelineno-0-310"></a>        <span class="s2">&quot;clutter_rcs_dbsm&quot;</span><span class="p">:</span> <span class="n">clutter_rcs_dbsm</span><span class="p">,</span>
-</span><span id="__span-0-311"><a id="__codelineno-0-311" name="__codelineno-0-311"></a>        <span class="s2">&quot;scr_db&quot;</span><span class="p">:</span> <span class="n">scr_db</span><span class="p">,</span>
-</span><span id="__span-0-312"><a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="s2">&quot;scnr_db&quot;</span><span class="p">:</span> <span class="n">scnr_db</span><span class="p">,</span>
-</span><span id="__span-0-313"><a id="__codelineno-0-313" name="__codelineno-0-313"></a>        <span class="c1"># CFAR</span>
-</span><span id="__span-0-314"><a id="__codelineno-0-314" name="__codelineno-0-314"></a>        <span class="s2">&quot;cfar_type&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">cfar_type</span><span class="p">,</span>
-</span><span id="__span-0-315"><a id="__codelineno-0-315" name="__codelineno-0-315"></a>        <span class="s2">&quot;cfar_loss_db&quot;</span><span class="p">:</span> <span class="n">cfar_loss</span><span class="p">,</span>
-</span><span id="__span-0-316"><a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="c1"># SNR</span>
-</span><span id="__span-0-317"><a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="s2">&quot;snr_single_pulse_db&quot;</span><span class="p">:</span> <span class="n">snr_single_db</span><span class="p">,</span>
-</span><span id="__span-0-318"><a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="s2">&quot;integration_gain_db&quot;</span><span class="p">:</span> <span class="n">integration_gain_db</span><span class="p">,</span>
-</span><span id="__span-0-319"><a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="s2">&quot;snr_integrated_db&quot;</span><span class="p">:</span> <span class="n">snr_integrated_db</span><span class="p">,</span>
-</span><span id="__span-0-320"><a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="s2">&quot;snr_required_db&quot;</span><span class="p">:</span> <span class="n">snr_required_db</span><span class="p">,</span>
-</span><span id="__span-0-321"><a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="s2">&quot;snr_margin_db&quot;</span><span class="p">:</span> <span class="n">snr_margin_db</span><span class="p">,</span>
-</span><span id="__span-0-322"><a id="__codelineno-0-322" name="__codelineno-0-322"></a>        <span class="c1"># Detection</span>
-</span><span id="__span-0-323"><a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="s2">&quot;pd_achieved&quot;</span><span class="p">:</span> <span class="n">pd_achieved</span><span class="p">,</span>
-</span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="s2">&quot;pd_required&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">pd_required</span><span class="p">,</span>
-</span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a>        <span class="s2">&quot;pfa&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span>
-</span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="s2">&quot;n_pulses&quot;</span><span class="p">:</span> <span class="n">n_pulses</span><span class="p">,</span>
-</span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a>        <span class="s2">&quot;integration_type&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">integration_type</span><span class="p">,</span>
-</span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="s2">&quot;detection_range_m&quot;</span><span class="p">:</span> <span class="n">detection_range_m</span><span class="p">,</span>
-</span><span id="__span-0-329"><a id="__codelineno-0-329" name="__codelineno-0-329"></a>    <span class="p">}</span>
+</span><span id="__span-0-271"><a id="__codelineno-0-271" name="__codelineno-0-271"></a>    <span class="c1"># Achieved Pd at the given range</span>
+</span><span id="__span-0-272"><a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="n">pd_achieved</span> <span class="o">=</span> <span class="n">compute_pd_from_snr</span><span class="p">(</span>
+</span><span id="__span-0-273"><a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="n">snr_integrated_db</span><span class="p">,</span>
+</span><span id="__span-0-274"><a id="__codelineno-0-274" name="__codelineno-0-274"></a>        <span class="n">scenario</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span>
+</span><span id="__span-0-275"><a id="__codelineno-0-275" name="__codelineno-0-275"></a>        <span class="n">swerling</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># Non-fluctuating</span>
+</span><span id="__span-0-276"><a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="n">n_pulses</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Already integrated</span>
+</span><span id="__span-0-277"><a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="n">integration</span><span class="o">=</span><span class="s2">&quot;coherent&quot;</span><span class="p">,</span>  <span class="c1"># SNR already includes integration</span>
+</span><span id="__span-0-278"><a id="__codelineno-0-278" name="__codelineno-0-278"></a>    <span class="p">)</span>
+</span><span id="__span-0-279"><a id="__codelineno-0-279" name="__codelineno-0-279"></a>
+</span><span id="__span-0-280"><a id="__codelineno-0-280" name="__codelineno-0-280"></a>    <span class="c1"># Detection range (range where margin = 0)</span>
+</span><span id="__span-0-281"><a id="__codelineno-0-281" name="__codelineno-0-281"></a>    <span class="c1"># From radar equation: R^4 proportional to SNR</span>
+</span><span id="__span-0-282"><a id="__codelineno-0-282" name="__codelineno-0-282"></a>    <span class="c1"># R_det / R = (SNR_integrated / SNR_required)^(1/4)</span>
+</span><span id="__span-0-283"><a id="__codelineno-0-283" name="__codelineno-0-283"></a>    <span class="c1"># In dB: R_det = R * 10^(margin_dB / 40)</span>
+</span><span id="__span-0-284"><a id="__codelineno-0-284" name="__codelineno-0-284"></a>    <span class="n">detection_range_m</span> <span class="o">=</span> <span class="n">range_m</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="n">snr_margin_db</span> <span class="o">/</span> <span class="mi">40</span><span class="p">)</span> <span class="k">if</span> <span class="n">snr_margin_db</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">40</span> <span class="k">else</span> <span class="mf">0.0</span>
+</span><span id="__span-0-285"><a id="__codelineno-0-285" name="__codelineno-0-285"></a>
+</span><span id="__span-0-286"><a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="__span-0-287"><a id="__codelineno-0-287" name="__codelineno-0-287"></a>        <span class="c1"># Power</span>
+</span><span id="__span-0-288"><a id="__codelineno-0-288" name="__codelineno-0-288"></a>        <span class="s2">&quot;peak_power_w&quot;</span><span class="p">:</span> <span class="n">peak_power_w</span><span class="p">,</span>
+</span><span id="__span-0-289"><a id="__codelineno-0-289" name="__codelineno-0-289"></a>        <span class="s2">&quot;peak_power_dbw&quot;</span><span class="p">:</span> <span class="n">peak_power_dbw</span><span class="p">,</span>
+</span><span id="__span-0-290"><a id="__codelineno-0-290" name="__codelineno-0-290"></a>        <span class="c1"># Antenna</span>
+</span><span id="__span-0-291"><a id="__codelineno-0-291" name="__codelineno-0-291"></a>        <span class="s2">&quot;g_ant_db&quot;</span><span class="p">:</span> <span class="n">g_ant_db</span><span class="p">,</span>
+</span><span id="__span-0-292"><a id="__codelineno-0-292" name="__codelineno-0-292"></a>        <span class="c1"># Target/Environment</span>
+</span><span id="__span-0-293"><a id="__codelineno-0-293" name="__codelineno-0-293"></a>        <span class="s2">&quot;wavelength_m&quot;</span><span class="p">:</span> <span class="n">wavelength_m</span><span class="p">,</span>
+</span><span id="__span-0-294"><a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="s2">&quot;target_rcs_dbsm&quot;</span><span class="p">:</span> <span class="n">rcs_dbsm</span><span class="p">,</span>
+</span><span id="__span-0-295"><a id="__codelineno-0-295" name="__codelineno-0-295"></a>        <span class="s2">&quot;target_rcs_m2&quot;</span><span class="p">:</span> <span class="n">rcs_m2</span><span class="p">,</span>
+</span><span id="__span-0-296"><a id="__codelineno-0-296" name="__codelineno-0-296"></a>        <span class="s2">&quot;range_m&quot;</span><span class="p">:</span> <span class="n">range_m</span><span class="p">,</span>
+</span><span id="__span-0-297"><a id="__codelineno-0-297" name="__codelineno-0-297"></a>        <span class="s2">&quot;grazing_angle_deg&quot;</span><span class="p">:</span> <span class="n">grazing_angle</span><span class="p">,</span>
+</span><span id="__span-0-298"><a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="c1"># Noise</span>
+</span><span id="__span-0-299"><a id="__codelineno-0-299" name="__codelineno-0-299"></a>        <span class="s2">&quot;noise_power_dbw&quot;</span><span class="p">:</span> <span class="n">noise_power_dbw</span><span class="p">,</span>
+</span><span id="__span-0-300"><a id="__codelineno-0-300" name="__codelineno-0-300"></a>        <span class="s2">&quot;system_loss_db&quot;</span><span class="p">:</span> <span class="n">system_loss_db</span><span class="p">,</span>
+</span><span id="__span-0-301"><a id="__codelineno-0-301" name="__codelineno-0-301"></a>        <span class="c1"># Propagation losses</span>
+</span><span id="__span-0-302"><a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="s2">&quot;atmos_loss_db&quot;</span><span class="p">:</span> <span class="n">atmos_loss</span><span class="p">,</span>
+</span><span id="__span-0-303"><a id="__codelineno-0-303" name="__codelineno-0-303"></a>        <span class="s2">&quot;rain_loss_db&quot;</span><span class="p">:</span> <span class="n">rain_loss</span><span class="p">,</span>
+</span><span id="__span-0-304"><a id="__codelineno-0-304" name="__codelineno-0-304"></a>        <span class="s2">&quot;propagation_loss_db&quot;</span><span class="p">:</span> <span class="n">propagation_loss_db</span><span class="p">,</span>
+</span><span id="__span-0-305"><a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="c1"># Clutter</span>
+</span><span id="__span-0-306"><a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="s2">&quot;clutter_type&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">clutter_type</span><span class="p">,</span>
+</span><span id="__span-0-307"><a id="__codelineno-0-307" name="__codelineno-0-307"></a>        <span class="s2">&quot;clutter_rcs_dbsm&quot;</span><span class="p">:</span> <span class="n">clutter_rcs_dbsm</span><span class="p">,</span>
+</span><span id="__span-0-308"><a id="__codelineno-0-308" name="__codelineno-0-308"></a>        <span class="s2">&quot;scr_db&quot;</span><span class="p">:</span> <span class="n">scr_db</span><span class="p">,</span>
+</span><span id="__span-0-309"><a id="__codelineno-0-309" name="__codelineno-0-309"></a>        <span class="s2">&quot;scnr_db&quot;</span><span class="p">:</span> <span class="n">scnr_db</span><span class="p">,</span>
+</span><span id="__span-0-310"><a id="__codelineno-0-310" name="__codelineno-0-310"></a>        <span class="c1"># CFAR</span>
+</span><span id="__span-0-311"><a id="__codelineno-0-311" name="__codelineno-0-311"></a>        <span class="s2">&quot;cfar_type&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">cfar_type</span><span class="p">,</span>
+</span><span id="__span-0-312"><a id="__codelineno-0-312" name="__codelineno-0-312"></a>        <span class="s2">&quot;cfar_loss_db&quot;</span><span class="p">:</span> <span class="n">cfar_loss</span><span class="p">,</span>
+</span><span id="__span-0-313"><a id="__codelineno-0-313" name="__codelineno-0-313"></a>        <span class="c1"># SNR</span>
+</span><span id="__span-0-314"><a id="__codelineno-0-314" name="__codelineno-0-314"></a>        <span class="s2">&quot;snr_single_pulse_db&quot;</span><span class="p">:</span> <span class="n">snr_single_db</span><span class="p">,</span>
+</span><span id="__span-0-315"><a id="__codelineno-0-315" name="__codelineno-0-315"></a>        <span class="s2">&quot;integration_gain_db&quot;</span><span class="p">:</span> <span class="n">integration_gain_db</span><span class="p">,</span>
+</span><span id="__span-0-316"><a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="s2">&quot;snr_integrated_db&quot;</span><span class="p">:</span> <span class="n">snr_integrated_db</span><span class="p">,</span>
+</span><span id="__span-0-317"><a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="s2">&quot;snr_required_db&quot;</span><span class="p">:</span> <span class="n">snr_required_db</span><span class="p">,</span>
+</span><span id="__span-0-318"><a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="s2">&quot;snr_margin_db&quot;</span><span class="p">:</span> <span class="n">snr_margin_db</span><span class="p">,</span>
+</span><span id="__span-0-319"><a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="c1"># Detection</span>
+</span><span id="__span-0-320"><a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="s2">&quot;pd_achieved&quot;</span><span class="p">:</span> <span class="n">pd_achieved</span><span class="p">,</span>
+</span><span id="__span-0-321"><a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="s2">&quot;pd_required&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">pd_required</span><span class="p">,</span>
+</span><span id="__span-0-322"><a id="__codelineno-0-322" name="__codelineno-0-322"></a>        <span class="s2">&quot;pfa&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">pfa</span><span class="p">,</span>
+</span><span id="__span-0-323"><a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="s2">&quot;n_pulses&quot;</span><span class="p">:</span> <span class="n">n_pulses</span><span class="p">,</span>
+</span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="s2">&quot;integration_type&quot;</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">integration_type</span><span class="p">,</span>
+</span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a>        <span class="s2">&quot;detection_range_m&quot;</span><span class="p">:</span> <span class="n">detection_range_m</span><span class="p">,</span>
+</span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a>    <span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
