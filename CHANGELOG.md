@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-21
+
+### Added
+- Design optimization module (`trades/optimization.py`) with `optimize_design()` using scipy solvers
+- `OptimizationResult` dataclass with best architecture, metrics, convergence info, and optional history
+- Three solver backends: `differential_evolution`, `dual_annealing`, `minimize` (L-BFGS-B)
+- Weighted multi-objective scalarization and requirement-based constraint penalties
+- CLI `pasys optimize` command with `--objective`, `--sense`, `--method`, `--max-iter` options
+- Unit tests for RF cascade models (`test_rf_cascade.py`): Friis NF, IIP3/OIP3, SFDR, MDS, cascade analysis
+- Unit tests for digital models (`test_digital.py`): converters, bandwidth, beamformer ops, scheduling
+- Optimization tests (`test_optimization.py`): single/multi-objective, constraints, integer vars, CLI E2E
+- Example script `05_optimization.py`: DOE baseline vs optimizer comparison
+
 ## [0.5.0] - 2026-03-21
 
 ### Added
@@ -93,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Requires `phased-array-modeling>=1.2.0`
 - Python 3.10+
 
-[Unreleased]: https://github.com/jman4162/phased-array-systems/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/jman4162/phased-array-systems/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/jman4162/phased-array-systems/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jman4162/phased-array-systems/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jman4162/phased-array-systems/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jman4162/phased-array-systems/compare/v0.2.0...v0.3.0

@@ -74,6 +74,26 @@ Examples:
     sens_parser.add_argument("--plot", action="store_true", help="Generate tornado plots")
     sens_parser.add_argument("--metric", type=str, default="g_peak_db", help="Metric for plot")
 
+    # pasys optimize <config>
+    opt_parser = subparsers.add_parser("optimize", help="Optimize a design")
+    opt_parser.add_argument("config", type=Path, help="Config file (YAML/JSON)")
+    opt_parser.add_argument("--objective", required=True, help="Metric to optimize")
+    opt_parser.add_argument(
+        "--sense",
+        choices=["maximize", "minimize"],
+        default="maximize",
+        help="Optimization direction (default: maximize)",
+    )
+    opt_parser.add_argument(
+        "--method",
+        choices=["de", "da", "minimize"],
+        default="de",
+        help="Solver: de (differential_evolution), da (dual_annealing), minimize (L-BFGS-B)",
+    )
+    opt_parser.add_argument("--max-iter", type=int, default=200, help="Maximum iterations")
+    opt_parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    opt_parser.add_argument("-o", "--output", type=Path, help="Save result to JSON")
+
     # pasys pareto <results>
     pareto_parser = subparsers.add_parser("pareto", help="Extract Pareto frontier")
     pareto_parser.add_argument("results", type=Path, help="Results file")
@@ -424,6 +444,101 @@ def cmd_pareto(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_optimize(args: argparse.Namespace) -> int:
+    """Execute design optimization."""
+    from phased_array_systems.io import load_config
+    from phased_array_systems.trades import DesignSpace, optimize_design
+
+    if not args.config.exists():
+        print(f"Error: Config file not found: {args.config}", file=sys.stderr)
+        return 1
+
+    try:
+        config = load_config(args.config)
+    except Exception as e:
+        print(f"Error loading config: {e}", file=sys.stderr)
+        return 1
+
+    scenario = config.get_scenario()
+    requirements = config.get_requirement_set()
+
+    if scenario is None:
+        print("Error: Config must define a scenario", file=sys.stderr)
+        return 1
+
+    doe_config = config.doe
+    if doe_config is None or not doe_config.variables:
+        print("Error: Config must define a doe section with variables", file=sys.stderr)
+        return 1
+
+    # Build design space
+    design_space = DesignSpace(name=config.name or "Optimize")
+    for var in doe_config.variables:
+        design_space.add_variable(
+            var.name,
+            type=var.type,
+            low=var.low,
+            high=var.high,
+            values=var.values,
+        )
+
+    # Map CLI method shorthand to full name
+    method_map = {
+        "de": "differential_evolution",
+        "da": "dual_annealing",
+        "minimize": "minimize",
+    }
+    method = method_map[args.method]
+
+    objectives = [(args.objective, args.sense)]
+
+    print(f"Optimizing: {args.sense} {args.objective}")
+    print(f"Method: {method}, max_iter: {args.max_iter}, seed: {args.seed}")
+    print(f"Design space: {design_space.n_dims} variables")
+
+    try:
+        result = optimize_design(
+            design_space=design_space,
+            scenario=scenario,
+            objectives=objectives,
+            requirements=requirements,
+            method=method,
+            seed=args.seed,
+            max_iter=args.max_iter,
+        )
+    except Exception as e:
+        print(f"Error during optimization: {e}", file=sys.stderr)
+        return 1
+
+    # Print results
+    print(f"\nConverged: {result.converged}")
+    print(f"Evaluations: {result.n_evaluations}")
+    print(f"Runtime: {result.runtime_s:.1f}s")
+
+    print_metrics_table(result.best_metrics, "Optimal Design")
+
+    # Save if requested
+    if args.output:
+        safe_metrics = {
+            k: (v if not isinstance(v, float) or v == v else None)
+            for k, v in result.best_metrics.items()
+        }
+        output_data = {
+            "objective": args.objective,
+            "sense": args.sense,
+            "objective_value": result.objective_value,
+            "converged": result.converged,
+            "n_evaluations": result.n_evaluations,
+            "runtime_s": result.runtime_s,
+            "metrics": safe_metrics,
+        }
+        with open(args.output, "w") as f:
+            json.dump(output_data, f, indent=2)
+        print(f"\nResult saved to: {args.output}")
+
+    return 0
+
+
 def cmd_sensitivity(args: argparse.Namespace) -> int:
     """Execute OAT sensitivity analysis."""
     from phased_array_systems.io import load_config
@@ -525,6 +640,7 @@ def main() -> int:
     commands = {
         "run": cmd_run,
         "doe": cmd_doe,
+        "optimize": cmd_optimize,
         "report": cmd_report,
         "pareto": cmd_pareto,
         "sensitivity": cmd_sensitivity,

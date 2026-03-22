@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Core dependency:** `phased-array-modeling>=1.2.0` (provides array geometries, steering, tapering, impairments, and pattern visualization)
 
-**Project status:** v0.4.0 - All 4 implementation phases complete. See `package_design_and_requirements.txt` for the original SDD.
+**Project status:** v0.6.0 - All 4 implementation phases complete plus optimization solvers. See `package_design_and_requirements.txt` for the original SDD.
 
 ## Git Attribution
 
@@ -39,6 +39,7 @@ mypy src/phased_array_systems
 # CLI
 pasys run config.yaml                       # Single case evaluation
 pasys doe config.yaml                       # DOE batch study
+pasys optimize config.yaml --objective eirp_dbw --sense maximize  # Optimization
 pasys pareto results.parquet --x cost_usd --y eirp_dbw  # Pareto analysis
 pasys report results.parquet -o report.html # Generate HTML report
 ```
@@ -52,12 +53,14 @@ pasys report results.parquet -o report.html # Generate HTML report
 
 ### Package Layout (`src/phased_array_systems/`)
 - `requirements/` - Constraint/objective definitions, verification reports
-- `architecture/` - ArrayConfig, RFChainConfig, PowerThermalConfig, CostConfig
+- `architecture/` - ArrayConfig, RFChainConfig, CostConfig, DigitalConfig, ReliabilityConfig
 - `models/antenna/` - Adapter wrapping `phased-array-modeling`, pattern metrics extraction
 - `models/comms/` - Link budget (SNR, margin, EIRP), propagation models
 - `models/radar/` - Radar equation, PD/PFA threshold helpers, integration gains
 - `models/swapc/` - Power, thermal, and cost models
-- `trades/` - DOE generation, batch runner, Pareto extraction, optimization
+- `models/rf/` - RF cascade analysis (Friis NF, IIP3, SFDR), TRM reliability models
+- `models/digital/` - ADC/DAC converters, beamformer bandwidth/ops, scheduling
+- `trades/` - DOE generation, batch runner, Pareto extraction, optimization solvers
 - `viz/` - Plots (Pareto, scatter-matrix), HTML/Markdown report generation
 - `io/` - Config loading (YAML/JSON), results export (Parquet/CSV)
 - `cli.py` - `pasys` command entrypoint
@@ -76,6 +79,9 @@ class ModelBlock(Protocol):
 - Antenna: `g_peak_db`, `beamwidth_az_deg`, `beamwidth_el_deg`, `sll_db`, `scan_loss_db`
 - Comms: `eirp_dbw`, `path_loss_db`, `snr_rx_db`, `link_margin_db`
 - Radar: `snr_single_pulse_db`, `snr_required_db`, `snr_margin_db`, `pd`, `pfa`
+- RF Cascade: `cascade_nf_db`, `cascade_gain_db`, `cascade_iip3_dbm`, `cascade_oip3_dbm`, `cascade_sfdr_db`, `cascade_mds_dbm`
+- Digital: `adc_enob`, `adc_snr_db`, `bf_data_rate_gbps`, `bf_compute_gops`, `processing_margin_db`, `fpga_utilization_pct`
+- Reliability: `trm_mtbf_hours`, `array_mtbf_hours`, `expected_failed_elements`, `array_availability`
 - SWaP-C: `prime_power_w`, `weight_kg`, `cost_usd`
 - Metadata: `meta.case_id`, `meta.runtime_s`, `meta.seed`, `meta.error`
 
@@ -83,7 +89,7 @@ class ModelBlock(Protocol):
 ```
 Config (YAML/JSON) → Pydantic validation → [Architecture + Scenario + RequirementSet]
     → DOE case generation → Batch evaluation (parallel, cached)
-    → Requirement verification → Pareto extraction → Visualization/Reports
+    → Requirement verification → Pareto extraction → Optimization → Visualization/Reports
 ```
 
 ## Design Principles
@@ -97,7 +103,7 @@ Config (YAML/JSON) → Pydantic validation → [Architecture + Scenario + Requir
 
 ## Implementation Phases
 
-All phases are complete as of v0.4.0:
+All phases are complete as of v0.4.0, with v0.5.0 adding digital/RF models and v0.6.0 adding optimization:
 
 1. **Phase 1 (MVP):** ✅ Complete
    - Pydantic schemas for Architecture, Scenario, RequirementSet
@@ -123,6 +129,18 @@ All phases are complete as of v0.4.0:
    - `pasys` CLI with run, doe, pareto, and report commands
    - HTML and Markdown report generation
    - Ready for PyPI publish
+
+5. **Phase 5 (v0.5.0):** ✅ Complete
+   - RF cascade analysis (Friis NF, IIP3, SFDR, MDS)
+   - TRM reliability and graceful degradation models
+   - Digital beamformer models (ADC/DAC, bandwidth, scheduling)
+   - DigitalConfig and ReliabilityConfig in Architecture
+
+6. **Phase 6 (v0.6.0):** ✅ Complete
+   - Design optimization via scipy solvers (DE, dual annealing, L-BFGS-B)
+   - Weighted multi-objective scalarization with constraint penalties
+   - `pasys optimize` CLI command
+   - Unit tests for RF cascade and digital models
 
 ## Future Goals
 
