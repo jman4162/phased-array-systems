@@ -1,0 +1,72 @@
+# Basic Radar Detection Configuration
+# Single-case evaluation example
+
+name: "Basic Radar Array Study"
+version: "1.0"
+
+# Architecture definition
+architecture:
+  array:
+    geometry: rectangular
+    nx: 16
+    ny: 16
+    dx_lambda: 0.5
+    dy_lambda: 0.5
+    scan_limit_deg: 60.0
+    taper_type: taylor
+    taper_sll_db: -30.0
+    element_cos_exp: 1.5
+  rf:
+    tx_power_w_per_elem: 5.0
+    pa_efficiency: 0.3
+    noise_figure_db: 3.0
+    feed_loss_db: 1.0
+    system_loss_db: 0.0
+  cost:
+    cost_per_elem_usd: 200.0
+    nre_usd: 50000.0
+    integration_cost_usd: 10000.0
+
+# Scenario definition
+scenario:
+  type: radar
+  freq_hz: 10.0e9          # 10 GHz (X-band)
+  bandwidth_hz: 1.0e6      # 1 MHz
+  range_m: 50.0e3           # 50 km detection range
+  target_rcs_dbsm: -10.0   # -10 dBsm target
+  pfa: 1.0e-6              # Probability of false alarm
+  pd_required: 0.9         # Required probability of detection
+  n_pulses: 10             # Number of integrated pulses
+  integration_type: noncoherent
+  scan_angle_deg: 0.0
+  system_loss_db: 2.0
+
+# Requirements
+requirements:
+  - id: REQ-R01
+    name: Minimum SNR Margin
+    metric_key: snr_margin_db
+    op: ">="
+    value: 3.0
+    units: dB
+    severity: must
+
+  - id: REQ-R02
+    name: Detection Range
+    metric_key: detection_range_m
+    op: ">="
+    value: 20000.0
+    units: m
+    severity: must
+
+  - id: REQ-R03
+    name: Maximum Cost
+    metric_key: cost_usd
+    op: "<="
+    value: 200000.0
+    units: USD
+    severity: must
+
+# Output configuration
+output_dir: ./results
+output_format: parquet

@@ -128,6 +128,46 @@ def evaluate_case(
             }
         )
 
+    # Digital beamformer analysis (if configured)
+    if arch.digital is not None:
+        from phased_array_systems.models.digital.bandwidth import (
+            beamformer_operations,
+            digital_beamformer_data_rate,
+            processing_margin,
+        )
+        from phased_array_systems.models.digital.converters import enob_to_snr
+
+        bw = getattr(scenario, "bandwidth_hz", 1e6)
+        sample_rate = bw * arch.digital.oversampling_ratio
+        bits_per_sample = int(arch.digital.adc_enob) * 2  # I + Q
+
+        # ADC metrics
+        metrics["adc_enob"] = arch.digital.adc_enob
+        metrics["adc_snr_db"] = enob_to_snr(arch.digital.adc_enob)
+        metrics["adc_sample_rate_hz"] = sample_rate
+
+        # Beamformer data rate
+        bf_rate = digital_beamformer_data_rate(
+            arch.array.n_elements,
+            sample_rate,
+            bits_per_sample,
+        )
+        metrics["bf_data_rate_gbps"] = bf_rate["with_overhead_gbps"]
+
+        # Beamformer compute
+        bf_ops = beamformer_operations(
+            arch.array.n_elements,
+            arch.digital.n_beams,
+            sample_rate,
+        )
+        metrics["bf_compute_gops"] = bf_ops["total_gops"]
+
+        # Processing margin (if FPGA throughput specified)
+        if arch.digital.fpga_throughput_gops is not None:
+            pm = processing_margin(arch.digital.fpga_throughput_gops, bf_ops["total_gops"])
+            metrics["processing_margin_db"] = pm["margin_db"]
+            metrics["fpga_utilization_pct"] = pm["utilization_percent"]
+
     # Evaluate scenario-specific models
     if isinstance(scenario, CommsLinkScenario):
         comms_model = CommsLinkModel()

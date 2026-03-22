@@ -234,6 +234,24 @@ class ReliabilityConfig(BaseModel):
     mission_hours: float = Field(default=8760.0, gt=0, description="Mission duration (hours)")
 
 
+class DigitalConfig(BaseModel):
+    """Configuration for digital beamformer constraints.
+
+    Attributes:
+        adc_enob: ADC effective number of bits
+        oversampling_ratio: ADC oversampling ratio
+        n_beams: Number of simultaneous digital beams
+        fpga_throughput_gops: Available FPGA throughput (GOPS); None=skip margin calc
+    """
+
+    adc_enob: float = Field(default=12.0, ge=4, le=18, description="ADC effective number of bits")
+    oversampling_ratio: float = Field(default=2.5, ge=2.0, description="ADC oversampling ratio")
+    n_beams: int = Field(default=1, ge=1, description="Simultaneous digital beams")
+    fpga_throughput_gops: float | None = Field(
+        default=None, ge=0, description="Available FPGA throughput (GOPS); None=skip margin calc"
+    )
+
+
 class Architecture(BaseModel):
     """Complete system architecture configuration.
 
@@ -252,6 +270,9 @@ class Architecture(BaseModel):
     cost: CostConfig = Field(default_factory=CostConfig)
     reliability: ReliabilityConfig | None = Field(
         default=None, description="Reliability analysis configuration"
+    )
+    digital: DigitalConfig | None = Field(
+        default=None, description="Digital beamformer configuration"
     )
     name: str | None = Field(default=None, description="Architecture name")
 
@@ -273,6 +294,8 @@ class Architecture(BaseModel):
         ]
         if self.reliability is not None:
             configs.append(("reliability", self.reliability))
+        if self.digital is not None:
+            configs.append(("digital", self.digital))
         for prefix, config in configs:
             for key, value in config.model_dump().items():
                 flat[f"{prefix}.{key}"] = value
@@ -294,6 +317,7 @@ class Architecture(BaseModel):
         rf_dict = {}
         cost_dict = {}
         reliability_dict = {}
+        digital_dict = {}
         name = None
 
         for key, value in flat_dict.items():
@@ -307,11 +331,14 @@ class Architecture(BaseModel):
                 cost_dict[key.replace("cost.", "")] = value
             elif key.startswith("reliability."):
                 reliability_dict[key.replace("reliability.", "")] = value
+            elif key.startswith("digital."):
+                digital_dict[key.replace("digital.", "")] = value
 
         return cls(
             array=ArrayConfig(**array_dict),
             rf=RFChainConfig(**rf_dict),
             cost=CostConfig(**cost_dict) if cost_dict else CostConfig(),
             reliability=ReliabilityConfig(**reliability_dict) if reliability_dict else None,
+            digital=DigitalConfig(**digital_dict) if digital_dict else None,
             name=name,
         )

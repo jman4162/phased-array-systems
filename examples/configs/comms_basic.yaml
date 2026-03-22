@@ -39,6 +39,11 @@ architecture:
     cost_per_elem_usd: 100.0
     nre_usd: 10000.0
     integration_cost_usd: 5000.0
+  # digital:                     # Digital beamformer constraints (optional)
+  #   adc_enob: 12.0             # ADC effective bits
+  #   oversampling_ratio: 2.5    # ADC oversampling
+  #   n_beams: 1                 # Simultaneous beams
+  #   fpga_throughput_gops: 500  # FPGA capacity (GOPS)
 
 # Scenario definition
 scenario:

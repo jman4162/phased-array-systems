@@ -1,0 +1,76 @@
+# Radar DOE Trade Study Configuration
+# Explores array size vs. TX power trade space for radar detection
+
+name: "Radar Array Trade Study"
+version: "1.0"
+
+# Base scenario (fixed parameters)
+scenario:
+  type: radar
+  freq_hz: 10.0e9          # 10 GHz (X-band)
+  bandwidth_hz: 1.0e6      # 1 MHz
+  range_m: 50.0e3           # 50 km detection range
+  target_rcs_dbsm: -10.0   # -10 dBsm target
+  pfa: 1.0e-6              # Probability of false alarm
+  pd_required: 0.9         # Required probability of detection
+  n_pulses: 10             # Number of integrated pulses
+  integration_type: noncoherent
+  scan_angle_deg: 0.0
+  system_loss_db: 2.0
+
+# Requirements for feasibility filtering
+requirements:
+  - id: REQ-R01
+    name: Minimum SNR Margin
+    metric_key: snr_margin_db
+    op: ">="
+    value: 3.0
+    units: dB
+    severity: must
+
+  - id: REQ-R02
+    name: Detection Range
+    metric_key: detection_range_m
+    op: ">="
+    value: 20000.0
+    units: m
+    severity: must
+
+  - id: REQ-R03
+    name: Maximum Cost
+    metric_key: cost_usd
+    op: "<="
+    value: 200000.0
+    units: USD
+    severity: must
+
+# DOE Configuration
+doe:
+  method: lhs              # Latin Hypercube Sampling
+  n_samples: 100
+  seed: 42
+
+  variables:
+    - name: array.nx
+      type: int
+      low: 8
+      high: 32
+
+    - name: array.ny
+      type: int
+      low: 8
+      high: 32
+
+    - name: rf.tx_power_w_per_elem
+      type: float
+      low: 1.0
+      high: 10.0
+
+    - name: cost.cost_per_elem_usd
+      type: float
+      low: 100.0
+      high: 500.0
+
+# Output configuration
+output_dir: ./results/radar_doe
+output_format: parquet

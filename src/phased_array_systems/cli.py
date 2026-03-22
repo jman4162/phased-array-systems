@@ -143,6 +143,16 @@ def print_metrics_table(metrics: dict[str, Any], title: str = "Metrics") -> None
             "prob_meeting_spec",
         ):
             group = "Reliability"
+        elif key in (
+            "adc_enob",
+            "adc_snr_db",
+            "adc_sample_rate_hz",
+            "bf_data_rate_gbps",
+            "bf_compute_gops",
+            "processing_margin_db",
+            "fpga_utilization_pct",
+        ):
+            group = "Digital"
         elif key in ("cost_usd", "recurring_cost_usd", "total_cost_usd"):
             group = "Cost"
         elif key in ("rf_power_w", "dc_power_w", "prime_power_w"):
@@ -232,27 +242,32 @@ def cmd_doe(args: argparse.Namespace) -> int:
         return 1
 
     # Build design space from config
-    design_space_config = getattr(config, "design_space", None)
-    if design_space_config is None:
-        print("Error: Config must define a design_space for DOE", file=sys.stderr)
+    doe_config = config.doe
+    if doe_config is None or not doe_config.variables:
+        print("Error: Config must define a doe section with variables for DOE", file=sys.stderr)
         return 1
 
     # Create design space
     design_space = DesignSpace(name=config.name or "DOE")
-    for var in design_space_config.get("variables", []):
+    for var in doe_config.variables:
         design_space.add_variable(
-            var["name"],
-            type=var["type"],
-            low=var.get("low"),
-            high=var.get("high"),
-            values=var.get("values"),
+            var.name,
+            type=var.type,
+            low=var.low,
+            high=var.high,
+            values=var.values,
         )
 
+    # Use DOE config defaults, with CLI args overriding
+    method = args.method if args.method != "lhs" else (doe_config.method or "lhs")
+    n_samples = args.samples if args.samples != 50 else (doe_config.n_samples or 50)
+    seed = args.seed if args.seed != 42 else (doe_config.seed or 42)
+
     print(f"Design Space: {design_space.n_dims} variables")
-    print(f"Generating {args.samples} samples using {args.method}...")
+    print(f"Generating {n_samples} samples using {method}...")
 
     # Generate DOE
-    doe = generate_doe(design_space, method=args.method, n_samples=args.samples, seed=args.seed)
+    doe = generate_doe(design_space, method=method, n_samples=n_samples, seed=seed)
 
     # Run batch
     print("Running batch evaluation...")
@@ -267,10 +282,16 @@ def cmd_doe(args: argparse.Namespace) -> int:
 
     # Summary
     n_total = len(results)
-    n_feasible = (results.get("verification.passes", 0) == 1.0).sum()
+    if "verification.passes" in results.columns:
+        n_feasible = (results["verification.passes"] == 1.0).sum()
+    else:
+        n_feasible = "N/A"
 
     print(f"\nCompleted: {n_total} cases")
-    print(f"Feasible: {n_feasible} ({n_feasible / n_total * 100:.1f}%)")
+    if isinstance(n_feasible, int):
+        print(f"Feasible: {n_feasible} ({n_feasible / n_total * 100:.1f}%)")
+    else:
+        print(f"Feasible: {n_feasible}")
 
     # Export
     output_dir = args.output or Path("./results")
@@ -429,14 +450,14 @@ def cmd_sensitivity(args: argparse.Namespace) -> int:
         print("Error: Config must define a scenario", file=sys.stderr)
         return 1
 
-    # Build param_ranges from design_space if available
-    design_space_config = getattr(config, "design_space", None)
+    # Build param_ranges from DOE config if available
+    doe_config = config.doe
     param_ranges: dict[str, list[float]] = {}
 
-    if design_space_config is not None:
-        for var in design_space_config.get("variables", []):
-            if var.get("type") == "continuous" and "low" in var and "high" in var:
-                param_ranges[var["name"]] = [var["low"], var["high"]]
+    if doe_config is not None and doe_config.variables:
+        for var in doe_config.variables:
+            if var.type in ("float", "continuous") and var.low is not None and var.high is not None:
+                param_ranges[var.name] = [var.low, var.high]
     else:
         print("Warning: No design_space in config; using default parameter ranges")
         param_ranges = {

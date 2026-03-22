@@ -6,6 +6,7 @@ from phased_array_systems.architecture import (
     Architecture,
     ArrayConfig,
     CostConfig,
+    DigitalConfig,
     ReliabilityConfig,
     RFChainConfig,
 )
@@ -373,3 +374,92 @@ class TestReliabilityIntegration:
         m_cool = evaluate_case(arch_cool, sample_scenario)
         m_hot = evaluate_case(arch_hot, sample_scenario)
         assert m_hot["trm_mtbf_hours"] < m_cool["trm_mtbf_hours"]
+
+
+class TestDigitalIntegration:
+    """Tests for digital beamformer integration in evaluate_case."""
+
+    @pytest.fixture
+    def sample_scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def test_digital_metrics_present(self, sample_scenario):
+        """Test that digital metrics appear when DigitalConfig is set."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(adc_enob=12.0, oversampling_ratio=2.5, n_beams=1),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "adc_enob" in metrics
+        assert "adc_snr_db" in metrics
+        assert "adc_sample_rate_hz" in metrics
+        assert "bf_data_rate_gbps" in metrics
+        assert "bf_compute_gops" in metrics
+
+    def test_no_digital_config_no_metrics(self, sample_scenario):
+        """Without digital config, no digital metrics should appear."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "adc_enob" not in metrics
+        assert "bf_data_rate_gbps" not in metrics
+
+    def test_processing_margin_with_fpga(self, sample_scenario):
+        """Processing margin should appear when fpga_throughput_gops is set."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(
+                adc_enob=12.0,
+                fpga_throughput_gops=500.0,
+            ),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "processing_margin_db" in metrics
+        assert "fpga_utilization_pct" in metrics
+
+    def test_no_processing_margin_without_fpga(self, sample_scenario):
+        """No processing margin without fpga_throughput_gops."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(adc_enob=12.0),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "processing_margin_db" not in metrics
+        assert "fpga_utilization_pct" not in metrics
+
+    def test_data_rate_scales_with_elements(self, sample_scenario):
+        """bf_data_rate_gbps should increase with more elements."""
+        arch_small = Architecture(
+            array=ArrayConfig(nx=4, ny=4),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(adc_enob=12.0),
+        )
+        arch_large = Architecture(
+            array=ArrayConfig(nx=16, ny=16),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(adc_enob=12.0),
+        )
+        m_small = evaluate_case(arch_small, sample_scenario)
+        m_large = evaluate_case(arch_large, sample_scenario)
+        assert m_large["bf_data_rate_gbps"] > m_small["bf_data_rate_gbps"]
+
+    def test_adc_snr_matches_enob(self, sample_scenario):
+        """ADC SNR should follow 6.02*ENOB + 1.76 formula."""
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(adc_enob=14.0),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        expected_snr = 6.02 * 14.0 + 1.76
+        assert metrics["adc_snr_db"] == pytest.approx(expected_snr)

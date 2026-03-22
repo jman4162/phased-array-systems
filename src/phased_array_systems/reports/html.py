@@ -351,6 +351,13 @@ class HTMLReport(ReportGenerator):
             # RF cascade
             "cascade_nf_db",
             "cascade_sfdr_db",
+            # Digital
+            "adc_enob",
+            "adc_snr_db",
+            "bf_data_rate_gbps",
+            "bf_compute_gops",
+            "processing_margin_db",
+            "fpga_utilization_pct",
             # Reliability
             "array_availability",
             "trm_mtbf_hours",
@@ -447,6 +454,12 @@ class HTMLReport(ReportGenerator):
             "rain_loss_computed_db",
             "cascade_nf_db",
             "cascade_sfdr_db",
+            "adc_enob",
+            "adc_snr_db",
+            "bf_data_rate_gbps",
+            "bf_compute_gops",
+            "processing_margin_db",
+            "fpga_utilization_pct",
             "array_availability",
             "trm_mtbf_hours",
         ]

@@ -1,7 +1,10 @@
 """Tests for CLI."""
 
+import argparse
+import json
 import subprocess
 import sys
+from pathlib import Path
 
 
 class TestCLIHelp:
@@ -218,3 +221,207 @@ class TestPrintMetricsTable:
         # Check groups appear
         assert "Antenna" in captured.out or "Link Budget" in captured.out
         assert "Cost" in captured.out or "Power" in captured.out
+
+
+CONFIGS_DIR = Path(__file__).parent.parent / "examples" / "configs"
+
+
+class TestCLIEndToEnd:
+    """End-to-end tests for CLI command functions."""
+
+    def test_cmd_run_comms(self, capsys):
+        """Test cmd_run with comms_basic.yaml and JSON output."""
+        from phased_array_systems.cli import cmd_run
+
+        args = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_basic.yaml",
+            format="json",
+            output=None,
+        )
+        ret = cmd_run(args)
+        assert ret == 0
+
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert "g_peak_db" in data
+        assert "eirp_dbw" in data
+        assert "cascade_nf_db" in data
+
+    def test_cmd_run_radar(self, capsys):
+        """Test cmd_run with radar_basic.yaml and JSON output."""
+        from phased_array_systems.cli import cmd_run
+
+        args = argparse.Namespace(
+            config=CONFIGS_DIR / "radar_basic.yaml",
+            format="json",
+            output=None,
+        )
+        ret = cmd_run(args)
+        assert ret == 0
+
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert "snr_margin_db" in data or "snr_single_pulse_db" in data
+        assert "g_peak_db" in data
+
+    def test_cmd_run_output_file(self, tmp_path, capsys):
+        """Test cmd_run writes output file."""
+        from phased_array_systems.cli import cmd_run
+
+        out_file = tmp_path / "result.json"
+        args = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_basic.yaml",
+            format="table",
+            output=out_file,
+        )
+        ret = cmd_run(args)
+        assert ret == 0
+        assert out_file.exists()
+
+        data = json.loads(out_file.read_text())
+        assert "g_peak_db" in data
+
+    def test_cmd_doe_comms(self, tmp_path, capsys):
+        """Test cmd_doe with comms_doe.yaml."""
+        from phased_array_systems.cli import cmd_doe
+
+        args = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_doe.yaml",
+            output=tmp_path,
+            samples=5,
+            method="lhs",
+            seed=42,
+            workers=1,
+        )
+        ret = cmd_doe(args)
+        assert ret == 0
+
+        result_path = tmp_path / "results.parquet"
+        assert result_path.exists()
+
+        import pandas as pd
+
+        df = pd.read_parquet(result_path)
+        assert len(df) == 5
+
+    def test_cmd_doe_radar(self, tmp_path, capsys):
+        """Test cmd_doe with radar_doe.yaml."""
+        from phased_array_systems.cli import cmd_doe
+
+        args = argparse.Namespace(
+            config=CONFIGS_DIR / "radar_doe.yaml",
+            output=tmp_path,
+            samples=5,
+            method="lhs",
+            seed=42,
+            workers=1,
+        )
+        ret = cmd_doe(args)
+        assert ret == 0
+
+        result_path = tmp_path / "results.parquet"
+        assert result_path.exists()
+
+        import pandas as pd
+
+        df = pd.read_parquet(result_path)
+        assert len(df) == 5
+
+    def test_cmd_report_html(self, tmp_path, capsys):
+        """Test cmd_report generates HTML output."""
+        from phased_array_systems.cli import cmd_doe, cmd_report
+
+        # Generate results first
+        args_doe = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_doe.yaml",
+            output=tmp_path,
+            samples=5,
+            method="lhs",
+            seed=42,
+            workers=1,
+        )
+        cmd_doe(args_doe)
+
+        result_path = tmp_path / "results.parquet"
+        report_path = tmp_path / "report.html"
+        args_report = argparse.Namespace(
+            results=result_path,
+            output=report_path,
+            format="html",
+            title="Test Report",
+        )
+        ret = cmd_report(args_report)
+        assert ret == 0
+        assert report_path.exists()
+        content = report_path.read_text()
+        assert "<html" in content
+
+    def test_cmd_report_markdown(self, tmp_path, capsys):
+        """Test cmd_report generates Markdown output."""
+        from phased_array_systems.cli import cmd_doe, cmd_report
+
+        # Generate results first
+        args_doe = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_doe.yaml",
+            output=tmp_path,
+            samples=5,
+            method="lhs",
+            seed=42,
+            workers=1,
+        )
+        cmd_doe(args_doe)
+
+        result_path = tmp_path / "results.parquet"
+        report_path = tmp_path / "report.md"
+        args_report = argparse.Namespace(
+            results=result_path,
+            output=report_path,
+            format="markdown",
+            title="Test Report",
+        )
+        ret = cmd_report(args_report)
+        assert ret == 0
+        assert report_path.exists()
+        content = report_path.read_text()
+        assert "# Test Report" in content
+
+    def test_cmd_pareto(self, tmp_path, capsys):
+        """Test cmd_pareto extracts Pareto frontier."""
+        from phased_array_systems.cli import cmd_doe, cmd_pareto
+
+        # Generate results first
+        args_doe = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_doe.yaml",
+            output=tmp_path,
+            samples=10,
+            method="lhs",
+            seed=42,
+            workers=1,
+        )
+        cmd_doe(args_doe)
+
+        result_path = tmp_path / "results.parquet"
+        pareto_path = tmp_path / "pareto.parquet"
+        args_pareto = argparse.Namespace(
+            results=result_path,
+            x="cost_usd",
+            y="eirp_dbw",
+            output=pareto_path,
+            plot=False,
+        )
+        ret = cmd_pareto(args_pareto)
+        assert ret == 0
+
+    def test_cmd_sensitivity(self, tmp_path, capsys):
+        """Test cmd_sensitivity runs OAT analysis."""
+        from phased_array_systems.cli import cmd_sensitivity
+
+        args = argparse.Namespace(
+            config=CONFIGS_DIR / "comms_doe.yaml",
+            output=None,
+            steps=3,
+            plot=False,
+            metric="g_peak_db",
+        )
+        ret = cmd_sensitivity(args)
+        assert ret == 0

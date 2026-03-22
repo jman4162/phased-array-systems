@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-21
+
+### Added
+- Digital beamformer integration: `DigitalConfig` for ADC ENOB, data rate, and FPGA processing margin
+- Radar YAML configs: `radar_basic.yaml` and `radar_doe.yaml` examples
+- CLI end-to-end tests for run, doe, report, pareto, and sensitivity commands
+- I/O round-trip tests for Parquet, CSV, and JSON export/import
+- Digital metrics in reports (HTML and Markdown): `adc_enob`, `bf_data_rate_gbps`, `processing_margin_db`
+
+### Fixed
+- CLI `pasys doe` command: was reading nonexistent `config.design_space` instead of `config.doe`
+- CLI `pasys sensitivity` command: same `design_space` bug, now reads DOE variables correctly
+
 ## [0.4.0] - 2026-02-01
 
 ### Added
@@ -80,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Requires `phased-array-modeling>=1.2.0`
 - Python 3.10+
 
-[Unreleased]: https://github.com/jman4162/phased-array-systems/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/jman4162/phased-array-systems/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/jman4162/phased-array-systems/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jman4162/phased-array-systems/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jman4162/phased-array-systems/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jman4162/phased-array-systems/compare/v0.1.0...v0.2.0
