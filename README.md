@@ -20,6 +20,8 @@ Phased array antenna system design, optimization, and performance visualization 
 - **Model-Based Workflow**: MBSE/MDAO approach from requirements through optimized designs
 - **Requirements-Driven**: Every evaluation produces pass/fail with margins and traceability
 - **Trade-Space Exploration**: DOE generation and Pareto analysis for systematic design exploration
+- **Design Optimization**: Scipy-based solvers (DE, dual annealing, L-BFGS-B) with constraint support
+- **Comprehensive Models**: Comms link budget, radar detection, RF cascade, digital beamformer, reliability
 - **Dual Application**: Supports both communications link budgets and radar detection scenarios
 - **Reproducible**: Config-driven workflow with seed control and version stamping
 
@@ -30,14 +32,20 @@ Config (YAML/JSON) → Architecture + Scenario → DOE Generation → Batch Eval
        ↓                                                              ↓
   Requirements ───────────────────────────────────────────→ Verification
                                                                    ↓
-                    Reports ← Visualization ← Pareto Extraction ←──┘
+                                                           Pareto Extraction
+                                                                   ↓
+              Reports ← Visualization ← Optimization ←────────────┘
 ```
 
 ## Features
 
 - **Requirements as first-class objects**: Every run produces pass/fail + margins with traceability
 - **Trade-space exploration**: DOE + Pareto optimization over single-point designs
+- **Design optimization**: Scipy solvers with weighted multi-objective scalarization and constraint penalties
 - **Communications & Radar**: Link budget analysis and radar detection modeling
+- **RF cascade analysis**: Friis noise figure, IIP3, SFDR, MDS for cascaded receiver chains
+- **Digital beamformer models**: ADC/DAC characterization, bandwidth budgets, scheduling
+- **TRM reliability**: MTBF, availability, graceful degradation with failed elements
 - **Flat metrics dictionary**: All models return consistent `dict[str, float]` for interchange
 - **Config-driven reproducibility**: Stable case IDs, seed control, version stamping
 - **CLI and Python API**: Use from command line or integrate into scripts
@@ -59,9 +67,8 @@ pip install phased-array-systems[plotting]
 ### Single Case Evaluation
 
 ```python
-from phased_array_systems.architecture import Architecture, ArrayConfig, RFChainConfig
-from phased_array_systems.scenarios import CommsLinkScenario
-from phased_array_systems.evaluate import evaluate_case
+from phased_array_systems import Architecture, ArrayConfig, RFChainConfig
+from phased_array_systems import CommsLinkScenario, evaluate_case
 
 # Define architecture
 arch = Architecture(
@@ -86,7 +93,7 @@ print(f"Link Margin: {metrics['link_margin_db']:.1f} dB")
 ### DOE Trade Study
 
 ```python
-from phased_array_systems.trades import DesignSpace, generate_doe, BatchRunner, extract_pareto
+from phased_array_systems import DesignSpace, generate_doe, BatchRunner, extract_pareto
 
 # Define design space
 space = (
@@ -110,12 +117,35 @@ pareto = extract_pareto(results, [
 ])
 ```
 
+### Design Optimization
+
+```python
+from phased_array_systems import optimize_design, DesignSpace, CommsLinkScenario
+
+scenario = CommsLinkScenario(
+    freq_hz=10e9, bandwidth_hz=10e6, range_m=100e3, required_snr_db=10.0,
+)
+space = (
+    DesignSpace()
+    .add_variable("array.nx", "categorical", values=[4, 8, 16])
+    .add_variable("array.ny", "categorical", values=[4, 8, 16])
+    .add_variable("rf.tx_power_w_per_elem", "float", low=0.5, high=3.0)
+)
+
+result = optimize_design(
+    space=space, scenario=scenario,
+    objective="eirp_dbw", sense="maximize", method="de", seed=42,
+)
+print(f"Best EIRP: {result.best_metrics['eirp_dbw']:.1f} dBW")
+```
+
 ## Examples
 
 See the `examples/` directory:
 - `01_comms_single_case.py` - Single case evaluation
 - `02_comms_doe_trade.py` - Full DOE trade study workflow
 - `03_radar_detection_trade.py` - Radar detection analysis and trade study
+- `05_optimization.py` - Design optimization with constraint handling
 
 ### Tutorial Notebook
 
@@ -168,11 +198,14 @@ pasys run config.yaml
 # DOE batch study
 pasys doe config.yaml -n 100 --method lhs
 
-# Generate report
-pasys report results.parquet --format html
+# Design optimization
+pasys optimize config.yaml --objective eirp_dbw --sense maximize
 
 # Extract Pareto frontier
 pasys pareto results.parquet -x cost_usd -y eirp_dbw --plot
+
+# Generate report
+pasys report results.parquet --format html
 ```
 
 ## Documentation
