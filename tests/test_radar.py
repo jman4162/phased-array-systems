@@ -317,21 +317,37 @@ class TestRadarModel:
         assert metrics["snr_margin_db"] == pytest.approx(expected_margin)
 
     def test_integration_not_double_counted(self, sample_architecture, sample_scenario):
-        """Margin must equal single-pulse SNR minus Albersheim's n-pulse requirement.
+        """Margin must equal single-pulse SNR minus the exact n-pulse requirement.
 
-        Applying a separate empirical integration gain on top of Albersheim's
-        own n-pulse law counts integration twice; this pins the consistent form.
+        Applying a separate empirical integration gain on top of a law that
+        already embeds n-pulse statistics counts integration twice; this
+        pins the consistent form.
         """
         model = RadarModel()
         metrics = model.evaluate(sample_architecture, sample_scenario, {})
 
-        required_single = albersheim_snr(
+        required_single = compute_snr_for_pd(
             pd=sample_scenario.pd_required,
             pfa=sample_scenario.pfa,
+            swerling=sample_scenario.swerling,
             n_pulses=sample_scenario.n_pulses,
+            integration="noncoherent",
         )
         expected_margin = metrics["snr_single_pulse_db"] - required_single
         assert metrics["snr_margin_db"] == pytest.approx(expected_margin, abs=1e-9)
+
+    def test_swerling_1_reduces_margin(self, sample_architecture, sample_scenario):
+        """A fluctuating target needs more SNR at Pd=0.9, so margin drops."""
+        model = RadarModel()
+        m0 = model.evaluate(sample_architecture, sample_scenario, {})
+        sw1 = sample_scenario.model_copy(update={"swerling": 1})
+        m1 = model.evaluate(sample_architecture, sw1, {})
+
+        # Required SNR rises for Swerling 1 at Pd=0.9, so margin drops.
+        # (pd_achieved itself can cross over at very low SNR, where
+        # fluctuation helps -- the classic Swerling-curve crossover.)
+        assert m1["snr_margin_db"] < m0["snr_margin_db"]
+        assert m1["swerling"] == 1
 
     def test_detection_range_positive(self, sample_architecture, sample_scenario):
         """Test detection range is positive."""

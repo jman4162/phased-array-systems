@@ -58,6 +58,9 @@ class RadarDetectionScenario(ScenarioBase):
         default=0.9, gt=0, lt=1, description="Required probability of detection"
     )
     n_pulses: int = Field(default=1, ge=1, description="Number of pulses integrated")
+    swerling: Literal[0, 1, 2, 3, 4] = Field(
+        default=0, description="Swerling target fluctuation model (0 = non-fluctuating)"
+    )
     duty_cycle: float = Field(
         default=1.0, gt=0, le=1, description="Transmit duty cycle (avg/peak power ratio)"
     )

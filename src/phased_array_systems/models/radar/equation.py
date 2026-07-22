@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from functools import lru_cache
 from typing import Any
 
 from phased_array_systems.architecture import Architecture
@@ -17,7 +18,7 @@ from phased_array_systems.models.radar.clutter import (
     rain_clutter_rcs,
     sea_clutter_rcs,
 )
-from phased_array_systems.models.radar.detection import albersheim_snr, compute_pd_from_snr
+from phased_array_systems.models.radar.detection import compute_pd_from_snr, compute_snr_for_pd
 from phased_array_systems.models.radar.integration import coherent_integration_gain
 from phased_array_systems.models.radar.propagation import (
     atmospheric_loss_db,
@@ -28,6 +29,23 @@ from phased_array_systems.models.radar.propagation import (
 )
 from phased_array_systems.scenarios import RadarDetectionScenario
 from phased_array_systems.types import MetricsDict
+
+
+@lru_cache(maxsize=256)
+def _required_snr(pd: float, pfa: float, swerling: int, n_pulses: int) -> float:
+    """Cached exact required per-pulse SNR (noncoherent statistics).
+
+    The (pd, pfa, swerling, n_pulses) tuple is constant across the cases
+    of a DOE study, so the brentq/quad inversion runs once per study
+    rather than once per case.
+    """
+    return compute_snr_for_pd(
+        pd=pd,
+        pfa=pfa,
+        swerling=swerling,  # type: ignore[arg-type]
+        n_pulses=n_pulses,
+        integration="noncoherent",
+    )
 
 
 class RadarModel:
@@ -242,21 +260,25 @@ class RadarModel:
             )
 
         # Integration gain and required SNR must come from the same law to
-        # avoid double-counting. For noncoherent integration, Albersheim's
-        # n-pulse form already embeds the integration efficiency, so the
-        # implied gain is the drop in required single-pulse SNR vs n=1.
+        # avoid double-counting. Both use the exact detection statistics
+        # (noncentral chi-square / gamma mixtures), so target fluctuation
+        # affects the margin consistently; the implied noncoherent gain is
+        # the drop in required single-pulse SNR vs n=1.
         n_pulses = scenario.n_pulses
-        snr_required_db = albersheim_snr(
+        swerling = scenario.swerling
+        snr_required_db = _required_snr(
             pd=scenario.pd_required,
             pfa=scenario.pfa,
+            swerling=swerling,
             n_pulses=1,
         )
         if scenario.integration_type == "coherent":
             integration_gain_db = coherent_integration_gain(n_pulses)
         else:
-            snr_required_single_db = albersheim_snr(
+            snr_required_single_db = _required_snr(
                 pd=scenario.pd_required,
                 pfa=scenario.pfa,
+                swerling=swerling,
                 n_pulses=n_pulses,
             )
             integration_gain_db = snr_required_db - snr_required_single_db
@@ -273,7 +295,7 @@ class RadarModel:
         pd_achieved = compute_pd_from_snr(
             effective_snr_single - cfar_loss,
             scenario.pfa,
-            swerling=0,  # Non-fluctuating
+            swerling=swerling,
             n_pulses=n_pulses,
             integration=scenario.integration_type,
         )
@@ -321,6 +343,7 @@ class RadarModel:
             "pd_achieved": pd_achieved,
             "pd_required": scenario.pd_required,
             "pfa": scenario.pfa,
+            "swerling": swerling,
             "n_pulses": n_pulses,
             "integration_type": scenario.integration_type,
             "detection_range_m": detection_range_m,
