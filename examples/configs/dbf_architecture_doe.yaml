@@ -1,0 +1,105 @@
+# DBF Architecture Trade Study Configuration
+# Trades digitization granularity (element / subarray / analog) against
+# ADC resolution, beam count, and subarray size for a wideband X-band array.
+# Run with: pasys doe examples/configs/dbf_architecture_doe.yaml
+
+name: "DBF Architecture Trade Study"
+version: "1.0"
+
+# Base scenario (fixed parameters)
+scenario:
+  type: comms
+  freq_hz: 10.0e9          # 10 GHz (X-band)
+  bandwidth_hz: 200.0e6    # 200 MHz instantaneous
+  range_m: 50.0e3          # 50 km
+  required_snr_db: 10.0
+  scan_angle_deg: 0.0
+  rx_antenna_gain_db: 30.0
+  rx_noise_temp_k: 290.0
+  path_loss_model: fspl
+
+# Requirements for feasibility filtering
+requirements:
+  - id: REQ-001
+    name: Link Margin
+    metric_key: link_margin_db
+    op: ">="
+    value: 3.0
+    units: dB
+    severity: must
+
+  - id: REQ-002
+    name: System Dynamic Range
+    metric_key: dynamic_range_system_db
+    op: ">="
+    value: 80.0
+    units: dB
+    severity: must
+
+  - id: REQ-003
+    name: Prime Power
+    metric_key: prime_power_w
+    op: "<="
+    value: 6000.0
+    units: W
+    severity: must
+
+# DOE Configuration
+doe:
+  method: lhs
+  n_samples: 120
+  seed: 42
+
+  variables:
+    - name: array.nx
+      type: categorical
+      values: [32]
+
+    - name: array.ny
+      type: categorical
+      values: [32]
+
+    - name: array.max_subarray_nx
+      type: categorical
+      values: [4, 8, 16]
+
+    - name: array.max_subarray_ny
+      type: categorical
+      values: [4, 8, 16]
+
+    - name: rf.tx_power_w_per_elem
+      type: float
+      low: 1.0
+      high: 1.0
+
+    - name: rf.rx_power_w_per_elem
+      type: float
+      low: 0.15
+      high: 0.15
+
+    - name: digital.digitization_level
+      type: categorical
+      values: [element, subarray, analog]
+
+    - name: digital.adc_enob
+      type: float
+      low: 8.0
+      high: 14.0
+
+    - name: digital.adc_jitter_ps_rms
+      type: float
+      low: 0.15
+      high: 0.15
+
+    - name: digital.n_beams
+      type: categorical
+      values: [1, 4, 16]
+
+    - name: cost.cost_per_elem_usd
+      type: float
+      low: 200.0
+      high: 200.0
+
+# Output configuration
+output_dir: ./results/dbf_architecture_doe
+output_format: parquet

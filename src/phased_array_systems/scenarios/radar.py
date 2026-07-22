@@ -58,6 +58,9 @@ class RadarDetectionScenario(ScenarioBase):
         default=0.9, gt=0, lt=1, description="Required probability of detection"
     )
     n_pulses: int = Field(default=1, ge=1, description="Number of pulses integrated")
+    duty_cycle: float = Field(
+        default=1.0, gt=0, le=1, description="Transmit duty cycle (avg/peak power ratio)"
+    )
     scan_angle_deg: float = Field(
         default=0.0, ge=0, le=90, description="Scan angle from boresight (deg)"
     )

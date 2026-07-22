@@ -120,6 +120,61 @@ class TestPdFromSNR:
         assert pd < 0.5
 
 
+class TestDetectionStatisticsExact:
+    """Reference-value tests for the exact detection statistics."""
+
+    def test_sw0_single_pulse_reference(self):
+        """Pd=0.9 at Pfa=1e-6 requires ~13.14 dB single pulse (Marcum Q)."""
+        snr = compute_snr_for_pd(pd=0.9, pfa=1e-6, swerling=0, n_pulses=1)
+        assert snr == pytest.approx(13.18, abs=0.15)
+
+    def test_sw0_matches_ncx2(self):
+        """Swerling 0 must equal the noncentral chi-square survival function."""
+        from scipy import special, stats
+
+        snr_db, pfa, n = 10.0, 1e-6, 4
+        snr = 10 ** (snr_db / 10)
+        threshold = special.gammaincinv(n, 1 - pfa)
+        expected = stats.ncx2.sf(2 * threshold, 2 * n, 2 * n * snr)
+        got = compute_pd_from_snr(snr_db, pfa, swerling=0, n_pulses=n)
+        assert got == pytest.approx(expected, rel=1e-9)
+
+    def test_swerling1_single_pulse_closed_form(self):
+        """Swerling 1, n=1: Pd = Pfa^(1/(1+SNR))."""
+        pfa = 1e-6
+        for snr_db in [10.0, 15.0, 20.0]:
+            snr = 10 ** (snr_db / 10)
+            expected = pfa ** (1 / (1 + snr))
+            got = compute_pd_from_snr(snr_db, pfa, swerling=1, n_pulses=1)
+            assert got == pytest.approx(expected, abs=1e-6)
+
+    def test_swerling2_gamma_closed_form(self):
+        """Swerling 2 integral must match the gamma closed form for n>1."""
+        from scipy import special
+
+        snr_db, pfa, n = 5.0, 1e-6, 10
+        snr = 10 ** (snr_db / 10)
+        threshold = special.gammaincinv(n, 1 - pfa)
+        expected = special.gammaincc(n, threshold / (1 + snr))
+        got = compute_pd_from_snr(snr_db, pfa, swerling=2, n_pulses=n)
+        assert got == pytest.approx(expected, rel=1e-6)
+
+    def test_fluctuating_targets_worse_at_high_pd(self):
+        """At high Pd, Swerling 1 targets detect worse than steady targets."""
+        pd_sw0 = compute_pd_from_snr(13.2, 1e-6, swerling=0)
+        pd_sw1 = compute_pd_from_snr(13.2, 1e-6, swerling=1)
+        assert pd_sw0 > 0.89
+        assert pd_sw1 < pd_sw0
+
+    def test_noncoherent_pd_improves_with_pulses(self):
+        """Fixed per-pulse SNR: more noncoherent pulses raise Pd."""
+        pds = [
+            compute_pd_from_snr(8.0, 1e-6, swerling=0, n_pulses=n, integration="noncoherent")
+            for n in [1, 4, 16]
+        ]
+        assert pds[0] < pds[1] < pds[2]
+
+
 class TestSNRForPd:
     """Tests for required SNR calculation."""
 
@@ -260,6 +315,23 @@ class TestRadarModel:
 
         expected_margin = metrics["snr_integrated_db"] - metrics["snr_required_db"]
         assert metrics["snr_margin_db"] == pytest.approx(expected_margin)
+
+    def test_integration_not_double_counted(self, sample_architecture, sample_scenario):
+        """Margin must equal single-pulse SNR minus Albersheim's n-pulse requirement.
+
+        Applying a separate empirical integration gain on top of Albersheim's
+        own n-pulse law counts integration twice; this pins the consistent form.
+        """
+        model = RadarModel()
+        metrics = model.evaluate(sample_architecture, sample_scenario, {})
+
+        required_single = albersheim_snr(
+            pd=sample_scenario.pd_required,
+            pfa=sample_scenario.pfa,
+            n_pulses=sample_scenario.n_pulses,
+        )
+        expected_margin = metrics["snr_single_pulse_db"] - required_single
+        assert metrics["snr_margin_db"] == pytest.approx(expected_margin, abs=1e-9)
 
     def test_detection_range_positive(self, sample_architecture, sample_scenario):
         """Test detection range is positive."""

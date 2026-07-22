@@ -6,12 +6,26 @@ For the full changelog, see:
 
 ## Recent Changes
 
+### [0.7.0] - 2026-07-22
+
+**Added:**
+- Digitization-level trades (element / subarray / analog) driving ADC count, data rate, compute, and power
+- ADC aperture-jitter SNR model and system dynamic range with array processing gain
+- Digital-section and receive-chain power in the DC budget; radar duty cycle
+- Exact Swerling 0-4 detection statistics (noncentral chi-square / gamma mixtures)
+- DBF architecture trade example and golden-case regression test
+
+**Fixed:**
+- DOE runner dropped `digital.*`/`reliability.*` variables
+- `augment_doe` repeated original samples when reusing a seed
+- Radar equation double-counted pulse integration gain
+
 ### [0.4.0] - 2026-02-01
 
 **Added:**
 - Digital array model for digital beamforming calculations
 - RF cascade model for noise figure and gain cascade analysis
-- Comprehensive MkDocs documentation site with API reference, user guides, and tutorials
+- MkDocs documentation site with API reference, user guides, and tutorials
 
 **Fixed:**
 - Ruff linting errors in models module

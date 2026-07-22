@@ -21,7 +21,7 @@ Phased array antenna system design, optimization, and performance visualization 
 - **Requirements-Driven**: Every evaluation produces pass/fail with margins and traceability
 - **Trade-Space Exploration**: DOE generation and Pareto analysis for systematic design exploration
 - **Design Optimization**: Scipy-based solvers (DE, dual annealing, L-BFGS-B) with constraint support
-- **Comprehensive Models**: Comms link budget, radar detection, RF cascade, digital beamformer, reliability
+- **System Models**: Comms link budget, radar detection, RF cascade, digital beamformer, reliability
 - **Dual Application**: Supports both communications link budgets and radar detection scenarios
 - **Reproducible**: Config-driven workflow with seed control and version stamping
 
@@ -145,7 +145,9 @@ See the `examples/` directory:
 - `01_comms_single_case.py` - Single case evaluation
 - `02_comms_doe_trade.py` - Full DOE trade study workflow
 - `03_radar_detection_trade.py` - Radar detection analysis and trade study
+- `04_taper_trade_study.py` - Amplitude taper comparison (SLL vs gain)
 - `05_optimization.py` - Design optimization with constraint handling
+- `06_dbf_architecture_trade.py` - Digital beamforming architecture trade (element vs subarray vs analog digitization)
 
 ### Tutorial Notebook
 

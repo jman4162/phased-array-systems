@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-22
+
+### Added
+- `digitization_level` (element / subarray / analog) on `DigitalConfig`; ADC count, beamformer data rate, compute, and power now follow the digitized channel count (`Architecture.n_digital_channels`) instead of assuming one ADC per element
+- ADC aperture-jitter model: `adc_effective_snr()` combines quantization and jitter noise; new `adc_jitter_ps_rms` and `adc_input_freq_hz` config fields and `adc_enob_effective` metric
+- System dynamic range metric `dynamic_range_system_db` including the 10*log10(N_channels) array processing gain
+- Digital section power in the DC budget: ADC power from the Walden figure of merit (`adc_fom_fj`) and beamformer power from `dsp_efficiency_gops_per_w`
+- Receive chain power per element (`rf.rx_power_w_per_elem`) and radar transmit `duty_cycle` in the power model; new metrics `rf_avg_power_w`, `pa_dc_power_w`, `rx_dc_power_w`, `adc_power_w`, `dsp_power_w`
+- Exact Swerling 1-4 detection probabilities via gamma-mixture of the noncentral chi-square detector statistics
+- Example `06_dbf_architecture_trade.py` and config `dbf_architecture_doe.yaml`: digitization-level trade study with Pareto extraction
+- Golden-case regression test (`tests/test_golden_case.py` + `tests/data/golden_dbf_case.json`)
+
+### Fixed
+- `default_architecture_builder` silently dropped `digital.*` and `reliability.*` DOE variables, so batch studies could not vary digital or reliability parameters
+- `augment_doe` reused the caller's seed and duplicated the original samples instead of drawing new points
+- Swerling 0 Pd used a Gaussian-tail approximation with identical dead-code branches; replaced with the exact Marcum Q (noncentral chi-square survival function)
+- Radar equation double-counted pulse integration: an empirical n^0.8 gain was added on top of Albersheim's own n-pulse law; required SNR and integration gain now come from a single consistent law
+
 ## [0.6.0] - 2026-03-21
 
 ### Added
@@ -38,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Digital array model for digital beamforming calculations
 - RF cascade model for noise figure and gain cascade analysis
-- Comprehensive documentation site with MkDocs Material
+- Documentation site with MkDocs Material
 - API reference with mkdocstrings
 - User guides for all major features
 - Tutorials for communications and radar trade studies

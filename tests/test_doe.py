@@ -204,3 +204,13 @@ class TestAugmentDOE:
 
         # All case IDs should be unique
         assert len(augmented["case_id"].unique()) == 15
+
+    def test_augment_draws_new_points(self):
+        """Augmenting with the same seed must not repeat the original draws."""
+        space = DesignSpace().add_variable("x", "float", low=0.0, high=1.0)
+
+        original = generate_doe(space, n_samples=10, seed=42)
+        augmented = augment_doe(original, space, n_additional=10, seed=42)
+
+        new_x = set(augmented["x"][10:].tolist())
+        assert new_x.isdisjoint(set(original["x"].tolist()))

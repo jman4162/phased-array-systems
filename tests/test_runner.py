@@ -63,6 +63,50 @@ class TestDefaultArchitectureBuilder:
         arch = default_architecture_builder(case)
         assert arch.array.nx == 8
 
+    def test_passes_digital_and_reliability_keys(self):
+        case = {
+            "case_id": "test_001",
+            "array.nx": 8,
+            "array.ny": 8,
+            "rf.tx_power_w_per_elem": 1.0,
+            "digital.adc_enob": 10.0,
+            "digital.n_beams": 4,
+            "digital.digitization_level": "subarray",
+            "reliability.mttr_hours": 4.0,
+        }
+
+        arch = default_architecture_builder(case)
+
+        assert arch.digital is not None
+        assert arch.digital.adc_enob == 10.0
+        assert arch.digital.n_beams == 4
+        assert arch.n_digital_channels == arch.array.n_subarrays
+        assert arch.reliability is not None
+        assert arch.reliability.mttr_hours == 4.0
+
+    def test_doe_over_digital_variables(self):
+        """A DOE sweeping digital.* must produce varying digital metrics."""
+        doe = generate_doe_from_dict(
+            {"digital.adc_enob": (8.0, 14.0)},
+            method="lhs",
+            n_samples=4,
+            seed=1,
+        )
+        doe["array.nx"] = 8
+        doe["array.ny"] = 8
+        doe["rf.tx_power_w_per_elem"] = 1.0
+
+        scenario = CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+        results = run_batch_simple(doe, scenario)
+
+        assert "adc_snr_db" in results.columns
+        assert results["adc_snr_db"].nunique() == 4
+
 
 class TestBatchRunner:
     """Tests for the BatchRunner."""

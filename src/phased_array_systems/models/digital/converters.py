@@ -82,6 +82,72 @@ def sfdr_to_enob(sfdr_db: float) -> float:
     return snr_to_enob(sfdr_db)
 
 
+def adc_effective_snr(
+    enob: float,
+    sample_rate_hz: float,
+    input_freq_hz: float | None = None,
+    jitter_s_rms: float | None = None,
+) -> dict[str, float]:
+    """ADC SNR combining quantization and aperture-jitter noise.
+
+    Quantization: SNR_q = 6.02*ENOB + 1.76 dB.
+    Aperture jitter: SNR_j = -20*log10(2*pi*f_in*t_j), which dominates at
+    high input frequency and wide bandwidth. Contributions add as noise
+    powers.
+
+    Args:
+        enob: Effective number of bits (quantization-limited)
+        sample_rate_hz: ADC sample rate in Hz
+        input_freq_hz: Input frequency for jitter SNR; None uses fs/2
+        jitter_s_rms: Aperture jitter in seconds RMS; None ignores jitter
+
+    Returns:
+        Dictionary with:
+            - snr_quant_db: Quantization-limited SNR
+            - snr_jitter_db: Jitter-limited SNR (inf if no jitter given)
+            - snr_total_db: Combined SNR
+            - enob_effective: ENOB implied by the combined SNR
+    """
+    snr_quant_db = enob_to_snr(enob)
+
+    if jitter_s_rms is None or jitter_s_rms <= 0:
+        snr_jitter_db = float("inf")
+        snr_total_db = snr_quant_db
+    else:
+        f_in = input_freq_hz if input_freq_hz is not None else sample_rate_hz / 2
+        snr_jitter_db = -20 * math.log10(2 * math.pi * f_in * jitter_s_rms)
+        noise_linear = 10 ** (-snr_quant_db / 10) + 10 ** (-snr_jitter_db / 10)
+        snr_total_db = -10 * math.log10(noise_linear)
+
+    return {
+        "snr_quant_db": snr_quant_db,
+        "snr_jitter_db": snr_jitter_db,
+        "snr_total_db": snr_total_db,
+        "enob_effective": snr_to_enob(snr_total_db),
+    }
+
+
+def adc_power_w(
+    enob: float,
+    sample_rate_hz: float,
+    fom_fj: float = 100.0,
+) -> float:
+    """ADC power from the Walden figure of merit.
+
+    P = FOM * 2^ENOB * fs, with FOM in J per conversion step. Survey values
+    range from ~10 fJ (state of the art) to a few hundred fJ.
+
+    Args:
+        enob: Effective number of bits
+        sample_rate_hz: Sample rate in Hz
+        fom_fj: Figure of merit in femtojoules per conversion step
+
+    Returns:
+        ADC power in Watts
+    """
+    return fom_fj * 1e-15 * 2**enob * sample_rate_hz
+
+
 def quantization_noise_floor(
     enob: float,
     full_scale_dbm: float,

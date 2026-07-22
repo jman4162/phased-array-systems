@@ -145,3 +145,6 @@ results/
 *.csv
 !examples/configs/*.yaml
 package_design_and_requirements.txt
+
+# slopcheck virtualenv
+scripts/.slopvenv/

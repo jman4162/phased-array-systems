@@ -130,25 +130,48 @@ def evaluate_case(
 
     # Digital beamformer analysis (if configured)
     if arch.digital is not None:
+        import math
+
         from phased_array_systems.models.digital.bandwidth import (
             beamformer_operations,
             digital_beamformer_data_rate,
             processing_margin,
         )
-        from phased_array_systems.models.digital.converters import enob_to_snr
+        from phased_array_systems.models.digital.converters import adc_effective_snr
 
         bw = getattr(scenario, "bandwidth_hz", 1e6)
         sample_rate = bw * arch.digital.oversampling_ratio
         bits_per_sample = int(arch.digital.adc_enob) * 2  # I + Q
 
-        # ADC metrics
+        # Digitized channel count follows the digitization level
+        # (element / subarray / analog), not the raw element count
+        n_channels = arch.n_digital_channels
+
+        # ADC metrics (quantization + aperture jitter)
+        jitter_s = (
+            arch.digital.adc_jitter_ps_rms * 1e-12
+            if arch.digital.adc_jitter_ps_rms is not None
+            else None
+        )
+        adc = adc_effective_snr(
+            arch.digital.adc_enob,
+            sample_rate,
+            input_freq_hz=arch.digital.adc_input_freq_hz,
+            jitter_s_rms=jitter_s,
+        )
         metrics["adc_enob"] = arch.digital.adc_enob
-        metrics["adc_snr_db"] = enob_to_snr(arch.digital.adc_enob)
+        metrics["adc_enob_effective"] = adc["enob_effective"]
+        metrics["adc_snr_db"] = adc["snr_total_db"]
         metrics["adc_sample_rate_hz"] = sample_rate
+        metrics["n_digital_channels"] = float(n_channels)
+
+        # Combining N digitized channels adds 10*log10(N) processing gain
+        # to the system dynamic range
+        metrics["dynamic_range_system_db"] = adc["snr_total_db"] + 10 * math.log10(n_channels)
 
         # Beamformer data rate
         bf_rate = digital_beamformer_data_rate(
-            arch.array.n_elements,
+            n_channels,
             sample_rate,
             bits_per_sample,
         )
@@ -156,7 +179,7 @@ def evaluate_case(
 
         # Beamformer compute
         bf_ops = beamformer_operations(
-            arch.array.n_elements,
+            n_channels,
             arch.digital.n_beams,
             sample_rate,
         )

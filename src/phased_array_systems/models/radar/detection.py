@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Literal
 
-from scipy import optimize, special
+from scipy import integrate, optimize, special, stats
 
 SwerlingModel = Literal[0, 1, 2, 3, 4]
 
@@ -45,9 +45,23 @@ def compute_pd_from_snr(
     n_pulses: int = 1,
     integration: Literal["coherent", "noncoherent"] = "noncoherent",
 ) -> float:
-    """Compute probability of detection for given SNR.
+    """Compute probability of detection for given per-pulse SNR.
 
-    Uses Marcum Q-function for Swerling 0 (non-fluctuating) targets.
+    Square-law detector statistics. Conditioned on the total received signal
+    power s (in noise-power units), the normalized detector output follows a
+    noncentral chi-square distribution with 2n degrees of freedom and
+    noncentrality 2s, so Pd = Q_chi2'(2T; 2n, 2s) where T is the normalized
+    threshold. Swerling fluctuation is the gamma-distributed mixture of s:
+
+        Swerling 0: s = n*SNR (deterministic; Pd is the Marcum Q result)
+        Swerling 1: s ~ Gamma(1, n*SNR)   (scan-to-scan Rayleigh)
+        Swerling 2: s ~ Gamma(n, SNR)     (pulse-to-pulse Rayleigh; closed form)
+        Swerling 3: s ~ Gamma(2, n*SNR/2) (scan-to-scan chi-4)
+        Swerling 4: s ~ Gamma(2n, SNR/2)  (pulse-to-pulse chi-4)
+
+    Coherent integration multiplies SNR by n and detects on a single sample;
+    noncoherent integration uses the n-sample statistics directly (no separate
+    empirical gain factor).
 
     Args:
         snr_db: Signal-to-noise ratio per pulse (dB)
@@ -61,64 +75,44 @@ def compute_pd_from_snr(
     """
     if not 0 < pfa < 1:
         raise ValueError("pfa must be between 0 and 1")
+    if n_pulses < 1:
+        raise ValueError("n_pulses must be >= 1")
 
     snr_linear = 10 ** (snr_db / 10)
 
-    # Apply integration gain
     if integration == "coherent":
-        # Coherent integration: SNR scales linearly with n
-        snr_integrated = snr_linear * n_pulses
+        # Coherent integration: full n-times SNR gain, single detection sample
+        snr_linear *= n_pulses
+        n = 1
     else:
-        # Non-coherent integration: approximate gain
-        # Using empirical formula: effective SNR ≈ snr * n^0.8
-        snr_integrated = snr_linear * (n_pulses**0.8)
+        n = n_pulses
 
-    # Compute threshold from Pfa
-    threshold = compute_detection_threshold(pfa, n_samples=1)
+    threshold = compute_detection_threshold(pfa, n_samples=n)
 
-    # For Swerling 0 (non-fluctuating), use Marcum Q-function approximation
-    # Pd = Q(sqrt(2*SNR), sqrt(2*threshold))
-    # Using Rice distribution approximation
     if swerling == 0:
-        # Marcum Q-function: Q_1(a, b) where a = sqrt(2*SNR), b = sqrt(threshold)
-        a = math.sqrt(2 * snr_integrated)
-        b = math.sqrt(2 * threshold)
-
-        # Approximate Marcum Q using modified Bessel function
-        # For high SNR, Pd ≈ 1 - 0.5 * erfc((a - b) / sqrt(2))
-        if a > b:
-            pd = 0.5 * special.erfc((b - a) / math.sqrt(2))
-        else:
-            pd = 0.5 * special.erfc((b - a) / math.sqrt(2))
-
-        # Clamp to valid range
-        return max(0.0, min(1.0, pd))
-
-    elif swerling in (1, 2, 3, 4):
-        # Swerling models with fluctuating RCS
-        # Use empirical adjustment factors
+        s = n * snr_linear
+        pd = stats.ncx2.sf(2 * threshold, 2 * n, 2 * s)
+    elif swerling == 2:
+        # Sum of n independent exponential pulses with mean (1 + SNR)
+        pd = special.gammaincc(n, threshold / (1 + snr_linear))
+    elif swerling in (1, 3, 4):
         if swerling == 1:
-            # Slow fluctuation, Rayleigh
-            factor = 1.0 + 1.0 / snr_integrated if snr_integrated > 0 else 0
-        elif swerling == 2:
-            # Fast fluctuation, Rayleigh
-            factor = 1.0 + 0.5 / snr_integrated if snr_integrated > 0 else 0
+            shape, scale = 1.0, n * snr_linear
         elif swerling == 3:
-            # Slow fluctuation, chi-squared (4 DOF)
-            factor = 1.0 + 2.0 / snr_integrated if snr_integrated > 0 else 0
+            shape, scale = 2.0, n * snr_linear / 2
         else:  # swerling == 4
-            # Fast fluctuation, chi-squared (4 DOF)
-            factor = 1.0 + 1.0 / snr_integrated if snr_integrated > 0 else 0
+            shape, scale = 2.0 * n, snr_linear / 2
 
-        # Adjusted threshold
-        adj_snr = snr_integrated / factor if factor > 0 else snr_integrated
-        a = math.sqrt(2 * adj_snr)
-        b = math.sqrt(2 * threshold)
-        pd = 0.5 * special.erfc((b - a) / math.sqrt(2))
-        return max(0.0, min(1.0, pd))
+        def integrand(s: float) -> float:
+            return stats.ncx2.sf(2 * threshold, 2 * n, 2 * s) * stats.gamma.pdf(
+                s, shape, scale=scale
+            )
 
+        pd, _ = integrate.quad(integrand, 0, stats.gamma.ppf(1 - 1e-10, shape, scale=scale))
     else:
         raise ValueError(f"Unknown Swerling model: {swerling}")
+
+    return max(0.0, min(1.0, float(pd)))
 
 
 def compute_snr_for_pd(

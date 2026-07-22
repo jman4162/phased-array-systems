@@ -121,15 +121,8 @@ def augment_doe(
     Returns:
         Combined DataFrame with original + new cases
     """
-    # Generate new samples
-    new_doe = generate_doe(
-        design_space,
-        method=method,
-        n_samples=n_additional,
-        seed=seed,
-    )
-
-    # Renumber case IDs to avoid collision
+    # Find highest existing case number (also used to offset the seed so
+    # augmentation draws new points instead of repeating the original ones)
     max_existing_id = 0
     for case_id in existing_doe["case_id"]:
         if case_id.startswith("case_"):
@@ -138,6 +131,16 @@ def augment_doe(
                 max_existing_id = max(max_existing_id, num)
             except ValueError:
                 pass
+
+    # Generate new samples with an offset seed; reusing the caller's seed
+    # verbatim would reproduce the original LHS/random draws
+    new_seed = seed + max_existing_id + 1 if seed is not None else None
+    new_doe = generate_doe(
+        design_space,
+        method=method,
+        n_samples=n_additional,
+        seed=new_seed,
+    )
 
     new_ids = [
         f"case_{i:05d}" for i in range(max_existing_id + 1, max_existing_id + 1 + n_additional)

@@ -77,6 +77,93 @@ class TestPowerModel:
         assert metrics["prime_power_w"] == pytest.approx(expected_prime)
 
 
+class TestPowerModelExtended:
+    """Tests for duty cycle, RX chain, and digital section power."""
+
+    @pytest.fixture
+    def comms_scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=100e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def test_duty_cycle_scales_dc_power(self):
+        """Pulsed radar at 10% duty draws 10% of the CW PA DC power."""
+        from phased_array_systems.scenarios import RadarDetectionScenario
+
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, pa_efficiency=0.4),
+        )
+        cw = RadarDetectionScenario(
+            freq_hz=10e9, bandwidth_hz=1e6, range_m=50e3, target_rcs_dbsm=0.0, duty_cycle=1.0
+        )
+        pulsed = RadarDetectionScenario(
+            freq_hz=10e9, bandwidth_hz=1e6, range_m=50e3, target_rcs_dbsm=0.0, duty_cycle=0.1
+        )
+
+        model = PowerModel()
+        m_cw = model.evaluate(arch, cw, {})
+        m_pulsed = model.evaluate(arch, pulsed, {})
+
+        # Peak RF power is unchanged; average and DC scale with duty
+        assert m_pulsed["rf_power_w"] == pytest.approx(m_cw["rf_power_w"])
+        assert m_pulsed["rf_avg_power_w"] == pytest.approx(0.1 * m_cw["rf_avg_power_w"])
+        assert m_pulsed["pa_dc_power_w"] == pytest.approx(0.1 * m_cw["pa_dc_power_w"])
+
+    def test_rx_chain_power_included(self, comms_scenario):
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, pa_efficiency=0.4, rx_power_w_per_elem=0.25),
+        )
+        metrics = PowerModel().evaluate(arch, comms_scenario, {})
+
+        assert metrics["rx_dc_power_w"] == pytest.approx(64 * 0.25)
+        assert metrics["dc_power_w"] == pytest.approx(
+            metrics["pa_dc_power_w"] + metrics["rx_dc_power_w"]
+        )
+
+    def test_digital_section_power_included(self, comms_scenario):
+        """ADC and DSP power appear in the DC budget when digital is configured."""
+        from phased_array_systems.architecture import DigitalConfig
+
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, pa_efficiency=0.4),
+            digital=DigitalConfig(adc_enob=12.0, n_beams=4),
+        )
+        metrics = PowerModel().evaluate(arch, comms_scenario, {})
+
+        assert metrics["adc_power_w"] > 0
+        assert metrics["dsp_power_w"] > 0
+        assert metrics["dc_power_w"] == pytest.approx(
+            metrics["pa_dc_power_w"]
+            + metrics["rx_dc_power_w"]
+            + metrics["adc_power_w"]
+            + metrics["dsp_power_w"]
+        )
+
+    def test_subarray_digitization_cuts_digital_power(self, comms_scenario):
+        """Fewer digitized channels -> less ADC power."""
+        from phased_array_systems.architecture import DigitalConfig
+
+        def build(level):
+            return Architecture(
+                array=ArrayConfig(nx=16, ny=16, max_subarray_nx=8, max_subarray_ny=8),
+                rf=RFChainConfig(tx_power_w_per_elem=1.0, pa_efficiency=0.4),
+                digital=DigitalConfig(adc_enob=12.0, digitization_level=level),
+            )
+
+        model = PowerModel()
+        elem = model.evaluate(build("element"), comms_scenario, {})
+        sub = model.evaluate(build("subarray"), comms_scenario, {})
+
+        # 256 elements vs 4 subarrays
+        assert elem["adc_power_w"] == pytest.approx(64 * sub["adc_power_w"])
+
+
 class TestThermalLoad:
     """Tests for thermal load calculation."""
 

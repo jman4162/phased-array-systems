@@ -214,9 +214,8 @@ def default_architecture_builder(case_row: dict) -> Architecture:
         Architecture object
     """
     # Filter out non-architecture keys
-    arch_keys = {
-        k: v for k, v in case_row.items() if k.startswith(("array.", "rf.", "cost.")) or k == "name"
-    }
+    arch_prefixes = ("array.", "rf.", "cost.", "digital.", "reliability.")
+    arch_keys = {k: v for k, v in case_row.items() if k.startswith(arch_prefixes) or k == "name"}
 
     return Architecture.from_flat(arch_keys)
 

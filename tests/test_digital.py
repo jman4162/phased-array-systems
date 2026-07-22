@@ -14,6 +14,8 @@ from phased_array_systems.models.digital.bandwidth import (
 )
 from phased_array_systems.models.digital.converters import (
     adc_dynamic_range,
+    adc_effective_snr,
+    adc_power_w,
     dac_output_power,
     enob_to_sfdr,
     enob_to_snr,
@@ -110,6 +112,50 @@ class TestADCDynamicRange:
         dr_10 = adc_dynamic_range(10.0, bandwidth_hz=10e6)
         dr_14 = adc_dynamic_range(14.0, bandwidth_hz=10e6)
         assert dr_14["dynamic_range_db"] > dr_10["dynamic_range_db"]
+
+
+class TestADCEffectiveSNR:
+    """Tests for combined quantization + jitter ADC SNR."""
+
+    def test_no_jitter_equals_quantization(self):
+        """Without jitter, total SNR is the quantization SNR."""
+        result = adc_effective_snr(12.0, sample_rate_hz=250e6)
+        assert result["snr_total_db"] == pytest.approx(enob_to_snr(12.0))
+        assert result["snr_jitter_db"] == float("inf")
+
+    def test_jitter_snr_reference_value(self):
+        """1 ps RMS at 1 GHz input: SNR_j = -20*log10(2*pi*1e9*1e-12) = 44.03 dB."""
+        result = adc_effective_snr(12.0, sample_rate_hz=3e9, input_freq_hz=1e9, jitter_s_rms=1e-12)
+        assert result["snr_jitter_db"] == pytest.approx(44.03, abs=0.02)
+        # Jitter dominates far below the 74 dB quantization SNR
+        assert result["snr_total_db"] < 45.0
+
+    def test_jitter_reduces_effective_enob(self):
+        """Adding jitter lowers effective ENOB below the configured value."""
+        ideal = adc_effective_snr(12.0, sample_rate_hz=250e6)
+        jittered = adc_effective_snr(12.0, sample_rate_hz=250e6, jitter_s_rms=1e-12)
+        assert jittered["enob_effective"] < ideal["enob_effective"]
+
+    def test_default_input_freq_is_half_fs(self):
+        """When input_freq_hz is None, jitter SNR uses fs/2."""
+        explicit = adc_effective_snr(
+            12.0, sample_rate_hz=2e9, input_freq_hz=1e9, jitter_s_rms=0.1e-12
+        )
+        implicit = adc_effective_snr(12.0, sample_rate_hz=2e9, jitter_s_rms=0.1e-12)
+        assert implicit["snr_jitter_db"] == pytest.approx(explicit["snr_jitter_db"])
+
+
+class TestADCPower:
+    """Tests for Walden FOM ADC power."""
+
+    def test_walden_reference_value(self):
+        """100 fJ FOM, 12 ENOB, 250 MHz: P = 1e-13 * 4096 * 2.5e8 = 0.1024 W."""
+        assert adc_power_w(12.0, 250e6, fom_fj=100.0) == pytest.approx(0.1024)
+
+    def test_power_scales_with_rate_and_bits(self):
+        base = adc_power_w(12.0, 250e6)
+        assert adc_power_w(12.0, 500e6) == pytest.approx(2 * base)
+        assert adc_power_w(13.0, 250e6) == pytest.approx(2 * base)
 
 
 class TestDACOutputPower:

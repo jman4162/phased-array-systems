@@ -18,10 +18,7 @@ from phased_array_systems.models.radar.clutter import (
     sea_clutter_rcs,
 )
 from phased_array_systems.models.radar.detection import albersheim_snr, compute_pd_from_snr
-from phased_array_systems.models.radar.integration import (
-    coherent_integration_gain,
-    noncoherent_integration_gain,
-)
+from phased_array_systems.models.radar.integration import coherent_integration_gain
 from phased_array_systems.models.radar.propagation import (
     atmospheric_loss_db,
     rain_attenuation_db,
@@ -244,37 +241,41 @@ class RadarModel:
                 scenario.pfa,
             )
 
-        # Integration gain
+        # Integration gain and required SNR must come from the same law to
+        # avoid double-counting. For noncoherent integration, Albersheim's
+        # n-pulse form already embeds the integration efficiency, so the
+        # implied gain is the drop in required single-pulse SNR vs n=1.
         n_pulses = scenario.n_pulses
+        snr_required_db = albersheim_snr(
+            pd=scenario.pd_required,
+            pfa=scenario.pfa,
+            n_pulses=1,
+        )
         if scenario.integration_type == "coherent":
             integration_gain_db = coherent_integration_gain(n_pulses)
         else:
-            integration_gain_db = noncoherent_integration_gain(
-                n_pulses, pd=scenario.pd_required, pfa=scenario.pfa
+            snr_required_single_db = albersheim_snr(
+                pd=scenario.pd_required,
+                pfa=scenario.pfa,
+                n_pulses=n_pulses,
             )
+            integration_gain_db = snr_required_db - snr_required_single_db
 
         # Integrated SCNR (use SCNR when clutter is present, SNR otherwise)
         effective_snr_single = scnr_db if scenario.clutter_type != "none" else snr_single_db
 
         snr_integrated_db = effective_snr_single + integration_gain_db - cfar_loss
 
-        # Required SNR for Pd/Pfa using Albersheim's equation
-        snr_required_db = albersheim_snr(
-            pd=scenario.pd_required,
-            pfa=scenario.pfa,
-            n_pulses=1,  # Integration gain already applied
-        )
-
-        # SNR margin
+        # SNR margin (snr_required_db is referenced to the integrated SNR)
         snr_margin_db = snr_integrated_db - snr_required_db
 
-        # Achieved Pd at the given range
+        # Achieved Pd from per-pulse SNR using exact n-pulse statistics
         pd_achieved = compute_pd_from_snr(
-            snr_integrated_db,
+            effective_snr_single - cfar_loss,
             scenario.pfa,
             swerling=0,  # Non-fluctuating
-            n_pulses=1,  # Already integrated
-            integration="coherent",  # SNR already includes integration
+            n_pulses=n_pulses,
+            integration=scenario.integration_type,
         )
 
         # Detection range (range where margin = 0)

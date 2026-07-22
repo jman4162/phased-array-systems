@@ -176,6 +176,9 @@ class RFChainConfig(BaseModel):
     """
 
     tx_power_w_per_elem: float = Field(gt=0, description="TX power per element (W)")
+    rx_power_w_per_elem: float = Field(
+        default=0.0, ge=0, description="RX chain DC power per element (LNA, phase shifter, W)"
+    )
     pa_efficiency: float = Field(default=0.3, gt=0, le=1, description="PA efficiency (0-1)")
     noise_figure_db: float = Field(default=3.0, ge=0, description="Noise figure (dB)")
     n_tx_beams: int = Field(default=1, ge=1, description="Number of TX beams")
@@ -238,17 +241,40 @@ class DigitalConfig(BaseModel):
     """Configuration for digital beamformer constraints.
 
     Attributes:
-        adc_enob: ADC effective number of bits
+        digitization_level: Where digitization happens in the receive chain.
+            "element" digitizes every element, "subarray" digitizes one channel
+            per sub-array (analog combining within the sub-array), "analog"
+            digitizes a single combined channel.
+        adc_enob: ADC effective number of bits (quantization-limited)
+        adc_jitter_ps_rms: ADC aperture jitter (ps RMS); None ignores jitter
+        adc_input_freq_hz: Input frequency for jitter SNR; None uses fs/2
         oversampling_ratio: ADC oversampling ratio
         n_beams: Number of simultaneous digital beams
         fpga_throughput_gops: Available FPGA throughput (GOPS); None=skip margin calc
+        adc_fom_fj: ADC Walden figure of merit (fJ per conversion step)
+        dsp_efficiency_gops_per_w: Beamformer compute efficiency (GOPS/W)
     """
 
+    digitization_level: Literal["element", "subarray", "analog"] = Field(
+        default="element", description="Digitization granularity"
+    )
     adc_enob: float = Field(default=12.0, ge=4, le=18, description="ADC effective number of bits")
+    adc_jitter_ps_rms: float | None = Field(
+        default=None, gt=0, description="ADC aperture jitter (ps RMS); None=ideal"
+    )
+    adc_input_freq_hz: float | None = Field(
+        default=None, gt=0, description="Input frequency for jitter SNR (Hz); None=fs/2"
+    )
     oversampling_ratio: float = Field(default=2.5, ge=2.0, description="ADC oversampling ratio")
     n_beams: int = Field(default=1, ge=1, description="Simultaneous digital beams")
     fpga_throughput_gops: float | None = Field(
         default=None, ge=0, description="Available FPGA throughput (GOPS); None=skip margin calc"
+    )
+    adc_fom_fj: float = Field(
+        default=100.0, gt=0, description="ADC Walden FOM (fJ/conversion-step)"
+    )
+    dsp_efficiency_gops_per_w: float = Field(
+        default=50.0, gt=0, description="Beamformer compute efficiency (GOPS/W)"
     )
 
 
@@ -280,6 +306,21 @@ class Architecture(BaseModel):
     def n_elements(self) -> int:
         """Total number of elements (convenience property)."""
         return self.array.n_elements
+
+    @property
+    def n_digital_channels(self) -> int:
+        """Number of digitized receive channels, set by digitization level.
+
+        Returns 0 when no digital configuration is present.
+        """
+        if self.digital is None:
+            return 0
+        level = self.digital.digitization_level
+        if level == "element":
+            return self.array.n_elements
+        if level == "subarray":
+            return self.array.n_subarrays
+        return 1  # analog: single combined channel
 
     def model_dump_flat(self) -> dict:
         """Return a flattened dictionary of all configuration values.

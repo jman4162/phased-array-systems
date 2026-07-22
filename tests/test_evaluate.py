@@ -463,3 +463,58 @@ class TestDigitalIntegration:
         metrics = evaluate_case(arch, sample_scenario)
         expected_snr = 6.02 * 14.0 + 1.76
         assert metrics["adc_snr_db"] == pytest.approx(expected_snr)
+
+
+class TestDigitizationLevels:
+    """Tests for element/subarray/analog digitization trades."""
+
+    @pytest.fixture
+    def sample_scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=100e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def _arch(self, level, **digital_kwargs):
+        return Architecture(
+            array=ArrayConfig(nx=16, ny=16, max_subarray_nx=8, max_subarray_ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            digital=DigitalConfig(digitization_level=level, **digital_kwargs),
+        )
+
+    def test_channel_counts(self, sample_scenario):
+        m_elem = evaluate_case(self._arch("element"), sample_scenario)
+        m_sub = evaluate_case(self._arch("subarray"), sample_scenario)
+        m_analog = evaluate_case(self._arch("analog"), sample_scenario)
+
+        assert m_elem["n_digital_channels"] == 256
+        assert m_sub["n_digital_channels"] == 4  # 16x16 with 8x8 subarrays
+        assert m_analog["n_digital_channels"] == 1
+
+    def test_data_rate_scales_with_channels(self, sample_scenario):
+        m_elem = evaluate_case(self._arch("element"), sample_scenario)
+        m_sub = evaluate_case(self._arch("subarray"), sample_scenario)
+
+        assert m_elem["bf_data_rate_gbps"] == pytest.approx(
+            64 * m_sub["bf_data_rate_gbps"], rel=1e-9
+        )
+
+    def test_system_dynamic_range_gains_with_channels(self, sample_scenario):
+        """Combining N channels adds 10*log10(N) to system dynamic range."""
+        import math
+
+        m_elem = evaluate_case(self._arch("element"), sample_scenario)
+        assert m_elem["dynamic_range_system_db"] == pytest.approx(
+            m_elem["adc_snr_db"] + 10 * math.log10(256)
+        )
+
+    def test_jitter_lowers_adc_snr(self, sample_scenario):
+        m_ideal = evaluate_case(self._arch("element"), sample_scenario)
+        m_jitter = evaluate_case(
+            self._arch("element", adc_jitter_ps_rms=1.0, adc_input_freq_hz=10e9),
+            sample_scenario,
+        )
+        assert m_jitter["adc_snr_db"] < m_ideal["adc_snr_db"]
+        assert m_jitter["adc_enob_effective"] < m_ideal["adc_enob_effective"]
