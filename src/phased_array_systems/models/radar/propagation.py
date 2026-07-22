@@ -5,8 +5,11 @@ Implements:
 - Rain attenuation
 - Earth curvature and refraction effects
 
+Gaseous and rain attenuation delegate to the shared line-by-line ITU
+implementations in `phased_array_systems.models.propagation`.
+
 References:
-    - ITU-R P.676-12: Attenuation by atmospheric gases
+    - ITU-R P.676-13: Attenuation by atmospheric gases
     - ITU-R P.838-3: Rain attenuation model
     - Skolnik, M. "Radar Handbook", 3rd Ed., Ch. 26
 """
@@ -14,6 +17,18 @@ References:
 from __future__ import annotations
 
 import math
+from typing import Literal
+
+from phased_array_systems.models.propagation import (
+    H2O_EQUIVALENT_HEIGHT_KM,
+    O2_EQUIVALENT_HEIGHT_KM,
+    effective_rain_path_km,
+    gaseous_attenuation_components_db_per_km,
+    gaseous_attenuation_from_humidity,
+    gaseous_slant_path_km,
+    rain_k_alpha,
+    water_vapor_density_g_m3,
+)
 
 # Earth radius (km)
 EARTH_RADIUS_KM = 6371.0
@@ -27,8 +42,8 @@ def atmospheric_attenuation_db_per_km(
 ) -> float:
     """Compute one-way atmospheric attenuation rate.
 
-    Uses simplified ITU-R P.676 model for combined oxygen and
-    water vapor absorption. Accurate for frequencies 1-100 GHz.
+    Line-by-line ITU-R P.676-13 model for combined oxygen and water vapor
+    absorption, valid 1-1000 GHz.
 
     Args:
         freq_hz: Frequency (Hz)
@@ -39,53 +54,9 @@ def atmospheric_attenuation_db_per_km(
     Returns:
         Attenuation rate (dB/km), one-way
     """
-    freq_ghz = freq_hz / 1e9
-
-    if freq_ghz < 1:
-        return 0.0  # Negligible below 1 GHz
-
-    # Simplified model coefficients
-    # Oxygen has resonances at ~60 GHz and ~118 GHz
-    # Water vapor has resonances at ~22 GHz and ~183 GHz
-
-    # Temperature and pressure correction factors
-    theta = 300.0 / (temperature_c + 273.15)
-    p_ratio = pressure_hpa / 1013.25
-
-    # Oxygen absorption (simplified Liebe model)
-    # Peak around 60 GHz
-    f_o2 = 60.0
-    delta_o2 = 5.0  # Approximate linewidth
-    gamma_o2 = 0.001 * p_ratio * theta**3 * freq_ghz**2 / (1 + ((freq_ghz - f_o2) / delta_o2) ** 2)
-
-    # Add low-frequency oxygen contribution
-    if freq_ghz < 60:
-        gamma_o2 += 7e-4 * p_ratio * theta**2 * freq_ghz**2 / 1000
-
-    # Water vapor absorption (simplified)
-    # Convert humidity to water vapor density
-    # Saturation vapor pressure (simplified)
-    e_s = 6.1121 * math.exp(17.502 * temperature_c / (240.97 + temperature_c))
-    rho_w = humidity_pct / 100.0 * e_s * 0.622 / (pressure_hpa - e_s) * 100
-
-    # Peak around 22 GHz
-    f_h2o = 22.235
-    delta_h2o = 3.0
-    gamma_h2o = (
-        0.0001 * rho_w * theta**3.5 * freq_ghz**2 / (1 + ((freq_ghz - f_h2o) / delta_h2o) ** 2)
+    return gaseous_attenuation_from_humidity(
+        freq_hz / 1e9, temperature_c, pressure_hpa, humidity_pct
     )
-
-    # Second water vapor line at 183 GHz
-    if freq_ghz > 100:
-        f_h2o_2 = 183.31
-        delta_h2o_2 = 5.0
-        gamma_h2o += (
-            0.001 * rho_w * theta**3 * freq_ghz**2 / (1 + ((freq_ghz - f_h2o_2) / delta_h2o_2) ** 2)
-        )
-
-    total_attenuation = gamma_o2 + gamma_h2o
-
-    return float(total_attenuation)
 
 
 def atmospheric_loss_db(
@@ -94,11 +65,14 @@ def atmospheric_loss_db(
     elevation_deg: float = 0.0,
     temperature_c: float = 15.0,
     humidity_pct: float = 50.0,
+    pressure_hpa: float = 1013.25,
 ) -> float:
     """Compute total two-way atmospheric loss.
 
-    For radar, this is the round-trip loss through the atmosphere.
-    Accounts for path elevation (less atmosphere at higher angles).
+    For radar, this is the round-trip loss through the atmosphere. Each gas
+    attenuates over min(range, equivalent-height slant column), so
+    low-elevation surveillance paths attenuate over the full range while
+    high-elevation paths only cross the absorbing layer.
 
     Args:
         freq_hz: Frequency (Hz)
@@ -106,44 +80,42 @@ def atmospheric_loss_db(
         elevation_deg: Elevation angle (deg), 0 = horizon
         temperature_c: Temperature (Celsius)
         humidity_pct: Relative humidity (%)
+        pressure_hpa: Total surface pressure (hPa)
 
     Returns:
         Two-way atmospheric loss (dB)
     """
+    freq_ghz = freq_hz / 1e9
+    if freq_ghz < 1:
+        return 0.0
+
     range_km = range_m / 1000.0
 
-    # Get attenuation rate
-    atten_rate = atmospheric_attenuation_db_per_km(
-        freq_hz, temperature_c, humidity_pct=humidity_pct
+    rho = water_vapor_density_g_m3(temperature_c, humidity_pct, pressure_hpa)
+    gamma_o, gamma_w = gaseous_attenuation_components_db_per_km(
+        freq_ghz, temperature_c, pressure_hpa, rho
     )
 
-    # Scale by elevation - less atmosphere at higher angles
-    # Effective path through atmosphere decreases with elevation
-    if elevation_deg > 0:
-        # Simple model: assume uniform atmosphere to 10 km altitude
-        # Path length scales approximately as 1/sin(elevation) near horizon
-        # but is limited by atmosphere height at high angles
-        elev_rad = math.radians(max(0.5, elevation_deg))
-        scale_factor = min(1.0, 1.0 / math.sin(elev_rad))
-    else:
-        scale_factor = 1.0
+    one_way_loss = gamma_o * gaseous_slant_path_km(
+        range_km, elevation_deg, O2_EQUIVALENT_HEIGHT_KM
+    ) + gamma_w * gaseous_slant_path_km(range_km, elevation_deg, H2O_EQUIVALENT_HEIGHT_KM)
 
-    # Two-way loss (radar sees both directions)
-    one_way_loss = atten_rate * range_km * scale_factor
-    two_way_loss = 2.0 * one_way_loss
-
-    return two_way_loss
+    return 2.0 * one_way_loss
 
 
 def rain_attenuation_rate(
     freq_hz: float,
     rain_rate_mm_hr: float,
+    polarization: Literal["H", "V"] = "H",
 ) -> float:
-    """Compute rain attenuation rate using ITU-R P.838.
+    """Compute rain attenuation rate per ITU-R P.838-3.
+
+    gamma_R = k * R^alpha with the published Table 1-4 coefficients.
 
     Args:
         freq_hz: Frequency (Hz)
         rain_rate_mm_hr: Rain rate (mm/hour)
+        polarization: Linear polarization, "H" or "V"
 
     Returns:
         Attenuation rate (dB/km), one-way
@@ -156,28 +128,8 @@ def rain_attenuation_rate(
     if freq_ghz < 1:
         return 0.0  # Negligible rain attenuation below 1 GHz
 
-    # ITU-R P.838-3 coefficients (simplified, horizontal polarization)
-    # gamma_R = k * R^alpha
-    # Coefficients are frequency-dependent
-
-    # Approximate k and alpha from ITU-R tables
-    # Valid for 1-100 GHz
-    log_f = math.log10(max(1.0, freq_ghz))
-
-    # Polynomial fit for k (log scale)
-    log_k = -5.33 + 0.7 * log_f + 0.15 * log_f**2
-    k = 10**log_k
-
-    # Polynomial fit for alpha
-    alpha = 1.2 - 0.1 * log_f
-
-    # Clamp alpha to reasonable range
-    alpha = max(0.8, min(1.3, alpha))
-
-    # Rain attenuation rate
-    gamma_r = k * (rain_rate_mm_hr**alpha)
-
-    return float(gamma_r)
+    k, alpha = rain_k_alpha(freq_ghz, polarization)
+    return float(k * (rain_rate_mm_hr**alpha))
 
 
 def rain_attenuation_db(
@@ -185,6 +137,7 @@ def rain_attenuation_db(
     range_m: float,
     rain_rate_mm_hr: float,
     rain_extent_km: float | None = None,
+    polarization: Literal["H", "V"] = "H",
 ) -> float:
     """Compute total two-way rain attenuation.
 
@@ -192,8 +145,9 @@ def rain_attenuation_db(
         freq_hz: Frequency (Hz)
         range_m: Slant range through rain (m)
         rain_rate_mm_hr: Rain rate (mm/hour)
-        rain_extent_km: Extent of rain cell (km). If None, uses
-            an empirical model based on rain rate.
+        rain_extent_km: Extent of rain cell (km). If None, uses the
+            ITU-R P.530 effective-path distance factor.
+        polarization: Linear polarization, "H" or "V"
 
     Returns:
         Two-way rain attenuation (dB)
@@ -201,26 +155,21 @@ def rain_attenuation_db(
     if rain_rate_mm_hr <= 0:
         return 0.0
 
+    freq_ghz = freq_hz / 1e9
+    if freq_ghz < 1:
+        return 0.0
+
     range_km = range_m / 1000.0
 
-    # Attenuation rate
-    gamma_r = rain_attenuation_rate(freq_hz, rain_rate_mm_hr)
+    k, alpha = rain_k_alpha(freq_ghz, polarization)
+    gamma_r = k * (rain_rate_mm_hr**alpha)
 
-    # Rain cell extent model (if not specified)
-    # Higher rain rates typically come from smaller cells
-    if rain_extent_km is None:
-        # Empirical model: extent decreases with rain rate
-        # Based on ITU-R P.530 reduction factor concept
-        rain_extent_km = max(1.0, 35.0 * math.exp(-0.02 * rain_rate_mm_hr))
+    if rain_extent_km is not None:
+        effective_path_km = min(range_km, rain_extent_km)
+    else:
+        effective_path_km = effective_rain_path_km(range_km, rain_rate_mm_hr, freq_ghz, alpha)
 
-    # Path through rain is minimum of range and rain extent
-    effective_path_km = min(range_km, rain_extent_km)
-
-    # Two-way loss
-    one_way_loss = gamma_r * effective_path_km
-    two_way_loss = 2.0 * one_way_loss
-
-    return two_way_loss
+    return float(2.0 * gamma_r * effective_path_km)
 
 
 def effective_earth_radius_factor(
