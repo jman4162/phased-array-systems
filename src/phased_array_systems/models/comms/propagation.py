@@ -144,7 +144,7 @@ def compute_atmospheric_loss(
     else:
         scale = 1.0
 
-    return total_rate * range_km * scale
+    return float(total_rate * range_km * scale)
 
 
 def compute_rain_loss(
@@ -183,7 +183,7 @@ def compute_rain_loss(
     rain_extent_km = max(1.0, 35.0 * math.exp(-0.02 * rain_rate_mmh))
     effective_km = min(range_km, rain_extent_km)
 
-    return gamma_r * effective_km
+    return float(gamma_r * effective_km)
 
 
 def compute_two_ray_path_loss(

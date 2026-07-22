@@ -54,7 +54,7 @@ def ca_cfar_threshold_factor(
     # alpha = n_ref * (Pfa^(-1/n_ref) - 1)
     alpha = n_ref * (pfa ** (-1.0 / n_ref) - 1)
 
-    return alpha
+    return float(alpha)
 
 
 def os_cfar_threshold_factor(
@@ -97,7 +97,7 @@ def os_cfar_threshold_factor(
 
     alpha = pfa ** (-1.0 / n_ref) - 1 if m == 1 else m / k * (pfa ** (-1.0 / m) - 1)
 
-    return alpha
+    return float(alpha)
 
 
 def go_cfar_threshold_factor(
@@ -133,7 +133,7 @@ def go_cfar_threshold_factor(
     # Use CA-CFAR formula with equivalent Pfa
     alpha = n_ref_half * (pfa_ca ** (-1.0 / n_ref_half) - 1)
 
-    return alpha
+    return float(alpha)
 
 
 def so_cfar_threshold_factor(
@@ -169,7 +169,7 @@ def so_cfar_threshold_factor(
     # Use CA-CFAR formula with equivalent Pfa
     alpha = n_ref_half * (pfa_ca ** (-1.0 / n_ref_half) - 1)
 
-    return alpha
+    return float(alpha)
 
 
 def cfar_threshold_factor(
@@ -350,4 +350,4 @@ def compute_pd_with_cfar(
 
     pd = 0.5 * special.erfc((b - a) / math.sqrt(2))
 
-    return max(0.0, min(1.0, pd))
+    return max(0.0, min(1.0, float(pd)))

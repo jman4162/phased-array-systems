@@ -50,10 +50,13 @@ class DesignVariable(BaseModel):
             Array of sampled values
         """
         if self.type == "float":
+            assert self.low is not None and self.high is not None
             return rng.uniform(self.low, self.high, n)
         elif self.type == "int":
+            assert self.low is not None and self.high is not None
             return rng.integers(int(self.low), int(self.high) + 1, n)
         else:  # categorical
+            assert self.values is not None
             indices = rng.integers(0, len(self.values), n)
             return np.array([self.values[i] for i in indices])
 
@@ -67,11 +70,14 @@ class DesignVariable(BaseModel):
             Scaled values in variable's actual range
         """
         if self.type == "float":
+            assert self.low is not None and self.high is not None
             return self.low + unit_values * (self.high - self.low)
         elif self.type == "int":
+            assert self.low is not None and self.high is not None
             scaled = self.low + unit_values * (self.high - self.low + 1)
-            return np.floor(scaled).astype(int).clip(int(self.low), int(self.high))
+            return np.asarray(np.floor(scaled).astype(int).clip(int(self.low), int(self.high)))
         else:  # categorical
+            assert self.values is not None
             indices = np.floor(unit_values * len(self.values)).astype(int)
             indices = indices.clip(0, len(self.values) - 1)
             return np.array([self.values[i] for i in indices])
@@ -86,8 +92,10 @@ class DesignVariable(BaseModel):
             List of values at each level
         """
         if self.type == "float":
+            assert self.low is not None and self.high is not None
             return list(np.linspace(self.low, self.high, n_levels))
         elif self.type == "int":
+            assert self.low is not None and self.high is not None
             # For integers, use actual integer values
             all_ints = list(range(int(self.low), int(self.high) + 1))
             if len(all_ints) <= n_levels:
@@ -96,6 +104,7 @@ class DesignVariable(BaseModel):
             indices = np.linspace(0, len(all_ints) - 1, n_levels).astype(int)
             return [all_ints[i] for i in indices]
         else:  # categorical
+            assert self.values is not None
             return list(self.values)
 
 

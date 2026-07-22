@@ -1,12 +1,12 @@
 """Pareto frontier extraction and analysis utilities."""
 
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 import pandas as pd
 
 from phased_array_systems.requirements import RequirementSet
-from phased_array_systems.types import OptimizeDirection
+from phased_array_systems.types import MetricsDict, OptimizeDirection
 
 
 def filter_feasible(
@@ -28,7 +28,7 @@ def filter_feasible(
         # Re-verify against requirements
         mask = []
         for _, row in results.iterrows():
-            metrics = row.to_dict()
+            metrics = cast("MetricsDict", {str(k): v for k, v in row.to_dict().items()})
             report = requirements.verify(metrics)
             mask.append(report.passes)
         return results[mask].copy()
@@ -74,7 +74,7 @@ def extract_pareto(
     # Convert to minimization (negate maximization objectives)
     obj_matrix = np.zeros((len(results), len(objectives)))
     for i, (name, direction) in enumerate(objectives):
-        values = results[name].values
+        values = np.asarray(results[name].values, dtype=float)
         if direction == "maximize":
             obj_matrix[:, i] = -values
         else:
@@ -139,7 +139,7 @@ def rank_pareto(
     # Extract and normalize objective values
     obj_matrix = np.zeros((len(pareto), n_obj))
     for i, (name, direction) in enumerate(objectives):
-        values = pareto[name].values.astype(float)
+        values = np.asarray(pareto[name].values, dtype=float)
         # Normalize to [0, 1]
         min_val, max_val = values.min(), values.max()
         if max_val > min_val:
@@ -213,7 +213,7 @@ def compute_hypervolume(
     # Extract objective values (convert to minimization)
     obj_matrix = np.zeros((len(pareto), n_obj))
     for i, (name, direction) in enumerate(objectives):
-        values = pareto[name].values.astype(float)
+        values = np.asarray(pareto[name].values, dtype=float)
         if direction == "maximize":
             obj_matrix[:, i] = -values
         else:
@@ -240,7 +240,7 @@ def compute_hypervolume(
                 hv += (ref[0] - x) * (prev_y - y)
                 prev_y = y
 
-        return hv
+        return float(hv)
 
     else:
         # Monte Carlo approximation for higher dimensions
@@ -263,4 +263,4 @@ def compute_hypervolume(
         box_volume = np.prod(ref - obj_matrix.min(axis=0))
         hv = box_volume * dominated.sum() / n_samples
 
-        return hv
+        return float(hv)

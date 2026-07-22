@@ -35,7 +35,7 @@ def compute_detection_threshold(
     # P(X > threshold) = pfa
     # threshold = gammaincinv(n, 1 - pfa)
     threshold = special.gammaincinv(n_samples, 1 - pfa)
-    return threshold
+    return float(threshold)
 
 
 def compute_pd_from_snr(
@@ -104,8 +104,8 @@ def compute_pd_from_snr(
             shape, scale = 2.0 * n, snr_linear / 2
 
         def integrand(s: float) -> float:
-            return stats.ncx2.sf(2 * threshold, 2 * n, 2 * s) * stats.gamma.pdf(
-                s, shape, scale=scale
+            return float(
+                stats.ncx2.sf(2 * threshold, 2 * n, 2 * s) * stats.gamma.pdf(s, shape, scale=scale)
             )
 
         pd, _ = integrate.quad(integrand, 0, stats.gamma.ppf(1 - 1e-10, shape, scale=scale))
@@ -150,7 +150,7 @@ def compute_snr_for_pd(
 
     try:
         result = optimize.brentq(objective, snr_guess - 20, snr_guess + 20)
-        return result
+        return float(result)
     except ValueError:
         # If brentq fails, return Albersheim estimate
         return snr_guess

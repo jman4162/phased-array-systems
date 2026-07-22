@@ -25,7 +25,7 @@ def compute_beamwidth(
     threshold = peak_db + level_db  # level_db is negative
 
     # Find peak index
-    peak_idx = np.argmax(pattern_db)
+    peak_idx = int(np.argmax(pattern_db))
 
     # Search left from peak
     left_idx = peak_idx
@@ -56,7 +56,7 @@ def compute_beamwidth(
         [angles_deg[right_idx], angles_deg[right_idx - 1]],
     )
 
-    return abs(right_angle - left_angle)
+    return float(abs(right_angle - left_angle))
 
 
 def compute_sidelobe_level(
@@ -75,7 +75,7 @@ def compute_sidelobe_level(
         Peak sidelobe level in dB (negative value)
     """
     peak_db = np.max(pattern_db)
-    peak_idx = np.argmax(pattern_db)
+    peak_idx = int(np.argmax(pattern_db))
     peak_angle = angles_deg[peak_idx]
 
     # Auto-detect main lobe width if not provided
@@ -95,7 +95,7 @@ def compute_sidelobe_level(
     sidelobe_pattern = pattern_db[mask]
     peak_sidelobe_db = np.max(sidelobe_pattern)
 
-    return peak_sidelobe_db - peak_db
+    return float(peak_sidelobe_db - peak_db)
 
 
 def compute_scan_loss(scan_angle_deg: float, model: str = "cosine") -> float:

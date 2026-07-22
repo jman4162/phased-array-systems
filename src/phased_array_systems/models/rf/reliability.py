@@ -184,7 +184,7 @@ def prob_failed_elements(
 
     probs = comb(n_elements, k, exact=False) * (p_fail**k) * (p_survive ** (n_elements - k))
 
-    return probs
+    return np.asarray(probs)
 
 
 def expected_failures(

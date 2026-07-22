@@ -32,6 +32,11 @@ jobs:
         run: |
           ruff check . --output-format=github
 
+      - name: Run type checking with mypy
+        if: matrix.python-version == '3.12'
+        run: |
+          mypy src/phased_array_systems
+
       - name: Run tests with pytest
         run: |
           pytest tests/ -v --tb=short --cov=phased_array_systems --cov-report=xml

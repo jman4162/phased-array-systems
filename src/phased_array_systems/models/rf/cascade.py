@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Any
 
 # Physical constants
 T0 = 290.0  # Reference temperature in Kelvin
@@ -64,7 +65,7 @@ def noise_temp_to_figure(te: float, t0: float = T0) -> float:
 
 def friis_noise_figure(
     stages: list[tuple[float, float]],
-) -> dict[str, float]:
+) -> dict[str, Any]:
     """Calculate cascaded noise figure using Friis equation.
 
     The Friis formula for cascaded noise figure:

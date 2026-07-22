@@ -1,6 +1,6 @@
 """Plotting functions for trade study visualization."""
 
-from typing import Literal
+from typing import Any, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,19 +45,23 @@ def pareto_plot(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = ax.figure
+        fig = cast(plt.Figure, ax.figure)
 
     # Determine point sizes
+    sizes: Any
     if size_by is not None and size_by in results.columns:
-        sizes = results[size_by]
-        sizes = (sizes - sizes.min()) / (sizes.max() - sizes.min() + 1e-10) * 100 + 20
+        size_vals = results[size_by]
+        sizes = (size_vals - size_vals.min()) / (
+            size_vals.max() - size_vals.min() + 1e-10
+        ) * 100 + 20
     else:
         sizes = 50
 
     # Determine colors
+    colors: Any
     if color_by is not None and color_by in results.columns:
         colors = results[color_by]
-        cmap = plt.cm.viridis
+        cmap = plt.get_cmap("viridis")
     else:
         colors = "steelblue"
         cmap = None
@@ -163,9 +167,10 @@ def scatter_matrix(
     fig, axes = plt.subplots(n, n, figsize=figsize)
 
     # Determine colors
+    point_colors: Any
     if color_by is not None and color_by in results.columns:
-        colors = results[color_by].values
-        cmap = plt.cm.viridis
+        colors = np.asarray(results[color_by].values, dtype=float)
+        cmap = plt.get_cmap("viridis")
         norm = plt.Normalize(colors.min(), colors.max())
         point_colors = cmap(norm(colors))
     else:
@@ -252,13 +257,17 @@ def trade_space_plot(
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111, projection="3d")
     else:
-        fig = ax.figure
+        fig = cast(plt.Figure, ax.figure)
+
+    # 3D Axes methods (z-argument scatter, set_zlabel) are not in the base
+    # Axes stubs
+    ax3d = cast(Any, ax)
 
     # Plot points
     if feasible_mask is not None:
         # Infeasible
         inf_data = results[~feasible_mask]
-        ax.scatter(
+        ax3d.scatter(
             inf_data[x],
             inf_data[y],
             inf_data[z],
@@ -271,7 +280,7 @@ def trade_space_plot(
     else:
         plot_data = results
 
-    scatter = ax.scatter(
+    scatter = ax3d.scatter(
         plot_data[x],
         plot_data[y],
         plot_data[z],
@@ -283,7 +292,7 @@ def trade_space_plot(
 
     # Highlight Pareto front
     if pareto_front is not None and len(pareto_front) > 0:
-        ax.scatter(
+        ax3d.scatter(
             pareto_front[x],
             pareto_front[y],
             pareto_front[z],
@@ -293,11 +302,11 @@ def trade_space_plot(
             label="Pareto Optimal",
             zorder=5,
         )
-        ax.legend()
+        ax3d.legend()
 
-    ax.set_xlabel(x)
-    ax.set_ylabel(y)
-    ax.set_zlabel(z)
+    ax3d.set_xlabel(x)
+    ax3d.set_ylabel(y)
+    ax3d.set_zlabel(z)
 
     fig.colorbar(scatter, ax=ax, label=z, shrink=0.5)
 
@@ -332,7 +341,7 @@ def tornado_plot(
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         else:
-            fig = ax.figure
+            fig = cast(plt.Figure, ax.figure)
         ax.text(
             0.5,
             0.5,
@@ -349,7 +358,7 @@ def tornado_plot(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = ax.figure
+        fig = cast(plt.Figure, ax.figure)
 
     y_pos = np.arange(len(data))
     baseline = data["baseline"].iloc[0]

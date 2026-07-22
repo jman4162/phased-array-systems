@@ -3,7 +3,7 @@
 from typing import Any, Literal, Protocol, runtime_checkable
 
 # Type aliases for metric dictionaries
-MetricsDict = dict[str, float | str | None]
+MetricsDict = dict[str, float | int | str | bool | None]
 
 # Comparison operators for requirements
 ComparisonOp = Literal[">=", "<=", "==", ">", "<"]

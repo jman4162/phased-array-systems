@@ -168,7 +168,8 @@ def get_export_metadata(path: str | Path) -> dict | None:
     elif suffix == ".json":
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
-        return data.get("metadata")
+        meta = data.get("metadata")
+        return dict(meta) if meta is not None else None
 
     else:
         return None

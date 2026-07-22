@@ -23,6 +23,7 @@ Example:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
@@ -74,6 +75,7 @@ def _build_architecture_from_vector(
         if var.type == "int":
             flat_dict[var.name] = int(round(x[i]))
         elif var.type == "categorical":
+            assert var.values is not None
             idx = int(round(x[i]))
             idx = max(0, min(idx, len(var.values) - 1))
             flat_dict[var.name] = var.values[idx]
@@ -87,8 +89,10 @@ def _get_bounds(design_space: DesignSpace) -> list[tuple[float, float]]:
     bounds = []
     for var in design_space.variables:
         if var.type == "categorical":
+            assert var.values is not None
             bounds.append((0.0, len(var.values) - 1.0))
         else:
+            assert var.low is not None and var.high is not None
             bounds.append((float(var.low), float(var.high)))
     return bounds
 
@@ -108,7 +112,7 @@ def _make_objective(
     track_history: bool,
     history: list[MetricsDict],
     eval_counter: list[int],
-) -> callable:
+) -> Callable[[np.ndarray], float]:
     """Create a scipy-compatible objective function."""
 
     obj_weights = weights or [1.0] * len(objectives)

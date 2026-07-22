@@ -19,6 +19,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class Function(str, Enum):
@@ -100,7 +101,7 @@ class Timeline:
         return sum(d.duration_ms for d in self.dwells_by_function(function))
 
 
-def timeline_utilization(timeline: Timeline) -> dict[str, float]:
+def timeline_utilization(timeline: Timeline) -> dict[str, Any]:
     """Calculate timeline utilization metrics.
 
     Analyzes how efficiently the timeline uses available time

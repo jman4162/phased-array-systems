@@ -53,15 +53,15 @@ def _build_taper_weights(taper_type: str, nx: int, ny: int, sll_db: float) -> np
     if taper_type == "uniform":
         return np.ones(nx * ny)
     elif taper_type == "taylor":
-        return taylor_taper_2d(nx, ny, sidelobe_dB=sll_db).ravel()
+        return np.asarray(taylor_taper_2d(nx, ny, sidelobe_dB=sll_db)).ravel()
     elif taper_type == "chebyshev":
-        return chebyshev_taper_2d(nx, ny, sidelobe_dB=sll_db).ravel()
+        return np.asarray(chebyshev_taper_2d(nx, ny, sidelobe_dB=sll_db)).ravel()
     elif taper_type == "hamming":
-        return hamming_taper_2d(nx, ny).ravel()
+        return np.asarray(hamming_taper_2d(nx, ny)).ravel()
     elif taper_type == "cosine":
-        return cosine_taper_2d(nx, ny).ravel()
+        return np.asarray(cosine_taper_2d(nx, ny)).ravel()
     elif taper_type == "gaussian":
-        return gaussian_taper_2d(nx, ny).ravel()
+        return np.asarray(gaussian_taper_2d(nx, ny)).ravel()
     else:
         logger.warning("Unknown taper type '%s', using uniform", taper_type)
         return np.ones(nx * ny)

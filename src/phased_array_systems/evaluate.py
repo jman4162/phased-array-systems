@@ -75,24 +75,24 @@ def evaluate_case(
 
         stages = [
             RFStage(
-                name=s.get("name", f"stage_{i}"),
-                gain_db=s["gain_db"],
-                noise_figure_db=s["nf_db"],
-                iip3_dbm=s.get("iip3_dbm", 100.0),
-                p1db_dbm=s.get("p1db_dbm", 100.0),
+                name=str(s.get("name", f"stage_{i}")),
+                gain_db=float(s["gain_db"]),
+                noise_figure_db=float(s["nf_db"]),
+                iip3_dbm=float(s.get("iip3_dbm", 100.0)),
+                p1db_dbm=float(s.get("p1db_dbm", 100.0)),
             )
             for i, s in enumerate(arch.rf.rx_stages)
         ]
         bw = getattr(scenario, "bandwidth_hz", 1e6)
-        cascade_metrics = cascade_analysis(stages, bandwidth_hz=bw)
+        cascade_metrics: dict[str, Any] = cascade_analysis(stages, bandwidth_hz=bw)
         metrics.update(
             {
-                "cascade_nf_db": cascade_metrics["total_nf_db"],
-                "cascade_gain_db": cascade_metrics["total_gain_db"],
-                "cascade_iip3_dbm": cascade_metrics["iip3_dbm"],
-                "cascade_oip3_dbm": cascade_metrics["oip3_dbm"],
-                "cascade_mds_dbm": cascade_metrics["mds_dbm"],
-                "cascade_sfdr_db": cascade_metrics["sfdr_db"],
+                "cascade_nf_db": float(cascade_metrics["total_nf_db"]),
+                "cascade_gain_db": float(cascade_metrics["total_gain_db"]),
+                "cascade_iip3_dbm": float(cascade_metrics["iip3_dbm"]),
+                "cascade_oip3_dbm": float(cascade_metrics["oip3_dbm"]),
+                "cascade_mds_dbm": float(cascade_metrics["mds_dbm"]),
+                "cascade_sfdr_db": float(cascade_metrics["sfdr_db"]),
             }
         )
         # Override NF in context so link budget uses cascaded value
@@ -111,7 +111,8 @@ def evaluate_case(
             mttr_hours=arch.reliability.mttr_hours,
             mission_hours=arch.reliability.mission_hours,
         )
-        original_sll = metrics.get("sll_db", -30.0)
+        sll_val = metrics.get("sll_db", -30.0)
+        original_sll = float(sll_val) if isinstance(sll_val, (int, float)) else -30.0
         result = analyze_array_reliability(
             arch.array.n_elements,
             spec,

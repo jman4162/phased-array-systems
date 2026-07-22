@@ -6,7 +6,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 from phased_array_systems import __version__
 
@@ -302,8 +302,9 @@ def cmd_doe(args: argparse.Namespace) -> int:
 
     # Summary
     n_total = len(results)
+    n_feasible: int | str
     if "verification.passes" in results.columns:
-        n_feasible = (results["verification.passes"] == 1.0).sum()
+        n_feasible = int((results["verification.passes"] == 1.0).sum())
     else:
         n_feasible = "N/A"
 
@@ -349,6 +350,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 
     # Generate report
     fmt = args.format if args.format != "md" else "markdown"
+    generator: HTMLReport | MarkdownReport
     if fmt == "html":
         generator = HTMLReport(config)
         ext = ".html"
@@ -395,9 +397,9 @@ def cmd_pareto(args: argparse.Namespace) -> int:
         return 1
 
     # Extract Pareto
-    objectives = [
-        (args.x, "minimize"),
-        (args.y, "maximize"),
+    objectives: list[tuple[str, Literal["minimize", "maximize"]]] = [
+        (str(args.x), "minimize"),
+        (str(args.y), "maximize"),
     ]
 
     pareto = extract_pareto(results, objectives)
@@ -502,7 +504,7 @@ def cmd_optimize(args: argparse.Namespace) -> int:
             scenario=scenario,
             objectives=objectives,
             requirements=requirements,
-            method=method,
+            method=cast(Literal["differential_evolution", "dual_annealing", "minimize"], method),
             seed=args.seed,
             max_iter=args.max_iter,
         )

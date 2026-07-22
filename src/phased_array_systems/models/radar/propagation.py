@@ -85,7 +85,7 @@ def atmospheric_attenuation_db_per_km(
 
     total_attenuation = gamma_o2 + gamma_h2o
 
-    return total_attenuation
+    return float(total_attenuation)
 
 
 def atmospheric_loss_db(
@@ -177,7 +177,7 @@ def rain_attenuation_rate(
     # Rain attenuation rate
     gamma_r = k * (rain_rate_mm_hr**alpha)
 
-    return gamma_r
+    return float(gamma_r)
 
 
 def rain_attenuation_db(

@@ -223,12 +223,12 @@ class ReliabilityConfig(BaseModel):
 
     component_mtbfs: dict[str, float] = Field(
         default_factory=lambda: {
-            "lna": 500_000,
-            "pa": 250_000,
-            "phase_shifter": 2_000_000,
-            "attenuator": 3_000_000,
-            "switch": 1_000_000,
-            "control_asic": 1_000_000,
+            "lna": 500_000.0,
+            "pa": 250_000.0,
+            "phase_shifter": 2_000_000.0,
+            "attenuator": 3_000_000.0,
+            "switch": 1_000_000.0,
+            "control_asic": 1_000_000.0,
         },
         description="Component name -> MTBF hours",
     )

@@ -52,6 +52,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0",
     "pandas-stubs>=2.0",
+    "types-PyYAML>=6.0",
 ]
 plotting = [
     "plotly>=5.0",

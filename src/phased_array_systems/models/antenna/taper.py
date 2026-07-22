@@ -104,7 +104,7 @@ def compute_taper_efficiency(taper: NDArray[np.floating]) -> float:
     if sum_weights_sq == 0:
         return 0.0
 
-    return (sum_weights**2) / (n * sum_weights_sq)
+    return float((sum_weights**2) / (n * sum_weights_sq))
 
 
 def taper_loss_from_sll(
@@ -239,7 +239,7 @@ def beamformer_noise_factor(
     if t_uniform == 0:
         return 1.0
 
-    return t_eff / t_uniform * n / (sum_weights**2 / np.sum(taper**2))
+    return float(t_eff / t_uniform * n / (sum_weights**2 / np.sum(taper**2)))
 
 
 def estimate_taper_parameters(

@@ -16,6 +16,7 @@ References:
 from __future__ import annotations
 
 import math
+from typing import Any
 
 
 def beam_bandwidth_product(
@@ -180,7 +181,7 @@ def beamformer_operations(
     n_beams: int,
     sample_rate_hz: float,
     fft_size: int = 0,
-) -> dict[str, float]:
+) -> dict[str, Any]:
     """Estimate digital beamformer computational requirements.
 
     Calculates operations per second for time-domain or frequency-domain
