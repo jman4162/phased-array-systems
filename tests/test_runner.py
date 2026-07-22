@@ -267,3 +267,64 @@ class TestRunBatchSimple:
 
         assert len(results) == 5
         assert "eirp_dbw" in results.columns
+
+
+class TestReproducibility:
+    """Deterministic ordering and resume behavior."""
+
+    @pytest.fixture
+    def doe_and_scenario(self):
+        doe = generate_doe_from_dict(
+            {
+                "array.nx": [8, 16],
+                "array.ny": [8],
+                "rf.tx_power_w_per_elem": (0.5, 2.0),
+            },
+            method="lhs",
+            n_samples=8,
+            seed=7,
+        )
+        scenario = CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+        return doe, scenario
+
+    def test_parallel_order_matches_serial(self, doe_and_scenario):
+        doe, scenario = doe_and_scenario
+        runner = BatchRunner(scenario)
+        serial = runner.run(doe, n_workers=1)
+        parallel = runner.run(doe, n_workers=2)
+
+        assert serial["case_id"].tolist() == parallel["case_id"].tolist()
+        pd.testing.assert_series_equal(serial["eirp_dbw"], parallel["eirp_dbw"])
+
+    def test_resume_skips_completed_cases(self, doe_and_scenario, tmp_path):
+        doe, scenario = doe_and_scenario
+        cache = tmp_path / "cache.parquet"
+        runner = BatchRunner(scenario)
+
+        # First: run only half the cases to populate the cache
+        first_half = doe.iloc[:4].copy()
+        runner.run(first_half, n_workers=1, cache_path=cache)
+        assert cache.exists()
+
+        # Resume with the full DOE: completed case_ids come from the cache
+        full = runner.run(doe, n_workers=1, cache_path=cache)
+        assert len(full) == len(doe)
+        assert sorted(full["case_id"]) == sorted(doe["case_id"])
+
+    def test_meta_provenance_stamps(self, doe_and_scenario):
+        from phased_array_systems import __version__
+        from phased_array_systems.architecture import Architecture
+        from phased_array_systems.evaluate import evaluate_case
+
+        _, scenario = doe_and_scenario
+        arch = Architecture.from_flat({"array.nx": 8, "array.ny": 8, "rf.tx_power_w_per_elem": 1.0})
+        metrics = evaluate_case(arch, scenario, seed=123)
+
+        assert metrics["meta.seed"] == 123
+        assert metrics["meta.package_version"] == __version__
+        assert isinstance(metrics["meta.pam_version"], str)

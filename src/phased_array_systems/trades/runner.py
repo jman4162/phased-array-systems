@@ -183,6 +183,10 @@ class BatchRunner:
         if cache_path is not None:
             self._save_cache(results, cache_path)
 
+        # Deterministic row order: parallel completion order (and cache
+        # merges on resume) are otherwise nondeterministic
+        results.sort(key=lambda r: str(r.get("case_id", "")))
+
         # Build result DataFrame
         result_df = pd.DataFrame(results)
 
@@ -190,7 +194,7 @@ class BatchRunner:
         cols = list(cases.columns) + [c for c in result_df.columns if c not in cases.columns]
         result_df = result_df[[c for c in cols if c in result_df.columns]]
 
-        return result_df
+        return result_df.reset_index(drop=True)
 
     def _save_cache(self, results: list[dict], cache_path: Path) -> None:
         """Save results to cache file."""

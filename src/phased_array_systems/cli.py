@@ -53,6 +53,17 @@ Examples:
     )
     doe_parser.add_argument("--seed", type=int, default=42, help="Random seed")
     doe_parser.add_argument("-j", "--workers", type=int, default=1, help="Parallel workers")
+    doe_parser.add_argument(
+        "--cache",
+        type=Path,
+        default=None,
+        help="Checkpoint file (parquet); partial results saved every 10 cases",
+    )
+    doe_parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from the --cache file, skipping completed cases",
+    )
 
     # pasys report <results>
     report_parser = subparsers.add_parser("report", help="Generate report from results")
@@ -298,7 +309,18 @@ def cmd_doe(args: argparse.Namespace) -> int:
         if completed % max(1, total // 10) == 0 or completed == total:
             print(f"  Progress: {completed}/{total} ({pct:.0f}%)")
 
-    results = runner.run(doe, n_workers=args.workers, progress_callback=progress)
+    cache_path = getattr(args, "cache", None)
+    resume = getattr(args, "resume", False)
+    if resume and cache_path is None:
+        print("Error: --resume requires --cache PATH", file=sys.stderr)
+        return 1
+    if cache_path is not None and not resume and cache_path.exists():
+        # Fresh run: don't silently resume from a stale checkpoint
+        cache_path.unlink()
+
+    results = runner.run(
+        doe, n_workers=args.workers, cache_path=cache_path, progress_callback=progress
+    )
 
     # Summary
     n_total = len(results)

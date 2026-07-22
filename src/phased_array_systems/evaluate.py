@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Any
 
+from phased_array_systems.__about__ import __version__
 from phased_array_systems.architecture import Architecture
 from phased_array_systems.models.antenna import PhasedArrayAdapter
 from phased_array_systems.models.comms import CommsLinkModel
@@ -23,6 +24,7 @@ def evaluate_case(
     scenario: Scenario,
     requirements: RequirementSet | None = None,
     case_id: str | None = None,
+    seed: int | None = None,
 ) -> MetricsDict:
     """Evaluate a single architecture/scenario case.
 
@@ -34,6 +36,8 @@ def evaluate_case(
         scenario: Scenario configuration (CommsLinkScenario or RadarDetectionScenario)
         requirements: Optional requirement set for verification
         case_id: Optional case identifier for tracking
+        seed: Optional RNG seed threaded to stochastic sub-models (element
+            failure simulation); recorded as meta.seed
 
     Returns:
         Dictionary containing all computed metrics plus metadata:
@@ -41,7 +45,7 @@ def evaluate_case(
             - All link/radar metrics (eirp_dbw, snr_*, margin_*, etc.)
             - All SWaP-C metrics (power_*, cost_*)
             - Verification results if requirements provided
-            - Metadata (case_id, runtime_s)
+            - Metadata (case_id, runtime_s, seed, versions)
     """
     start_time = time.perf_counter()
     metrics: MetricsDict = {}
@@ -56,7 +60,10 @@ def evaluate_case(
     cost_model = CostModel()
 
     # Evaluate antenna model first (provides gain for link budget)
-    antenna_metrics = antenna_model.evaluate(arch, scenario, {})
+    antenna_context: dict[str, Any] = {}
+    if seed is not None:
+        antenna_context["meta.seed"] = seed
+    antenna_metrics = antenna_model.evaluate(arch, scenario, antenna_context)
     metrics.update(antenna_metrics)
 
     # Create context with antenna results for downstream models
@@ -212,11 +219,29 @@ def evaluate_case(
             ",".join(report.failed_ids) if report.failed_ids else ""
         )
 
-    # Add timing metadata
+    # Add timing and provenance metadata
     elapsed = time.perf_counter() - start_time
     metrics["meta.runtime_s"] = elapsed
+    if seed is not None:
+        metrics["meta.seed"] = seed
+    metrics["meta.package_version"] = __version__
+    metrics["meta.pam_version"] = _pam_version()
 
     return metrics
+
+
+def _pam_version() -> str:
+    """Version of the phased_array backend, or 'analytical' if absent."""
+    from phased_array_systems.models.antenna.adapter import HAS_PAM
+
+    if not HAS_PAM:
+        return "analytical"
+    try:
+        import phased_array
+
+        return str(getattr(phased_array, "__version__", "unknown"))
+    except ImportError:  # pragma: no cover
+        return "analytical"
 
 
 def evaluate_case_with_report(
