@@ -95,6 +95,39 @@ class TestITUP838:
         assert rain_specific_attenuation_db_per_km(20.0, 0.0) == 0.0
 
 
+class TestCFARLoss:
+    """CA-CFAR universal-curve loss (Gregers-Hansen; Richards ch. 16)."""
+
+    def test_universal_curve_points(self):
+        from phased_array_systems.models.radar.cfar import cfar_loss_db
+
+        # Published universal curve: ~2.0 dB at N=16, ~0.95 dB at N=32
+        # for Pfa = 1e-6
+        assert cfar_loss_db("CA", 16, 1e-6) == pytest.approx(2.0, abs=0.1)
+        assert cfar_loss_db("CA", 32, 1e-6) == pytest.approx(0.97, abs=0.1)
+
+    def test_loss_decreases_with_cells(self):
+        from phased_array_systems.models.radar.cfar import cfar_loss_db
+
+        losses = [cfar_loss_db("CA", n, 1e-6) for n in [8, 16, 32, 64]]
+        assert losses == sorted(losses, reverse=True)
+
+    def test_loss_increases_with_lower_pfa(self):
+        from phased_array_systems.models.radar.cfar import cfar_loss_db
+
+        assert cfar_loss_db("CA", 16, 1e-8) > cfar_loss_db("CA", 16, 1e-4)
+
+    def test_type_ordering(self):
+        """SO > OS > GO > CA loss in homogeneous clutter."""
+        from phased_array_systems.models.radar.cfar import cfar_loss_db
+
+        ca = cfar_loss_db("CA", 16, 1e-6)
+        go = cfar_loss_db("GO", 16, 1e-6)
+        os_ = cfar_loss_db("OS", 16, 1e-6)
+        so = cfar_loss_db("SO", 16, 1e-6)
+        assert ca < go < os_ < so
+
+
 class TestNRLSeaClutter:
     """NRL sea clutter model (Gregers-Hansen & Mittal, NRL/MR/5310-12-9346).
 

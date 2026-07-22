@@ -16,9 +16,16 @@ from __future__ import annotations
 import math
 from typing import Literal
 
-from scipy import special
-
 CFARType = Literal["CA", "OS", "GO", "SO"]
+
+# Homogeneous-clutter CFAR loss deltas relative to CA-CFAR (dB): published
+# comparisons (Rohling 1983; Richards ch. 16). OS at default rank k=3N/4.
+CFAR_TYPE_LOSS_DELTA_DB: dict[str, float] = {
+    "CA": 0.0,
+    "OS": 0.3,
+    "GO": 0.2,
+    "SO": 1.0,
+}
 
 
 def ca_cfar_threshold_factor(
@@ -231,57 +238,17 @@ def cfar_loss_db(
     if n_ref < 2:
         return 10.0  # Very high loss with few cells
 
-    # CA-CFAR loss (approximation)
-    # Loss ≈ 10*log10(1 + 2/n_ref) for moderate n_ref
-    if cfar_type == "CA":
-        loss = 10 * math.log10(1 + 2.0 / n_ref)
-    elif cfar_type == "OS":
-        # OS-CFAR typically has 0.5-1 dB more loss than CA
-        loss = 10 * math.log10(1 + 3.0 / n_ref)
-    elif cfar_type == "GO":
-        # GO-CFAR has ~1 dB more loss than CA in homogeneous
-        loss = 10 * math.log10(1 + 4.0 / n_ref)
-    elif cfar_type == "SO":
-        # SO-CFAR has least loss but worst interference rejection
-        loss = 10 * math.log10(1 + 1.5 / n_ref)
-    else:
-        loss = 10 * math.log10(1 + 2.0 / n_ref)
+    # CA-CFAR universal-curve loss: ratio of the mean adaptive threshold
+    # multiplier alpha = N*(Pfa^(-1/N)-1) to the ideal fixed-threshold
+    # multiplier ln(1/Pfa) (Gregers-Hansen; Richards, "Fundamentals of
+    # Radar Signal Processing", ch. 16). -> 0 dB as N -> inf.
+    alpha_ca = ca_cfar_threshold_factor(n_ref, pfa)
+    ca_loss = 10 * math.log10(alpha_ca / math.log(1.0 / pfa))
 
-    return loss
-
-
-def cfar_required_snr_adjustment(
-    cfar_type: CFARType,
-    n_ref: int,
-    pd: float = 0.9,
-    pfa: float = 1e-6,
-) -> float:
-    """Compute additional SNR required due to CFAR processing.
-
-    This includes CFAR loss and the threshold adjustment needed
-    to maintain the desired Pd/Pfa.
-
-    Args:
-        cfar_type: Type of CFAR
-        n_ref: Number of reference cells
-        pd: Probability of detection
-        pfa: Probability of false alarm
-
-    Returns:
-        Additional SNR required in dB
-    """
-    # Base CFAR loss
-    loss = cfar_loss_db(cfar_type, n_ref, pfa)
-
-    # High Pd requires more margin
-    if pd >= 0.99:
-        pd_factor = 0.5
-    elif pd >= 0.9:
-        pd_factor = 0.3
-    else:
-        pd_factor = 0.0
-
-    return loss + pd_factor
+    # Documented homogeneous-clutter deltas relative to CA (published
+    # comparisons: Rohling 1983; Richards ch. 16). OS at the default
+    # k = 3N/4 rank, GO/SO in homogeneous background.
+    return ca_loss + CFAR_TYPE_LOSS_DELTA_DB.get(cfar_type, 0.0)
 
 
 def optimal_reference_cells(
@@ -334,20 +301,8 @@ def compute_pd_with_cfar(
     Returns:
         Probability of detection (0-1)
     """
-    # Effective SNR after CFAR loss
+    from phased_array_systems.models.radar.detection import compute_pd_from_snr
+
+    # Effective SNR after CFAR loss, then exact Marcum-Q detection
     loss = cfar_loss_db(cfar_type, n_ref, pfa)
-    effective_snr_db = snr_db - loss
-
-    # Convert to linear
-    snr_linear = 10 ** (effective_snr_db / 10)
-
-    # Threshold from Pfa (normalized)
-    threshold = special.gammaincinv(1, 1 - pfa)
-
-    # Marcum Q approximation for Pd
-    a = math.sqrt(2 * snr_linear)
-    b = math.sqrt(2 * threshold)
-
-    pd = 0.5 * special.erfc((b - a) / math.sqrt(2))
-
-    return max(0.0, min(1.0, float(pd)))
+    return compute_pd_from_snr(snr_db - loss, pfa, swerling=0, n_pulses=1)
