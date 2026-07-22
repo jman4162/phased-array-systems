@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://raw.githubusercontent.com/jman4162/phased-array-systems/main/docs/assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -2268,6 +2268,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#070-2026-07-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.7.0] - 2026-07-22
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#040-2026-02-01" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2390,6 +2401,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#070-2026-07-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.7.0] - 2026-07-22
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#040-2026-02-01" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2462,11 +2484,22 @@
 <p>For the full changelog, see:</p>
 <p><strong><a href="https://github.com/jman4162/phased-array-systems/blob/main/CHANGELOG.md">CHANGELOG.md on GitHub</a></strong></p>
 <h2 id="recent-changes">Recent Changes<a class="headerlink" href="#recent-changes" title="Permanent link">&para;</a></h2>
+<h3 id="070-2026-07-22">[0.7.0] - 2026-07-22<a class="headerlink" href="#070-2026-07-22" title="Permanent link">&para;</a></h3>
+<p><strong>Added:</strong>
+- Digitization-level trades (element / subarray / analog) driving ADC count, data rate, compute, and power
+- ADC aperture-jitter SNR model and system dynamic range with array processing gain
+- Digital-section and receive-chain power in the DC budget; radar duty cycle
+- Exact Swerling 0-4 detection statistics (noncentral chi-square / gamma mixtures)
+- DBF architecture trade example and golden-case regression test</p>
+<p><strong>Fixed:</strong>
+- DOE runner dropped <code>digital.*</code>/<code>reliability.*</code> variables
+- <code>augment_doe</code> repeated original samples when reusing a seed
+- Radar equation double-counted pulse integration gain</p>
 <h3 id="040-2026-02-01">[0.4.0] - 2026-02-01<a class="headerlink" href="#040-2026-02-01" title="Permanent link">&para;</a></h3>
 <p><strong>Added:</strong>
 - Digital array model for digital beamforming calculations
 - RF cascade model for noise figure and gain cascade analysis
-- Comprehensive MkDocs documentation site with API reference, user guides, and tutorials</p>
+- MkDocs documentation site with API reference, user guides, and tutorials</p>
 <p><strong>Fixed:</strong>
 - Ruff linting errors in models module
 - MathJax rendering in documentation</p>
@@ -2621,7 +2654,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../javascripts/mathjax.js"></script>
       
