@@ -509,3 +509,67 @@ class TestGratingLobes:
         """Only one axis needs to exceed limit for risk."""
         result = check_grating_lobes(0.5, 0.9, 60.0)
         assert result["grating_lobe_risk"] is True
+
+
+class TestAdapterPathParity:
+    """The analytical fallback must mirror the pattern-based metric contract."""
+
+    @pytest.fixture
+    def scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def _arch(self, **array_kwargs):
+        return Architecture(
+            array=ArrayConfig(nx=16, ny=16, **array_kwargs),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+        )
+
+    @pytest.mark.skipif(not HAS_PAM, reason="requires phased-array-modeling")
+    def test_metric_key_parity(self, scenario):
+        """Both paths emit the same key set (minus failure-sim keys)."""
+        adapter = PhasedArrayAdapter()
+        arch = self._arch(taper_type="taylor", taper_sll_db=-30.0, phase_bits=4)
+
+        pam_keys = set(adapter._evaluate_with_pam(arch, scenario, 0.0, {}))
+        analytic_keys = set(adapter._evaluate_analytical(arch, scenario, 0.0))
+
+        assert pam_keys == analytic_keys
+
+    def test_analytic_taper_affects_gain_and_sll(self, scenario):
+        adapter = PhasedArrayAdapter()
+        uniform = adapter._evaluate_analytical(self._arch(), scenario, 0.0)
+        tapered = adapter._evaluate_analytical(
+            self._arch(taper_type="taylor", taper_sll_db=-35.0), scenario, 0.0
+        )
+
+        assert tapered["g_peak_db"] < uniform["g_peak_db"]
+        assert tapered["taper_loss_db"] > 0
+        assert tapered["sll_db"] == pytest.approx(-35.0)
+        assert uniform["sll_db"] == pytest.approx(-13.2)
+
+    def test_analytic_phase_bits_reduce_gain(self, scenario):
+        adapter = PhasedArrayAdapter()
+        ideal = adapter._evaluate_analytical(self._arch(), scenario, 0.0)
+        quantized = adapter._evaluate_analytical(self._arch(phase_bits=3), scenario, 0.0)
+
+        # 3-bit quantization costs ~0.22 dB (Mailloux)
+        loss = ideal["g_peak_db"] - quantized["g_peak_db"]
+        assert loss == pytest.approx(0.223, abs=0.01)
+        assert quantized["phase_quantization_loss_db"] == pytest.approx(loss, abs=1e-9)
+        assert quantized["rms_sidelobe_floor_db"] < -20.0
+
+    def test_error_floor_can_dominate_design_sll(self, scenario):
+        """Coarse quantization floors the SLL of an aggressive taper."""
+        adapter = PhasedArrayAdapter()
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8, taper_type="chebyshev", taper_sll_db=-60.0, phase_bits=2),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0),
+        )
+        metrics = adapter._evaluate_analytical(arch, scenario, 0.0)
+        assert metrics["sll_db"] > -60.0
+        assert metrics["sll_db"] == pytest.approx(metrics["rms_sidelobe_floor_db"])

@@ -22,10 +22,61 @@ References:
 from __future__ import annotations
 
 import math
+import warnings
 from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.signal import windows
+
+TaperType = Literal["uniform", "taylor", "chebyshev", "hamming", "cosine", "gaussian"]
+
+
+def generate_taper_weights(
+    taper_type: TaperType,
+    n: int,
+    sll_db: float = -30.0,
+) -> NDArray[np.floating]:
+    """Generate a 1-D amplitude taper from standard window functions.
+
+    Args:
+        taper_type: Window type. "taylor" and "chebyshev" honor sll_db;
+            "hamming"/"cosine"/"gaussian" have fixed shapes ("gaussian"
+            uses std = n/6).
+        n: Number of elements
+        sll_db: Design sidelobe level (dB, negative) for taylor/chebyshev
+
+    Returns:
+        Array of n linear amplitude weights, peak-normalized
+
+    Raises:
+        ValueError: For unknown taper types
+    """
+    if n < 1:
+        raise ValueError("n must be >= 1")
+
+    sll = abs(sll_db)
+    if taper_type == "uniform":
+        w = np.ones(n)
+    elif taper_type == "taylor":
+        w = windows.taylor(n, nbar=max(2, int(round(0.15 * sll))), sll=sll, norm=False)
+    elif taper_type == "chebyshev":
+        # chebwin warns below 45 dB attenuation about spectral-analysis
+        # noise bandwidth; irrelevant for aperture tapering
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            w = np.asarray(windows.chebwin(n, at=sll))
+    elif taper_type == "hamming":
+        w = windows.hamming(n)
+    elif taper_type == "cosine":
+        w = windows.cosine(n)
+    elif taper_type == "gaussian":
+        w = windows.gaussian(n, std=n / 6)
+    else:
+        raise ValueError(f"Unknown taper type: {taper_type}")
+
+    w = np.asarray(w, dtype=float)
+    return np.asarray(w / w.max())
 
 
 def compute_taper_loss(taper: NDArray[np.floating]) -> float:
@@ -125,7 +176,7 @@ def taper_loss_from_sll(
 
     Examples:
         >>> loss = taper_loss_from_sll(-30, 'taylor')
-        >>> 0.5 < loss < 1.5  # Typical Taylor loss for -30 dB SLL
+        >>> 0.2 < loss < 1.5  # Typical Taylor loss for -30 dB SLL
         True
 
         >>> loss = taper_loss_from_sll(-40, 'taylor')
@@ -133,51 +184,12 @@ def taper_loss_from_sll(
         True
 
     Notes:
-        These are empirical approximations. For exact values,
-        generate the actual taper and use compute_taper_loss().
+        Computed from the actual window function (n=64 representative
+        length) rather than a fitted curve; taper efficiency is nearly
+        length-independent for n >= 16.
     """
-    # Ensure positive value for calculations
-    sll = abs(target_sll_db)
-
-    if taper_type == "taylor":
-        # Taylor window: loss increases roughly as 0.02 * (SLL - 13)
-        # -13.2 dB (uniform) -> 0 dB loss
-        # -30 dB -> ~0.5-0.8 dB loss
-        # -40 dB -> ~1.0-1.5 dB loss
-        if sll <= 13.2:
-            return 0.0
-        loss = 0.02 * (sll - 13.2) + 0.15 * ((sll - 13.2) / 20) ** 2
-        return min(loss, 3.0)
-
-    elif taper_type == "chebyshev":
-        # Chebyshev (Dolph): slightly more efficient than Taylor
-        if sll <= 13.2:
-            return 0.0
-        loss = 0.018 * (sll - 13.2) + 0.12 * ((sll - 13.2) / 20) ** 2
-        return min(loss, 2.5)
-
-    elif taper_type == "hamming":
-        # Hamming: fixed ~-42 dB SLL, ~1.34 dB loss
-        return 1.34
-
-    elif taper_type == "cosine":
-        # Cosine (Hann): ~-32 dB SLL, ~1.76 dB loss
-        return 1.76
-
-    elif taper_type == "gaussian":
-        # Gaussian: loss depends on sigma parameter
-        # For typical sigma giving -30 to -40 dB SLL
-        if sll <= 20:
-            return 0.5
-        elif sll <= 30:
-            return 1.0
-        elif sll <= 40:
-            return 1.5
-        else:
-            return 2.0
-
-    else:
-        raise ValueError(f"Unknown taper type: {taper_type}")
+    weights = generate_taper_weights(taper_type, 64, target_sll_db)
+    return compute_taper_loss(weights)
 
 
 def beamformer_noise_factor(
@@ -208,11 +220,14 @@ def beamformer_noise_factor(
         True
 
     Notes:
-        For uniform weighting and equal element noise temperatures,
-        the beamformer noise factor is 1.0.
+        This is the temperature-inhomogeneity factor only:
 
-        For tapered arrays, the effective noise is:
-            T_eff = Σ(w_i² * T_i) / (Σw_i)²
+            F_bf = sum(w_i^2 * T_i) / (sum(w_i^2) * T_mean)
+
+        It equals 1.0 whenever all element noise temperatures are equal,
+        regardless of taper. The SNR penalty of tapering itself is already
+        carried by the taper loss on gain; including it here again would
+        double-count it.
     """
     taper = np.asarray(taper)
     n = len(taper)
@@ -225,21 +240,16 @@ def beamformer_noise_factor(
     else:
         component_temps_k = np.asarray(component_temps_k)
 
-    sum_weights = np.sum(taper)
-    if sum_weights == 0:
+    sum_weights_sq = np.sum(taper**2)
+    if sum_weights_sq == 0:
         return float("inf")
 
-    # Weighted noise temperature
-    t_eff = np.sum((taper**2) * component_temps_k) / (sum_weights**2)
-
-    # Noise factor relative to reference
-    # F = 1 + T_eff / T_ref for excess noise
-    # But we want the relative increase due to tapering
-    t_uniform = np.mean(component_temps_k)  # Uniform case
-    if t_uniform == 0:
+    t_mean = float(np.mean(component_temps_k))
+    if t_mean == 0:
         return 1.0
 
-    return float(t_eff / t_uniform * n / (sum_weights**2 / np.sum(taper**2)))
+    t_weighted = float(np.sum((taper**2) * component_temps_k)) / float(sum_weights_sq)
+    return t_weighted / t_mean
 
 
 def estimate_taper_parameters(
@@ -342,10 +352,11 @@ def aperture_efficiency_components(
     sigma_phi = math.radians(phase_error_rms_deg)
     eta_phase = math.exp(-(sigma_phi**2))
 
-    # Amplitude error efficiency
-    # Approximate: 1 - (sigma_A)^2 where sigma_A is linear RMS error
-    sigma_a_linear = (10 ** (amplitude_error_rms_db / 20)) - 1
-    eta_amp = max(0, 1 - sigma_a_linear**2)
+    # Amplitude error efficiency: 1/(1+sigma_a^2) with sigma_a the
+    # fractional RMS amplitude error (Ruze form; Mailloux sec. 7.2).
+    # dB-to-fractional conversion is a small-error approximation.
+    sigma_a_linear = (10 ** (abs(amplitude_error_rms_db) / 20)) - 1
+    eta_amp = 1.0 / (1.0 + sigma_a_linear**2)
 
     # Blockage efficiency
     eta_blockage = (1 - blockage_fraction) ** 2

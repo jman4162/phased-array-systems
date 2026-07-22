@@ -1,16 +1,28 @@
 """Adapter wrapping phased-array-modeling for consistent metric extraction."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
 from phased_array_systems.architecture import Architecture
+from phased_array_systems.models.antenna.errors import (
+    phase_quantization_loss_db,
+    phase_quantization_rms_rad,
+    rms_sidelobe_floor_db,
+)
 from phased_array_systems.models.antenna.metrics import (
     compute_beamwidth,
     compute_directivity_rectangular,
     compute_scan_loss,
     compute_sidelobe_level,
+)
+from phased_array_systems.models.antenna.taper import (
+    TaperType,
+    generate_taper_weights,
+)
+from phased_array_systems.models.antenna.taper import (
+    compute_taper_efficiency as _local_taper_efficiency,
 )
 from phased_array_systems.types import MetricsDict, Scenario
 
@@ -212,7 +224,10 @@ class PhasedArrayAdapter:
         directivity = compute_directivity_rectangular(
             nx, ny, arch.array.dx_lambda, arch.array.dy_lambda
         )
-        g_peak = directivity - scan_loss - taper_loss_db
+        # Quantization is simulated in the pattern, but g_peak is assembled
+        # analytically, so the quantization gain loss must be subtracted here
+        quant_loss_db = phase_quantization_loss_db(phase_bits) if phase_bits else 0.0
+        g_peak = directivity - scan_loss - taper_loss_db - quant_loss_db
 
         # 7. Grating lobe check
         from phased_array_systems.models.antenna.grating import check_grating_lobes
@@ -247,8 +262,14 @@ class PhasedArrayAdapter:
             "max_safe_spacing_lambda": grating_info["max_safe_spacing_lambda"],
         }
 
-        if quantization_applied:
+        if quantization_applied and phase_bits is not None:
             metrics["phase_quantization_bits"] = phase_bits
+            metrics["phase_quantization_loss_db"] = quant_loss_db
+            metrics["rms_sidelobe_floor_db"] = rms_sidelobe_floor_db(
+                phase_quantization_rms_rad(phase_bits) ** 2,
+                arch.array.n_elements,
+                taper_eff,
+            )
 
         if failure_rate > 0:
             metrics["n_failed_elements"] = n_failed
@@ -256,38 +277,81 @@ class PhasedArrayAdapter:
 
         return metrics
 
+    # Approximate first-sidelobe design levels for fixed-shape windows
+    # (uniform: sinc theory; hamming/cosine/gaussian: window first SLL)
+    _DESIGN_SLL_DB = {
+        "uniform": -13.2,
+        "hamming": -42.7,
+        "cosine": -23.0,
+        "gaussian": -55.0,
+    }
+
     def _evaluate_analytical(
         self, arch: Architecture, scenario: Scenario, scan_angle_deg: float
     ) -> MetricsDict:
         """Evaluate using analytical approximations.
 
         Uses standard phased array formulas when the full simulation
-        library is not available.
+        library is not available. Emits the same metric key set as the
+        pattern-based path so downstream models and requirements behave
+        identically in both modes.
         """
+        nx, ny = arch.array.nx, arch.array.ny
+
+        # Taper from real window functions (separable 2-D outer product)
+        taper_type = cast(TaperType, getattr(arch.array, "taper_type", "uniform"))
+        taper_sll_db = getattr(arch.array, "taper_sll_db", -30.0)
+        wx = generate_taper_weights(taper_type, nx, taper_sll_db)
+        wy = generate_taper_weights(taper_type, ny, taper_sll_db)
+        weights_2d = np.outer(wx, wy).ravel()
+        taper_eff = _local_taper_efficiency(weights_2d)
+        taper_loss_db = -10 * np.log10(taper_eff) if taper_eff > 0 else 0.0
+
         # Directivity from aperture size
         directivity_db = compute_directivity_rectangular(
-            arch.array.nx, arch.array.ny, arch.array.dx_lambda, arch.array.dy_lambda
+            nx, ny, arch.array.dx_lambda, arch.array.dy_lambda
         )
 
         # Scan loss
         scan_loss = compute_scan_loss(scan_angle_deg)
 
-        # Peak gain (accounting for scan)
-        g_peak = directivity_db - scan_loss
+        # Phase-shifter quantization loss (analytic Ruze form)
+        phase_bits = getattr(arch.array, "phase_bits", None)
+        quant_loss_db = phase_quantization_loss_db(phase_bits) if phase_bits else 0.0
 
-        # Beamwidth approximations for uniform rectangular array
-        # BW ≈ 0.886 * lambda / (N * d) in radians, for uniform taper
-        # With d in wavelengths: BW ≈ 0.886 / (N * d_lambda) radians
-        bw_az_rad = 0.886 / (arch.array.nx * arch.array.dx_lambda)
-        bw_el_rad = 0.886 / (arch.array.ny * arch.array.dy_lambda)
+        # Peak gain
+        g_peak = directivity_db - scan_loss - taper_loss_db - quant_loss_db
 
-        beamwidth_az_deg = np.degrees(bw_az_rad)
-        beamwidth_el_deg = np.degrees(bw_el_rad)
+        # Beamwidth approximations for a rectangular array
+        # BW ≈ 0.886 / (N * d_lambda) radians (uniform-taper form; tapers
+        # broaden this slightly, not modeled here)
+        beamwidth_az_deg = np.degrees(0.886 / (nx * arch.array.dx_lambda))
+        beamwidth_el_deg = np.degrees(0.886 / (ny * arch.array.dy_lambda))
 
-        # Sidelobe level for uniform taper (theoretical: -13.2 dB)
-        sll_db = -13.2
+        # Sidelobe level: taper design SLL, floored by the RMS error
+        # sidelobe floor when quantization is present
+        if taper_type in ("taylor", "chebyshev"):
+            design_sll = taper_sll_db
+        else:
+            design_sll = self._DESIGN_SLL_DB.get(taper_type, -13.2)
+        if phase_bits:
+            error_floor = rms_sidelobe_floor_db(
+                phase_quantization_rms_rad(phase_bits) ** 2,
+                arch.array.n_elements,
+                taper_eff,
+            )
+            sll_db = max(design_sll, error_floor)
+        else:
+            sll_db = design_sll
 
-        return {
+        # Grating lobe check (same as the pattern-based path)
+        from phased_array_systems.models.antenna.grating import check_grating_lobes
+
+        grating_info = check_grating_lobes(
+            arch.array.dx_lambda, arch.array.dy_lambda, arch.array.scan_limit_deg
+        )
+
+        metrics: MetricsDict = {
             "g_peak_db": g_peak,
             "beamwidth_az_deg": beamwidth_az_deg,
             "beamwidth_el_deg": beamwidth_el_deg,
@@ -295,4 +359,22 @@ class PhasedArrayAdapter:
             "scan_loss_db": scan_loss,
             "directivity_db": directivity_db,
             "n_elements": arch.array.n_elements,
+            "taper_type": taper_type,
+            "taper_efficiency": taper_eff,
+            "taper_loss_db": taper_loss_db,
+            "element_pattern_applied": False,
+            "element_cos_exp": getattr(arch.array, "element_cos_exp", 1.5),
+            "grating_lobe_risk": grating_info["grating_lobe_risk"],
+            "max_safe_spacing_lambda": grating_info["max_safe_spacing_lambda"],
         }
+
+        if phase_bits:
+            metrics["phase_quantization_bits"] = phase_bits
+            metrics["phase_quantization_loss_db"] = quant_loss_db
+            metrics["rms_sidelobe_floor_db"] = rms_sidelobe_floor_db(
+                phase_quantization_rms_rad(phase_bits) ** 2,
+                arch.array.n_elements,
+                taper_eff,
+            )
+
+        return metrics
