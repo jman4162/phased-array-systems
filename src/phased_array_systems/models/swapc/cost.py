@@ -79,20 +79,3 @@ def compute_cost_per_watt(total_cost_usd: float, rf_power_w: float) -> float:
     if rf_power_w <= 0:
         return float("inf")
     return total_cost_usd / rf_power_w
-
-
-def compute_cost_per_db(total_cost_usd: float, eirp_dbw: float) -> float:
-    """Compute cost per dBW of EIRP.
-
-    Useful for comparing cost-effectiveness of different architectures.
-
-    Args:
-        total_cost_usd: Total system cost (USD)
-        eirp_dbw: Effective Isotropic Radiated Power (dBW)
-
-    Returns:
-        Cost per dBW (USD/dBW)
-    """
-    if eirp_dbw <= 0:
-        return float("inf")
-    return total_cost_usd / eirp_dbw

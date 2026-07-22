@@ -83,14 +83,18 @@ def friis_noise_figure(
             - total_nf_db: Cascaded noise figure in dB
             - total_gain_db: Cascaded gain in dB
             - noise_temp_k: Equivalent noise temperature
-            - stage_contributions_db: NF contribution from each stage
+            - stage_contribution_pct: Each stage's share of the total
+              excess noise factor (F_total - 1); sums to 100
+            - stage_nf_delta_db: dB of total NF saved if that stage were
+              noiseless (0 dB NF, same gain)
     """
     if not stages:
         return {
             "total_nf_db": 0.0,
             "total_gain_db": 0.0,
             "noise_temp_k": 0.0,
-            "stage_contributions_db": [],
+            "stage_contribution_pct": [],
+            "stage_nf_delta_db": [],
         }
 
     # Convert to linear
@@ -108,10 +112,16 @@ def friis_noise_figure(
         f_total += contribution
         cumulative_gain *= gains_linear[i]
 
-    # Convert contributions to dB (referenced to total)
-    contributions_db = [10 * math.log10(1 + c) for c in contributions]
+    # Per-stage share of the excess noise factor: sums to 100% by
+    # construction (a per-stage "dB contribution" cannot sum to the total
+    # NF, which is why the old stage_contributions_db key was dropped)
+    excess = f_total - 1.0
+    contribution_pct = [100.0 * c / excess if excess > 0 else 0.0 for c in contributions]
 
+    # dB of total NF saved if stage i were noiseless (same gain)
     total_nf_db = 10 * math.log10(f_total)
+    nf_delta_db = [total_nf_db - 10 * math.log10(f_total - c) for c in contributions]
+
     total_gain_db = sum(g for g, _ in stages)
     noise_temp_k = noise_figure_to_temp(total_nf_db)
 
@@ -119,7 +129,8 @@ def friis_noise_figure(
         "total_nf_db": total_nf_db,
         "total_gain_db": total_gain_db,
         "noise_temp_k": noise_temp_k,
-        "stage_contributions_db": contributions_db,
+        "stage_contribution_pct": contribution_pct,
+        "stage_nf_delta_db": nf_delta_db,
         "n_stages": len(stages),
     }
 
@@ -461,7 +472,8 @@ def cascade_analysis(
         # Noise
         "total_nf_db": nf_result["total_nf_db"],
         "noise_temp_k": nf_result["noise_temp_k"],
-        "stage_nf_contributions_db": nf_result["stage_contributions_db"],
+        "stage_nf_contribution_pct": nf_result["stage_contribution_pct"],
+        "stage_nf_delta_db": nf_result["stage_nf_delta_db"],
         # Linearity
         "iip3_dbm": iip3_result["iip3_dbm"],
         "oip3_dbm": iip3_result["oip3_dbm"],

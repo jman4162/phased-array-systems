@@ -9,7 +9,7 @@ from phased_array_systems.architecture import (
     RFChainConfig,
 )
 from phased_array_systems.models.swapc import CostModel, PowerModel
-from phased_array_systems.models.swapc.cost import compute_cost_per_db, compute_cost_per_watt
+from phased_array_systems.models.swapc.cost import compute_cost_per_watt
 from phased_array_systems.models.swapc.power import compute_thermal_load
 from phased_array_systems.scenarios import CommsLinkScenario
 
@@ -279,7 +279,8 @@ class TestCostUtilities:
         cost_per_w = compute_cost_per_watt(10000.0, 0.0)
         assert cost_per_w == float("inf")
 
-    def test_cost_per_db(self):
-        """Test cost per dBW calculation."""
-        cost_per_db = compute_cost_per_db(10000.0, 40.0)
-        assert cost_per_db == pytest.approx(250.0)  # $250/dBW
+    def test_cost_per_db_removed(self):
+        """USD divided by a dB value is dimensionless nonsense; removed in v0.8."""
+        import phased_array_systems.models.swapc.cost as cost_mod
+
+        assert not hasattr(cost_mod, "compute_cost_per_db")

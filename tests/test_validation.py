@@ -95,6 +95,41 @@ class TestITUP838:
         assert rain_specific_attenuation_db_per_km(20.0, 0.0) == 0.0
 
 
+class TestFriisCascade:
+    """Friis cascade vs the standard textbook 3-stage example."""
+
+    def test_textbook_cascade(self):
+        """Pozar-style chain: LNA (G=10 dB, F=1.5 dB) -> mixer (G=-3, F=6)
+        -> IF amp (G=20, F=5). F = F1 + (F2-1)/G1 + (F3-1)/(G1 G2)."""
+        from phased_array_systems.models.rf.cascade import friis_noise_figure
+
+        result = friis_noise_figure([(10.0, 1.5), (-3.0, 6.0), (20.0, 5.0)])
+
+        f1, f2, f3 = (10 ** (nf / 10) for nf in (1.5, 6.0, 5.0))
+        g1, g2 = 10.0, 10 ** (-3 / 10)
+        f_total = f1 + (f2 - 1) / g1 + (f3 - 1) / (g1 * g2)
+        import math
+
+        assert result["total_nf_db"] == pytest.approx(10 * math.log10(f_total), abs=1e-9)
+        assert result["total_gain_db"] == pytest.approx(27.0)
+
+    def test_contributions_sum_to_100(self):
+        from phased_array_systems.models.rf.cascade import friis_noise_figure
+
+        result = friis_noise_figure([(20.0, 1.5), (-7.0, 7.0), (30.0, 4.0)])
+        assert sum(result["stage_contribution_pct"]) == pytest.approx(100.0, abs=1e-9)
+        # First stage dominates when it has gain (Friis's point)
+        assert result["stage_contribution_pct"][0] == max(result["stage_contribution_pct"])
+
+    def test_nf_delta_is_positive_and_ordered(self):
+        from phased_array_systems.models.rf.cascade import friis_noise_figure
+
+        result = friis_noise_figure([(20.0, 1.5), (-7.0, 7.0), (30.0, 4.0)])
+        deltas = result["stage_nf_delta_db"]
+        assert all(d > 0 for d in deltas)
+        assert deltas[0] == max(deltas)
+
+
 class TestNoiseConvention:
     """T_sys = T_ant + T0*(F-1) system-noise composition."""
 
