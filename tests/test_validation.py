@@ -93,3 +93,59 @@ class TestITUP838:
 
     def test_zero_rain_is_zero(self):
         assert rain_specific_attenuation_db_per_km(20.0, 0.0) == 0.0
+
+
+class TestNRLSeaClutter:
+    """NRL sea clutter model (Gregers-Hansen & Mittal, NRL/MR/5310-12-9346).
+
+    Spot values computed from the published closed form (author's
+    reference MATLAB implementation); the model itself fits the Nathanson
+    tables within ~2.3 dB for 0.1-10 deg grazing.
+    """
+
+    def test_xband_ss3_low_grazing_spot(self):
+        """9.3 GHz, SS3, 1 deg, HH: published-form value -43.83 dB."""
+        from phased_array_systems.models.radar.clutter import sea_clutter_sigma0
+
+        got = sea_clutter_sigma0(3, 1.0, 9.3e9, "HH")
+        assert got == pytest.approx(-43.83, abs=0.05)
+        # Nathanson X-band SS3 HH low-grazing values cluster near -45 dB
+        assert -50.0 < got < -40.0
+
+    def test_vv_exceeds_hh_at_low_grazing(self):
+        from phased_array_systems.models.radar.clutter import sea_clutter_sigma0
+
+        hh = sea_clutter_sigma0(3, 1.0, 9.3e9, "HH")
+        vv = sea_clutter_sigma0(3, 1.0, 9.3e9, "VV")
+        assert vv > hh
+
+    def test_monotone_in_sea_state_and_grazing(self):
+        from phased_array_systems.models.radar.clutter import sea_clutter_sigma0
+
+        by_ss = [sea_clutter_sigma0(s, 1.0, 9.3e9) for s in range(7)]
+        assert by_ss == sorted(by_ss)
+        by_psi = [sea_clutter_sigma0(3, g, 9.3e9) for g in [0.1, 1.0, 10.0, 30.0]]
+        assert by_psi == sorted(by_psi)
+
+
+class TestConstantGammaGroundClutter:
+    """Constant-gamma terrain model with Barton's published median gammas."""
+
+    def test_sigma0_is_gamma_sin_psi(self):
+        import math
+
+        from phased_array_systems.models.radar.clutter import ground_clutter_sigma0
+
+        got = ground_clutter_sigma0("rural", 5.0, 10e9)
+        expected = -15.0 + 10 * math.log10(math.sin(math.radians(5.0)))
+        assert got == pytest.approx(expected, abs=1e-9)
+
+    def test_terrain_ordering(self):
+        """Urban > forest > rural > wetland > desert reflectivity."""
+        from phased_array_systems.models.radar.clutter import ground_clutter_sigma0
+
+        vals = [
+            ground_clutter_sigma0(t, 5.0, 10e9)
+            for t in ["urban", "forest", "rural", "wetland", "desert"]
+        ]
+        assert vals == sorted(vals, reverse=True)

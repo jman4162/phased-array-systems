@@ -1,11 +1,15 @@
 """Surface and volume clutter models for radar.
 
 Implements empirical clutter RCS models for:
-- Sea surface clutter (GIT model)
-- Ground/terrain clutter (Nathanson model)
-- Rain volume clutter
+- Sea surface clutter (NRL empirical model, fitted to the Nathanson tables)
+- Ground/terrain clutter (constant-gamma model with published gamma values)
+- Rain volume clutter (Marshall-Palmer reflectivity)
 
 References:
+    - Gregers-Hansen, V. and Mittal, R., "An Improved Empirical Model for
+      Radar Sea Clutter Reflectivity", NRL/MR/5310-12-9346 (2012); also
+      IEEE Trans. AES 48(4), 2012
+    - Barton, D., "Radar System Analysis and Modeling" (constant-gamma)
     - Skolnik, M. "Radar Handbook", 3rd Ed., Ch. 7
     - Nathanson, F. "Radar Design Principles", 2nd Ed.
     - Long, M. "Radar Reflectivity of Land and Sea", 3rd Ed.
@@ -67,50 +71,33 @@ def sea_clutter_sigma0(
     if not 0.1 <= grazing_angle_deg <= 90:
         raise ValueError("grazing_angle_deg must be between 0.1 and 90")
 
-    # Convert to radians
-    psi = math.radians(grazing_angle_deg)
+    psi_deg = grazing_angle_deg
+    psi_rad = math.radians(psi_deg)
 
-    # Frequency in GHz
-    freq_ghz = freq_hz / 1e9
+    # NRL model validity: 0.5-35 GHz, grazing 0.1-60 deg
+    freq_ghz = max(0.5, min(35.0, freq_hz / 1e9))
+    psi_deg = min(psi_deg, 60.0)
 
-    # Wave height factor
-    h = SEA_STATE_TO_WAVE_HEIGHT.get(sea_state, 0.9)
-
-    # GIT model coefficients (simplified empirical fit)
-    # sigma_0 = A * sin(psi)^B * f^C * h^D
-    # Coefficients vary by polarization
-
-    if polarization == "HH":
-        # Horizontal polarization - typically lower at low grazing
-        a0 = -27.0
-        b_psi = 1.0
-        c_freq = 0.6
-        d_wave = 0.9
-    elif polarization == "VV":
-        # Vertical polarization - less grazing angle dependence
-        a0 = -23.0
-        b_psi = 0.7
-        c_freq = 0.5
-        d_wave = 0.8
-    else:  # HV cross-pol
-        # Cross-polarization - typically 10-15 dB lower
-        a0 = -40.0
-        b_psi = 0.8
-        c_freq = 0.5
-        d_wave = 0.7
-
-    # Compute sigma-0 in dB
-    # Clamp frequency to valid range
-    freq_ghz = max(1.0, min(100.0, freq_ghz))
+    # NRL empirical model coefficients (Gregers-Hansen & Mittal 2012),
+    # fitted to the Nathanson tables within ~2.3 dB for 0.1-10 deg grazing
+    if polarization == "VV":
+        c1, c2, c3, c4, c5 = -50.796, 25.93, 0.7093, 21.588, 0.00211
+        crosspol_offset = 0.0
+    else:
+        # HH coefficients; HV uses HH minus a fixed offset (cross-pol sea
+        # clutter runs 5-15 dB below copol; Long, ch. 6)
+        c1, c2, c3, c4, c5 = -73.0, 20.781, 7.351, 25.65, 0.0054
+        crosspol_offset = -10.0 if polarization == "HV" else 0.0
 
     sigma0_db = (
-        a0
-        + b_psi * 10 * math.log10(math.sin(psi))
-        + c_freq * 10 * math.log10(freq_ghz)
-        + d_wave * 10 * math.log10(max(0.1, h))
+        c1
+        + c2 * math.log10(math.sin(psi_rad))
+        + (27.5 + c3 * psi_deg) * math.log10(freq_ghz) / (1.0 + 0.95 * psi_deg)
+        + c4 * (sea_state + 1.0) ** (1.0 / (2.0 + 0.085 * psi_deg + 0.033 * sea_state))
+        + c5 * psi_deg**2
     )
 
-    return sigma0_db
+    return float(sigma0_db + crosspol_offset)
 
 
 def sea_clutter_rcs(
@@ -148,13 +135,17 @@ def ground_clutter_sigma0(
 ) -> float:
     """Compute ground surface normalized RCS (sigma-0).
 
-    Uses Nathanson's empirical model for terrain clutter.
-    Valid for frequencies 1-100 GHz.
+    Constant-gamma model: sigma0 = gamma * sin(psi), i.e.
+    sigma0_dB = gamma_dB + 10*log10(sin psi). Gamma values are published
+    medians (Barton, "Radar System Analysis and Modeling"; Nathanson);
+    actual terrain scatters several dB about these. Constant-gamma is
+    frequency-independent to first order; the freq_hz argument is kept
+    for API compatibility and validity checks only.
 
     Args:
         terrain_type: Type of terrain surface
         grazing_angle_deg: Grazing angle from horizon (deg), 0.1 to 90
-        freq_hz: Radar frequency (Hz)
+        freq_hz: Radar frequency (Hz); unused (constant-gamma model)
 
     Returns:
         Normalized RCS (sigma-0) in dB (dBsm/m^2)
@@ -166,28 +157,19 @@ def ground_clutter_sigma0(
         raise ValueError("grazing_angle_deg must be between 0.1 and 90")
 
     psi = math.radians(grazing_angle_deg)
-    freq_ghz = freq_hz / 1e9
-    freq_ghz = max(1.0, min(100.0, freq_ghz))
 
-    # Terrain-dependent coefficients (empirical, from Nathanson)
-    # sigma_0 ≈ gamma_0 * sin(psi)^n where gamma_0 is a constant
-    terrain_params = {
-        "rural": {"gamma0_db": -20.0, "n": 0.8, "freq_exp": 0.3},
-        "urban": {"gamma0_db": -10.0, "n": 0.5, "freq_exp": 0.4},
-        "forest": {"gamma0_db": -15.0, "n": 0.6, "freq_exp": 0.5},
-        "desert": {"gamma0_db": -30.0, "n": 1.0, "freq_exp": 0.2},
-        "wetland": {"gamma0_db": -18.0, "n": 0.7, "freq_exp": 0.4},
+    # Published median gamma values (dB): Barton constant-gamma model
+    terrain_gamma_db = {
+        "rural": -15.0,  # farmland/open country
+        "urban": -5.0,  # built-up areas
+        "forest": -10.0,  # wooded terrain
+        "desert": -20.0,  # desert/flatland
+        "wetland": -17.0,  # marsh/wetland (between farmland and desert)
     }
 
-    params = terrain_params.get(terrain_type, terrain_params["rural"])
+    gamma_db = terrain_gamma_db.get(terrain_type, terrain_gamma_db["rural"])
 
-    sigma0_db = (
-        params["gamma0_db"]
-        + params["n"] * 10 * math.log10(math.sin(psi))
-        + params["freq_exp"] * 10 * math.log10(freq_ghz)
-    )
-
-    return sigma0_db
+    return gamma_db + 10 * math.log10(math.sin(psi))
 
 
 def ground_clutter_rcs(
