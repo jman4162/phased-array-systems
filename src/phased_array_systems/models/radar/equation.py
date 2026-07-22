@@ -190,10 +190,15 @@ class RadarModel:
         # Total propagation loss
         propagation_loss_db = atmos_loss + rain_loss
 
-        # Noise power: N = kTB
-        noise_temp_k = scenario.rx_noise_temp_k
-        noise_power_w = K_B * noise_temp_k * scenario.bandwidth_hz
-        noise_power_dbw = W_TO_DBW(noise_power_w) + arch.rf.noise_figure_db
+        # Noise convention: rx_noise_temp_k is the ANTENNA temperature.
+        # T_sys = T_ant + T0*(F-1), N = k*T_sys*B. Cascaded NF from context
+        # (RF cascade model) wins over the flat arch.rf value, matching the
+        # comms link budget.
+        nf_raw = context.get("cascade_nf_db", arch.rf.noise_figure_db)
+        nf_db = float(nf_raw) if isinstance(nf_raw, (int, float)) else arch.rf.noise_figure_db
+        noise_factor = 10.0 ** (nf_db / 10.0)
+        t_sys_k = scenario.rx_noise_temp_k + 290.0 * (noise_factor - 1.0)
+        noise_power_dbw = W_TO_DBW(K_B * t_sys_k * scenario.bandwidth_hz)
 
         # Radar equation constant: (4π)^3 in dB
         radar_constant_db = 30 * math.log10(4 * math.pi)  # ≈ 32.98 dB
@@ -320,6 +325,8 @@ class RadarModel:
             "grazing_angle_deg": grazing_angle,
             # Noise
             "noise_power_dbw": noise_power_dbw,
+            "noise_temp_system_k": t_sys_k,
+            "noise_figure_used_db": nf_db,
             "system_loss_db": system_loss_db,
             # Propagation losses
             "atmos_loss_db": atmos_loss,

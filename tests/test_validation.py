@@ -95,6 +95,52 @@ class TestITUP838:
         assert rain_specific_attenuation_db_per_km(20.0, 0.0) == 0.0
 
 
+class TestNoiseConvention:
+    """T_sys = T_ant + T0*(F-1) system-noise composition."""
+
+    def test_290k_matches_ktb_plus_nf(self):
+        """At T_ant = 290 K the convention equals the old kTB + NF form."""
+        import math
+
+        from phased_array_systems.constants import K_B
+        from phased_array_systems.models.comms.link_budget import compute_link_margin
+
+        nf_db = 3.0
+        result = compute_link_margin(
+            eirp_dbw=40.0,
+            path_loss_db=180.0,
+            g_rx_db=30.0,
+            noise_temp_k=290.0,
+            bandwidth_hz=1e6,
+            noise_figure_db=nf_db,
+            required_snr_db=10.0,
+        )
+        old_form = 10 * math.log10(K_B * 290.0 * 1e6) + nf_db
+        assert result["noise_power_dbw"] == pytest.approx(old_form, abs=1e-9)
+
+    def test_low_sky_temp_satcom_case(self):
+        """Textbook downlink: T_ant=60 K, NF=1 dB -> T_sys = 60+75.1 = 135.1 K.
+
+        G/T-style budgets (e.g. Ippolito, 'Satellite Communications
+        Systems Engineering') use exactly this composition; the old
+        kTB+NF form would have used 60*F = 75.5 K equivalent, overstating
+        SNR by ~2.5 dB.
+        """
+        from phased_array_systems.models.comms.link_budget import compute_link_margin
+
+        result = compute_link_margin(
+            eirp_dbw=50.0,
+            path_loss_db=205.0,
+            g_rx_db=40.0,
+            noise_temp_k=60.0,
+            bandwidth_hz=10e6,
+            noise_figure_db=1.0,
+            required_snr_db=10.0,
+        )
+        t_rx = 290.0 * (10 ** (1.0 / 10.0) - 1.0)  # 75.09 K
+        assert result["noise_temp_system_k"] == pytest.approx(60.0 + t_rx, abs=0.01)
+
+
 class TestCFARLoss:
     """CA-CFAR universal-curve loss (Gregers-Hansen; Richards ch. 16)."""
 

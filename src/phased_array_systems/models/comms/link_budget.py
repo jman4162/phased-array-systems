@@ -137,13 +137,17 @@ class CommsLinkModel:
         # Received power
         rx_power_dbw = eirp_dbw - total_path_loss_db + g_rx_db
 
-        # Noise power: N = k*T*B
-        noise_power_w = K_B * scenario.rx_noise_temp_k * scenario.bandwidth_hz
-        noise_power_dbw = W_TO_DBW(noise_power_w)
-
-        # Add receiver noise figure (use cascaded NF if available)
-        nf_db = context.get("cascade_nf_db", arch.rf.noise_figure_db)
-        noise_power_dbw += nf_db
+        # Noise convention: rx_noise_temp_k is the ANTENNA temperature.
+        # T_sys = T_ant + T0*(F-1) with the noise figure referenced to
+        # T0 = 290 K; N = k*T_sys*B. (Cascaded NF from context wins over
+        # the flat arch.rf value.) At T_ant = 290 K this is numerically
+        # identical to the old kTB + NF form; it differs -- correctly --
+        # for low-noise-sky satcom cases.
+        nf_raw = context.get("cascade_nf_db", arch.rf.noise_figure_db)
+        nf_db = float(nf_raw) if isinstance(nf_raw, (int, float)) else arch.rf.noise_figure_db
+        noise_factor = 10.0 ** (nf_db / 10.0)
+        t_sys_k = scenario.rx_noise_temp_k + 290.0 * (noise_factor - 1.0)
+        noise_power_dbw = W_TO_DBW(K_B * t_sys_k * scenario.bandwidth_hz)
 
         # SNR
         snr_rx_db = rx_power_dbw - noise_power_dbw
@@ -163,6 +167,8 @@ class CommsLinkModel:
             "g_rx_db": g_rx_db,
             "rx_power_dbw": rx_power_dbw,
             "noise_power_dbw": noise_power_dbw,
+            "noise_temp_system_k": t_sys_k,
+            "noise_figure_used_db": nf_db,
             "snr_rx_db": snr_rx_db,
             "link_margin_db": link_margin_db,
             "required_snr_db": scenario.required_snr_db,
@@ -187,23 +193,27 @@ def compute_link_margin(
         eirp_dbw: Effective Isotropic Radiated Power (dBW)
         path_loss_db: Total path loss (dB)
         g_rx_db: Receive antenna gain (dB)
-        noise_temp_k: System noise temperature (K)
+        noise_temp_k: Antenna noise temperature T_ant (K); the receiver
+            contribution is added via the noise figure
         bandwidth_hz: Signal bandwidth (Hz)
-        noise_figure_db: Receiver noise figure (dB)
+        noise_figure_db: Receiver noise figure (dB, referenced to 290 K)
         required_snr_db: Required SNR for demodulation (dB)
 
     Returns:
-        Dictionary with rx_power_dbw, noise_power_dbw, snr_db, margin_db
+        Dictionary with rx_power_dbw, noise_power_dbw, noise_temp_system_k,
+        snr_db, margin_db
     """
     rx_power_dbw = eirp_dbw - path_loss_db + g_rx_db
-    noise_power_w = K_B * noise_temp_k * bandwidth_hz
-    noise_power_dbw = W_TO_DBW(noise_power_w) + noise_figure_db
+    noise_factor = 10.0 ** (noise_figure_db / 10.0)
+    t_sys_k = noise_temp_k + 290.0 * (noise_factor - 1.0)
+    noise_power_dbw = W_TO_DBW(K_B * t_sys_k * bandwidth_hz)
     snr_db = rx_power_dbw - noise_power_dbw
     margin_db = snr_db - required_snr_db
 
     return {
         "rx_power_dbw": rx_power_dbw,
         "noise_power_dbw": noise_power_dbw,
+        "noise_temp_system_k": t_sys_k,
         "snr_db": snr_db,
         "margin_db": margin_db,
     }
