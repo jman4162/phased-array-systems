@@ -95,6 +95,118 @@ class TestITUP838:
         assert rain_specific_attenuation_db_per_km(20.0, 0.0) == 0.0
 
 
+class TestDetectionReferences:
+    """Detection statistics vs published reference points."""
+
+    def test_albersheim_reference_points(self):
+        """Albersheim: 13.1 dB at Pd=0.9/Pfa=1e-6 single pulse (Richards
+        table 6.4 region); n=10 noncoherent ~5.0 dB per pulse."""
+        from phased_array_systems.models.radar.detection import albersheim_snr
+
+        assert albersheim_snr(0.9, 1e-6, 1) == pytest.approx(13.1, abs=0.2)
+        assert albersheim_snr(0.9, 1e-6, 10) == pytest.approx(5.0, abs=0.3)
+
+    def test_exact_required_snr_vs_albersheim(self):
+        """Exact Marcum-Q inversion agrees with Albersheim within its
+        published 0.2 dB accuracy for single-pulse Swerling 0."""
+        from phased_array_systems.models.radar.detection import (
+            albersheim_snr,
+            compute_snr_for_pd,
+        )
+
+        for pd_, pfa in [(0.9, 1e-6), (0.5, 1e-4), (0.99, 1e-8)]:
+            exact = compute_snr_for_pd(pd_, pfa, swerling=0, n_pulses=1)
+            assert exact == pytest.approx(albersheim_snr(pd_, pfa, 1), abs=0.25)
+
+    def test_swerling1_penalty_at_high_pd(self):
+        """Swerling 1 requires ~7.5-9 dB more than Swerling 0 at
+        Pd=0.9/Pfa=1e-6 single pulse (classic Swerling-curve spread)."""
+        from phased_array_systems.models.radar.detection import compute_snr_for_pd
+
+        sw0 = compute_snr_for_pd(0.9, 1e-6, swerling=0, n_pulses=1)
+        sw1 = compute_snr_for_pd(0.9, 1e-6, swerling=1, n_pulses=1)
+        assert 7.0 < sw1 - sw0 < 9.5
+
+
+class TestRadarEquationCrossCheck:
+    """Full RadarModel vs an independent hand assembly of the radar equation."""
+
+    def test_hand_assembled_radar_equation(self):
+        import math
+
+        from phased_array_systems.architecture import (
+            Architecture,
+            ArrayConfig,
+            RFChainConfig,
+        )
+        from phased_array_systems.constants import C_LIGHT, K_B
+        from phased_array_systems.models.radar import RadarModel
+        from phased_array_systems.scenarios import RadarDetectionScenario
+
+        arch = Architecture(
+            array=ArrayConfig(nx=16, ny=16, enforce_subarray_constraint=False),
+            rf=RFChainConfig(
+                tx_power_w_per_elem=10.0,
+                noise_figure_db=3.0,
+                feed_loss_db=1.0,
+                system_loss_db=2.0,
+            ),
+        )
+        scenario = RadarDetectionScenario(
+            freq_hz=10e9,
+            bandwidth_hz=1e6,
+            range_m=50e3,
+            target_rcs_dbsm=0.0,
+            pfa=1e-6,
+            pd_required=0.9,
+            n_pulses=1,
+        )
+        g_db = 30.0  # supplied antenna gain via context
+
+        metrics = RadarModel().evaluate(arch, scenario, {"g_peak_db": g_db})
+
+        # Independent assembly: SNR = Pt G^2 lambda^2 sigma /
+        #   ((4pi)^3 R^4 L k T_sys B), with L = feed + system losses
+        pt_w = 10.0 * 256
+        lam = C_LIGHT / 10e9
+        t_sys = 290.0 + 290.0 * (10 ** (3.0 / 10.0) - 1.0)
+        g_lin = 10 ** (g_db / 10)
+        snr_lin = (pt_w * g_lin * g_lin * lam**2 * 1.0) / (
+            (4 * math.pi) ** 3 * (50e3) ** 4 * 10 ** (3.0 / 10.0) * K_B * t_sys * 1e6
+        )
+        expected_snr_db = 10 * math.log10(snr_lin)
+
+        assert metrics["snr_single_pulse_db"] == pytest.approx(expected_snr_db, abs=1e-6)
+
+    def test_range_and_rcs_scaling_laws(self):
+        """SNR scales as -40*log10(R) and +sigma_dB (radar equation)."""
+        from phased_array_systems.architecture import (
+            Architecture,
+            ArrayConfig,
+            RFChainConfig,
+        )
+        from phased_array_systems.models.radar import RadarModel
+        from phased_array_systems.scenarios import RadarDetectionScenario
+
+        arch = Architecture(
+            array=ArrayConfig(nx=16, ny=16),
+            rf=RFChainConfig(tx_power_w_per_elem=10.0),
+        )
+
+        def snr(range_m, rcs_dbsm):
+            s = RadarDetectionScenario(
+                freq_hz=10e9,
+                bandwidth_hz=1e6,
+                range_m=range_m,
+                target_rcs_dbsm=rcs_dbsm,
+            )
+            return RadarModel().evaluate(arch, s, {})["snr_single_pulse_db"]
+
+        base = snr(50e3, 0.0)
+        assert snr(100e3, 0.0) == pytest.approx(base - 40 * 0.30103, abs=1e-6)
+        assert snr(50e3, 10.0) == pytest.approx(base + 10.0, abs=1e-6)
+
+
 class TestFriisCascade:
     """Friis cascade vs the standard textbook 3-stage example."""
 

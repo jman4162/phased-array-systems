@@ -6,6 +6,24 @@ For the full changelog, see:
 
 ## Recent Changes
 
+### [0.8.0] - 2026-07-22
+
+**Added:**
+- Real ITU-R P.676-13 (line-by-line) and P.838-3 propagation with vendored coefficient tables
+- NRL sea clutter and Barton constant-gamma ground clutter (published models)
+- Swerling 0-4 threading through required SNR, integration gain, and Pd
+- Analytic error budget (quantization, RMS errors) wired into both antenna paths
+- Validation suite vs published references; [validation table](theory/validation.md)
+- Seed threading, provenance stamps, sorted batch results, `pasys doe --resume`
+- mypy at zero errors, enforced in CI
+
+**Changed (numbers shift):**
+- Atmospheric/rain losses, clutter sigma0, CFAR loss vs Pfa, exact required SNR
+  (golden margin -0.24 dB), radar honors cascaded NF (golden +1.16 dB SNR)
+
+**Removed:**
+- Hand-fit placeholder coefficients, `compute_cost_per_db`, empirical Swerling/CFAR step tables
+
 ### [0.7.0] - 2026-07-22
 
 **Added:**

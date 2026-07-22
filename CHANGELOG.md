@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-22
+
+### Added
+- `models/propagation/` package: full ITU-R P.676-13 Annex 1 line-by-line
+  gaseous attenuation (44 O2 + 35 H2O vendored spectroscopic lines) and
+  ITU-R P.838-3 rain k/alpha for H and V polarization; ITU-R P.530
+  effective rain path length; all coefficient data vendored, no new
+  dependencies
+- NRL sea clutter model (Gregers-Hansen & Mittal 2012, fitted to the
+  Nathanson tables) and Barton constant-gamma ground clutter
+- `swerling` field on `RadarDetectionScenario`; required SNR, integration
+  gain, and achieved Pd all use the exact detection statistics
+- `models/antenna/errors.py`: Ruze gain loss, phase-quantization RMS and
+  loss, average sidelobe floor, beam-pointing estimate; wired into both
+  antenna adapter paths so `phase_bits` and taper affect metrics in
+  analytic mode
+- `generate_taper_weights()` from scipy window functions; taper losses
+  computed from real windows
+- Reproducibility: `evaluate_case(seed=...)` threads the element-failure
+  RNG seed; `meta.seed`, `meta.package_version`, `meta.pam_version`
+  stamped per case; batch results sorted by case_id; `pasys doe --cache
+  PATH --resume`
+- Validation suite (`tests/test_validation.py`, 35 tests) asserting
+  models against their published sources; `docs/theory/validation.md`
+  documents every reference and tolerance
+- mypy at zero errors, enforced as a blocking CI step
+
+### Changed (numeric results shift)
+- Atmospheric and rain losses now come from the real ITU models (the
+  previous 2-line/polynomial fits were hand-set approximations);
+  elevation handling uses equivalent-height slant columns (the previous
+  scale factor always evaluated to 1)
+- Required radar SNR uses the exact Marcum-Q inversion instead of
+  Albersheim (golden case: 13.115 -> 13.183 dB, margin -0.24 dB)
+- One noise convention: `rx_noise_temp_k` is antenna temperature and
+  T_sys = T_ant + 290*(F-1); identical at 290 K, corrects low-sky-temp
+  satcom cases; the radar equation now honors cascaded NF like the comms
+  path (golden case: +1.16 dB SNR with its 1.84 dB cascade)
+- CA-CFAR loss follows the analytic universal curve, so Pfa now matters
+  (N=16 at 1e-6: 2.0 dB, unchanged; other Pfa values shift)
+- Clutter sigma0 values shift to the published models
+- `friis_noise_figure` reports `stage_contribution_pct` (sums to 100)
+  and `stage_nf_delta_db` instead of per-stage dB values that did not
+  sum; `cascade_analysis` key renamed to `stage_nf_contribution_pct`
+
+### Removed
+- `compute_cost_per_db` (USD per dB is not a meaningful ratio)
+- `swerling_snr_adjustment` and `cfar_required_snr_adjustment` empirical
+  step tables (superseded by exact statistics and the universal curve)
+- Hand-fit taper-loss polynomials, GIT-style clutter constants, and the
+  fabricated rain-cell extent model
+
 ## [0.7.0] - 2026-07-22
 
 ### Added

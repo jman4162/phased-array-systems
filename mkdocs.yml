@@ -164,6 +164,7 @@ nav:
     - Link Budget Equations: theory/link-budget-equations.md
     - Radar Equation: theory/radar-equation.md
     - Pareto Optimization: theory/pareto-optimization.md
+    - Model Validation: theory/validation.md
   - Contributing: contributing.md
   - Changelog: changelog.md
   - FAQ: faq.md
