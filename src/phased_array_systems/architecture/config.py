@@ -233,6 +233,18 @@ class ReliabilityConfig(BaseModel):
         description="Component name -> MTBF hours",
     )
     operating_temp_c: float = Field(default=85.0, description="Operating temperature (C)")
+    thermal_resistance_c_per_w: float | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Junction-to-ambient thermal resistance per TRM (C/W). When set, "
+            "the operating temperature is estimated from dissipated power "
+            "instead of the static operating_temp_c value."
+        ),
+    )
+    ambient_temp_c: float = Field(
+        default=25.0, description="Ambient/coldplate temperature (C) for thermal estimate"
+    )
     mttr_hours: float = Field(default=8.0, ge=0, description="Mean time to repair (hours)")
     mission_hours: float = Field(default=8760.0, gt=0, description="Mission duration (hours)")
 

@@ -97,6 +97,25 @@ class RadarDetectionScenario(ScenarioBase):
         default=2, ge=0, description="Number of CFAR guard cells per side"
     )
 
+    # Search timeline parameters (all set -> timeline metrics are computed)
+    prf_hz: float | None = Field(
+        default=None, gt=0, description="Pulse repetition frequency (Hz); dwell = n_pulses/PRF"
+    )
+    search_az_extent_deg: float | None = Field(
+        default=None, gt=0, le=360, description="Search volume azimuth extent (deg)"
+    )
+    search_el_extent_deg: float | None = Field(
+        default=None, gt=0, le=90, description="Search volume elevation extent (deg)"
+    )
+    beam_overhead_us: float = Field(
+        default=0.0, ge=0, description="Beam-switching overhead per position (us)"
+    )
+    search_frame_time_ms: float | None = Field(
+        default=None,
+        gt=0,
+        description="Allotted search frame budget (ms); sets timeline_occupancy",
+    )
+
     # Propagation parameters
     include_atmos_loss: bool = Field(default=False, description="Include atmospheric attenuation")
     temperature_c: float = Field(default=15.0, description="Ambient temperature (Celsius)")

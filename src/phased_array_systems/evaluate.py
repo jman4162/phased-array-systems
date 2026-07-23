@@ -112,9 +112,26 @@ def evaluate_case(
             analyze_array_reliability,
         )
 
+        # Feed-forward thermal coupling: when a thermal resistance is
+        # given, estimate the TRM junction temperature from the dissipated
+        # heat the power model already computed (heat = DC in - RF out),
+        # so array size, TX power, and duty cycle drive Arrhenius derating
+        operating_temp_c = arch.reliability.operating_temp_c
+        if arch.reliability.thermal_resistance_c_per_w is not None:
+            dc_w = metrics.get("dc_power_w", 0.0)
+            rf_avg_w = metrics.get("rf_avg_power_w", 0.0)
+            dc_w = float(dc_w) if isinstance(dc_w, (int, float)) else 0.0
+            rf_avg_w = float(rf_avg_w) if isinstance(rf_avg_w, (int, float)) else 0.0
+            heat_per_elem_w = max(0.0, dc_w - rf_avg_w) / arch.array.n_elements
+            operating_temp_c = (
+                arch.reliability.ambient_temp_c
+                + arch.reliability.thermal_resistance_c_per_w * heat_per_elem_w
+            )
+            metrics["junction_temp_c"] = operating_temp_c
+
         spec = TRMReliabilitySpec(
             component_mtbfs=arch.reliability.component_mtbfs,
-            operating_temp_c=arch.reliability.operating_temp_c,
+            operating_temp_c=operating_temp_c,
             mttr_hours=arch.reliability.mttr_hours,
             mission_hours=arch.reliability.mission_hours,
         )
@@ -208,6 +225,45 @@ def evaluate_case(
         radar_model = RadarModel()
         radar_metrics = radar_model.evaluate(arch, scenario, context)
         metrics.update(radar_metrics)
+
+        # Search timeline (if PRF and search extents configured): connects
+        # the antenna beamwidths and dwell time to volume revisit rate
+        if (
+            scenario.prf_hz is not None
+            and scenario.search_az_extent_deg is not None
+            and scenario.search_el_extent_deg is not None
+        ):
+            import math
+
+            from phased_array_systems.models.digital.scheduling import max_update_rate
+
+            dwell_time_s = scenario.n_pulses / scenario.prf_hz
+
+            bw_az = metrics.get("beamwidth_az_deg", 5.0)
+            bw_el = metrics.get("beamwidth_el_deg", 5.0)
+            bw_az = float(bw_az) if isinstance(bw_az, (int, float)) else 5.0
+            bw_el = float(bw_el) if isinstance(bw_el, (int, float)) else 5.0
+            beam_solid_angle_sr = math.radians(bw_az) * math.radians(bw_el)
+            scan_volume_sr = math.radians(scenario.search_az_extent_deg) * math.radians(
+                scenario.search_el_extent_deg
+            )
+
+            timeline = max_update_rate(
+                scan_volume_sr=scan_volume_sr,
+                beam_solid_angle_sr=beam_solid_angle_sr,
+                dwell_time_us=dwell_time_s * 1e6,
+                overhead_us=scenario.beam_overhead_us,
+            )
+            metrics["dwell_time_ms"] = dwell_time_s * 1e3
+            metrics["n_beam_positions"] = timeline["n_beam_positions"]
+            metrics["search_frame_time_s"] = timeline["scan_time_s"]
+            metrics["search_update_rate_hz"] = timeline["update_rate_hz"]
+            # Occupancy vs an allotted frame budget: > 1 means the search
+            # task is oversubscribed (natural must-requirement metric)
+            if scenario.search_frame_time_ms is not None:
+                metrics["timeline_occupancy"] = timeline["frame_time_ms"] / (
+                    scenario.search_frame_time_ms
+                )
 
     # Verify requirements if provided
     if requirements is not None and len(requirements) > 0:

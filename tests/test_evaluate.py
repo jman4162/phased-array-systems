@@ -518,3 +518,120 @@ class TestDigitizationLevels:
         )
         assert m_jitter["adc_snr_db"] < m_ideal["adc_snr_db"]
         assert m_jitter["adc_enob_effective"] < m_ideal["adc_enob_effective"]
+
+
+class TestSearchTimeline:
+    """Radar search timeline metrics (scheduling -> detection wiring)."""
+
+    def _scenario(self, **kw):
+        from phased_array_systems.scenarios import RadarDetectionScenario
+
+        base = {
+            "freq_hz": 10e9,
+            "bandwidth_hz": 50e6,
+            "range_m": 15e3,
+            "target_rcs_dbsm": 10.0,
+            "n_pulses": 16,
+        }
+        base.update(kw)
+        return RadarDetectionScenario(**base)
+
+    def _arch(self):
+        return Architecture(
+            array=ArrayConfig(nx=32, ny=32),
+            rf=RFChainConfig(tx_power_w_per_elem=4.0),
+        )
+
+    def test_hand_computed_frame_time(self):
+        import math
+
+        scn = self._scenario(
+            prf_hz=2000.0,
+            search_az_extent_deg=90.0,
+            search_el_extent_deg=30.0,
+            beam_overhead_us=10.0,
+            search_frame_time_ms=2000.0,
+        )
+        m = evaluate_case(self._arch(), scn)
+
+        dwell_us = 16 / 2000.0 * 1e6
+        beam_sr = math.radians(m["beamwidth_az_deg"]) * math.radians(m["beamwidth_el_deg"])
+        volume_sr = math.radians(90.0) * math.radians(30.0)
+        n_pos = math.ceil(volume_sr / beam_sr)
+        frame_s = n_pos * (dwell_us + 10.0) / 1e6
+
+        assert m["dwell_time_ms"] == pytest.approx(8.0)
+        assert m["n_beam_positions"] == n_pos
+        assert m["search_frame_time_s"] == pytest.approx(frame_s, abs=1e-9)
+        assert m["search_update_rate_hz"] == pytest.approx(1 / frame_s, rel=1e-9)
+        assert m["timeline_occupancy"] == pytest.approx(frame_s * 1000 / 2000.0, rel=1e-9)
+
+    def test_oversubscription_flagged(self):
+        """Big volume + long dwell + tight budget -> occupancy > 1."""
+        scn = self._scenario(
+            prf_hz=500.0,  # 32 ms dwell
+            search_az_extent_deg=120.0,
+            search_el_extent_deg=60.0,
+            search_frame_time_ms=1000.0,
+        )
+        m = evaluate_case(self._arch(), scn)
+        assert m["timeline_occupancy"] > 1.0
+
+    def test_metrics_absent_without_fields(self):
+        m = evaluate_case(self._arch(), self._scenario())
+        assert "search_update_rate_hz" not in m
+        assert "timeline_occupancy" not in m
+
+    def test_larger_array_searches_slower(self):
+        """Narrower beams -> more positions -> lower update rate."""
+        scn = self._scenario(prf_hz=2000.0, search_az_extent_deg=90.0, search_el_extent_deg=30.0)
+        small = Architecture(
+            array=ArrayConfig(nx=8, ny=8), rf=RFChainConfig(tx_power_w_per_elem=4.0)
+        )
+        m_small = evaluate_case(small, scn)
+        m_large = evaluate_case(self._arch(), scn)
+        assert m_large["search_update_rate_hz"] < m_small["search_update_rate_hz"]
+
+
+class TestThermalReliabilityCoupling:
+    """Feed-forward power -> junction temperature -> Arrhenius derating."""
+
+    def _arch(self, r_th=None, duty_scenario=False, tx_w=2.0):
+        return Architecture(
+            array=ArrayConfig(nx=8, ny=8),
+            rf=RFChainConfig(tx_power_w_per_elem=tx_w, pa_efficiency=0.4),
+            reliability=ReliabilityConfig(
+                thermal_resistance_c_per_w=r_th,
+                ambient_temp_c=25.0,
+            ),
+        )
+
+    def _scenario(self, duty=1.0):
+        from phased_array_systems.scenarios import RadarDetectionScenario
+
+        return RadarDetectionScenario(
+            freq_hz=10e9,
+            bandwidth_hz=1e6,
+            range_m=50e3,
+            target_rcs_dbsm=0.0,
+            duty_cycle=duty,
+        )
+
+    def test_junction_temperature_hand_value(self):
+        m = evaluate_case(self._arch(r_th=20.0), self._scenario())
+        # heat = dc - rf_avg; per element / 64; T_j = 25 + 20 * heat_per_elem
+        heat_per_elem = (m["dc_power_w"] - m["rf_avg_power_w"]) / 64
+        assert m["junction_temp_c"] == pytest.approx(25.0 + 20.0 * heat_per_elem, abs=1e-9)
+
+    def test_mtbf_decreases_with_duty_cycle(self):
+        """More average power -> hotter junction -> shorter MTBF (Arrhenius)."""
+        low = evaluate_case(self._arch(r_th=20.0), self._scenario(duty=0.05))
+        high = evaluate_case(self._arch(r_th=20.0), self._scenario(duty=1.0))
+        assert high["junction_temp_c"] > low["junction_temp_c"]
+        assert high["trm_mtbf_hours"] < low["trm_mtbf_hours"]
+
+    def test_static_temperature_unchanged_without_rth(self):
+        """R_th unset -> v0.8 behavior: static operating_temp_c, no metric."""
+        m = evaluate_case(self._arch(r_th=None), self._scenario())
+        assert "junction_temp_c" not in m
+        assert "trm_mtbf_hours" in m

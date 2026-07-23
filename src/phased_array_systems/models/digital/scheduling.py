@@ -273,23 +273,39 @@ def interleaved_timeline(
         dwell_time_ms = dwell_time_us / 1000
         n_dwells = int(time_budget_ms / dwell_time_ms)
 
-        # Create dwells (simple placeholder positions)
-        for _ in range(n_dwells):
+        # Create dwells; beam positions are function-specific and left to
+        # the caller (metadata carries the burst grouping)
+        dwells_per_burst = max(1, int(func_spec.get("dwells_per_burst", 1)))
+        for i in range(n_dwells):
             dwell = Dwell(
                 function=func,
                 duration_us=dwell_time_us,
-                azimuth_deg=0.0,  # Would be populated by scheduler
-                elevation_deg=0.0,
                 priority=func_spec.get("priority", 1),
+                metadata={"burst": i // dwells_per_burst},
             )
             dwells.append(dwell)
 
-    # Sort by priority (higher priority dwells interleaved more frequently)
-    # This is a simplified scheduling - real systems use more sophisticated algorithms
-    dwells.sort(key=lambda d: -d.priority)
+    # Round-robin interleave across functions in burst-sized groups so no
+    # function is starved for long stretches (simple deterministic
+    # scheduler; real systems use deadline-driven schedulers)
+    queues: dict[Function, list[Dwell]] = {}
+    for d in dwells:
+        queues.setdefault(d.function, []).append(d)
+
+    # Higher-priority functions get proportionally more slots per round
+    min_priority = min((d.priority for d in dwells), default=1)
+    interleaved: list[Dwell] = []
+    while any(queues.values()):
+        for func in list(queues):
+            queue = queues[func]
+            if not queue:
+                continue
+            take = max(1, round(queue[0].priority / max(min_priority, 1)))
+            interleaved.extend(queue[:take])
+            del queue[:take]
 
     return Timeline(
-        dwells=dwells,
+        dwells=interleaved,
         frame_time_ms=frame_time_ms,
         name="Interleaved multi-function",
     )
