@@ -177,3 +177,11 @@ objectives = [
 - [User Guide: Trade Studies](../user-guide/trade-studies.md)
 - [User Guide: Pareto Analysis](../user-guide/pareto-analysis.md)
 - [Visualization API](viz.md)
+
+## Multi-Objective Optimization
+
+::: phased_array_systems.trades.moo.optimize_pareto
+
+## Global Sensitivity
+
+::: phased_array_systems.trades.sensitivity.sobol_sensitivity

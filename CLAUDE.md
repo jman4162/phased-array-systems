@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Core dependency:** `phased-array-modeling>=1.2.0` (provides array geometries, steering, tapering, impairments, and pattern visualization)
 
-**Project status:** v0.6.0 - All 4 implementation phases complete plus optimization solvers. See `package_design_and_requirements.txt` for the original SDD.
+**Project status:** v0.9.0 - MDAO capability complete (NSGA-II, Sobol, constraint-aware DOE, timeline and thermal coupling) on top of the validated reference models. See `package_design_and_requirements.txt` for the original SDD and `CHANGELOG.md` for release history.
 
 ## Git Attribution
 
@@ -16,7 +16,10 @@ All GitHub commits and attributions for this repository should be attributed to:
 
 - **Name:** John Hodge
 - **GitHub:** jman4162
-- **Email:** jah70@vt.edu
+- **Email:** jhodge007@gmail.com
+
+Do NOT commit as jah70@vt.edu: GitHub maps that email to the account
+@jman41, which wrongly appears as a separate contributor.
 
 ## Build & Development Commands
 

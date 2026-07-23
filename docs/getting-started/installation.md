@@ -41,6 +41,7 @@ This installs:
 For interactive Plotly visualizations:
 
 ```bash
+pip install "phased-array-systems[mdao]"       # NSGA-II optimization + Sobol sensitivity
 pip install phased-array-systems[plotting]
 ```
 

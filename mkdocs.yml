@@ -140,6 +140,8 @@ nav:
     - cli/index.md
     - pasys run: cli/run.md
     - pasys doe: cli/doe.md
+    - pasys optimize: cli/optimize.md
+    - pasys sensitivity: cli/sensitivity.md
     - pasys report: cli/report.md
     - pasys pareto: cli/pareto.md
   - API Reference:

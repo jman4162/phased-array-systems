@@ -45,7 +45,11 @@ For radar applications:
 
 Interactive versions are available:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_phased_array_trade_study.ipynb)
+| Notebook | Covers | |
+|---|---|---|
+| Phased array trade study | Single case, DOE, Pareto basics | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_phased_array_trade_study.ipynb) |
+| DBF architecture trade | Digitization level x ADC x beams -> Pareto with interactive plots | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_dbf_architecture_trade.ipynb) |
+| MDAO workflow | Constraint-aware DOE -> NSGA-II -> Sobol -> report | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_mdao_workflow.ipynb) |
 
 ## Example Files
 

@@ -19,11 +19,12 @@ Phased array antenna system design, optimization, and performance visualization 
 
 - **Model-Based Workflow**: MBSE/MDAO approach from requirements through optimized designs
 - **Requirements-Driven**: Every evaluation produces pass/fail with margins and traceability
-- **Trade-Space Exploration**: DOE generation and Pareto analysis for systematic design exploration
-- **Design Optimization**: Scipy-based solvers (DE, dual annealing, L-BFGS-B) with constraint support
-- **System Models**: Comms link budget, radar detection, RF cascade, digital beamformer, reliability
-- **Dual Application**: Supports both communications link budgets and radar detection scenarios
-- **Reproducible**: Config-driven workflow with seed control and version stamping
+- **Trade-Space Exploration**: constraint-aware DOE generation and Pareto analysis
+- **Multi-Objective Optimization**: NSGA-II Pareto fronts (pymoo) plus scipy scalarized solvers
+- **Validated Physics**: ITU-R P.676/P.838 propagation, NRL sea clutter, exact Swerling detection statistics, each tested against its published source
+- **Digital Beamforming Trades**: element vs subarray vs analog digitization drives ADC count, data rate, compute, and power
+- **System Models**: comms link budget, radar detection + search timeline, RF cascade, digital beamformer, thermal-coupled reliability
+- **Reproducible**: config-driven workflow with seed control, provenance stamps, and checkpoint/resume
 
 ## Workflow
 
@@ -39,27 +40,32 @@ Config (YAML/JSON) → Architecture + Scenario → DOE Generation → Batch Eval
 
 ## Features
 
-- **Requirements as first-class objects**: Every run produces pass/fail + margins with traceability
-- **Trade-space exploration**: DOE + Pareto optimization over single-point designs
-- **Design optimization**: Scipy solvers with weighted multi-objective scalarization and constraint penalties
-- **Communications & Radar**: Link budget analysis and radar detection modeling
+- **Requirements as first-class objects**: every run produces pass/fail + margins with traceability
+- **Trade-space exploration**: DOE (grid/random/LHS) with rejection sampling against architecture constraints, plus Pareto extraction, TOPSIS ranking, and hypervolume
+- **Multi-objective optimization**: NSGA-II returns the nondominated set directly; scipy solvers (DE, dual annealing, L-BFGS-B) with normalized constraint penalties remain for scalarized runs
+- **Global sensitivity**: Sobol S1/ST indices (SALib) alongside one-at-a-time sweeps
+- **Communications & Radar**: link budgets with ITU-R P.676-13 line-by-line gaseous and P.838-3 rain attenuation; radar detection with exact Swerling 0-4 statistics, NRL sea clutter, analytic CFAR loss, and search-timeline revisit metrics
+- **Digital beamforming**: digitization level (element/subarray/analog), jitter-aware ADC SNR, system dynamic range with array processing gain, beamformer data-rate and compute budgets
 - **RF cascade analysis**: Friis noise figure, IIP3, SFDR, MDS for cascaded receiver chains
-- **Digital beamformer models**: ADC/DAC characterization, bandwidth budgets, scheduling
-- **TRM reliability**: MTBF, availability, graceful degradation with failed elements
-- **Flat metrics dictionary**: All models return consistent `dict[str, float]` for interchange
-- **Config-driven reproducibility**: Stable case IDs, seed control, version stamping
-- **CLI and Python API**: Use from command line or integrate into scripts
+- **TRM reliability**: MTBF with Arrhenius derating driven by estimated junction temperature, availability, graceful degradation
+- **Validation suite**: models checked against published references in CI (see the docs' validation table)
+- **Flat metrics dictionary**: all models return a consistent flat dict for interchange
+- **Interactive reports**: self-contained HTML with embedded plotly trade plots
+- **CLI and Python API**: use from the command line or integrate into scripts
 
 ## Installation
 
 ```bash
 pip install phased-array-systems
 
-# Development dependencies
-pip install phased-array-systems[dev]
+# Multi-objective optimization + Sobol sensitivity (pymoo, SALib)
+pip install "phased-array-systems[mdao]"
 
-# Visualization extras
-pip install phased-array-systems[plotting]
+# Interactive plots and report embeds (plotly)
+pip install "phased-array-systems[plotting]"
+
+# Development dependencies
+pip install "phased-array-systems[dev]"
 ```
 
 ## Quick Start
@@ -149,11 +155,13 @@ See the `examples/` directory:
 - `05_optimization.py` - Design optimization with constraint handling
 - `06_dbf_architecture_trade.py` - Digital beamforming architecture trade (element vs subarray vs analog digitization)
 
-### Tutorial Notebook
+### Tutorial Notebooks
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_phased_array_trade_study.ipynb)
+Try the interactive tutorials in Google Colab:
 
-Try the interactive tutorial in Google Colab!
+- Trade study basics: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_phased_array_trade_study.ipynb)
+- DBF architecture trade: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_dbf_architecture_trade.ipynb)
+- MDAO workflow (NSGA-II + Sobol): [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jman4162/phased-array-systems/blob/main/notebooks/tutorial_mdao_workflow.ipynb)
 
 ## Package Structure
 
@@ -197,13 +205,20 @@ ruff check .
 # Single case evaluation
 pasys run config.yaml
 
-# DOE batch study
-pasys doe config.yaml -n 100 --method lhs
+# DOE batch study (checkpoint every 10 cases; resume after interruption)
+pasys doe config.yaml -n 100 --method lhs --cache results/cache.parquet --resume
 
-# Design optimization
+# Scalarized optimization (differential evolution)
 pasys optimize config.yaml --objective eirp_dbw --sense maximize
 
-# Extract Pareto frontier
+# Multi-objective Pareto front (NSGA-II; needs the [mdao] extra)
+pasys optimize config.yaml --objective eirp_dbw --method nsga2 \
+    --objective2 cost_usd:minimize -o pareto.parquet
+
+# Sensitivity: one-at-a-time or Sobol global indices
+pasys sensitivity config.yaml --sens-method sobol --samples 256
+
+# Extract Pareto frontier from DOE results
 pasys pareto results.parquet -x cost_usd -y eirp_dbw --plot
 
 # Generate report

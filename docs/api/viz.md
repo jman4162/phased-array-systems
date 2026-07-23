@@ -177,3 +177,11 @@ plt.close(fig)  # Release memory
 - [User Guide: Visualization](../user-guide/visualization.md)
 - [User Guide: Pareto Analysis](../user-guide/pareto-analysis.md)
 - [Trades API](trades.md)
+
+## Interactive Plots (plotly)
+
+::: phased_array_systems.viz.interactive.pareto_plot_interactive
+
+::: phased_array_systems.viz.interactive.trade_space_plot_interactive
+
+::: phased_array_systems.viz.interactive.figure_to_html_div

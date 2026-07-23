@@ -15,6 +15,7 @@ The User Guide covers:
 | [Radar Detection](radar-detection.md) | Radar equation and detection analysis |
 | [Trade Studies](trade-studies.md) | DOE generation and batch evaluation |
 | [Pareto Analysis](pareto-analysis.md) | Multi-objective optimization |
+| [MDAO Tools](mdao.md) | NSGA-II, Sobol sensitivity, timeline metrics, thermal coupling |
 | [Visualization](visualization.md) | Plotting functions and options |
 | [Reports](reports.md) | HTML and Markdown report generation |
 
