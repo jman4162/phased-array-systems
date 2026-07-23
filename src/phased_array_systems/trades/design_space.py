@@ -1,5 +1,8 @@
 """Design space definition for DOE studies."""
 
+import math
+import warnings
+from collections.abc import Callable
 from typing import Any, Literal
 
 import numpy as np
@@ -162,6 +165,8 @@ class DesignSpace(BaseModel):
         n_samples: int = 100,
         seed: int | None = None,
         grid_levels: int | list[int] | None = None,
+        validator: Callable[[dict[str, Any]], bool] | None = None,
+        max_oversample: int = 20,
     ) -> pd.DataFrame:
         """Sample the design space.
 
@@ -170,18 +175,86 @@ class DesignSpace(BaseModel):
             n_samples: Number of samples (ignored for grid method)
             seed: Random seed for reproducibility
             grid_levels: Number of levels per variable for grid method
+            validator: Optional feasibility predicate on a row dict (variable
+                name -> value). Infeasible rows are rejected: grid samples
+                are filtered, random/LHS samples are re-drawn in batches
+                until n_samples valid rows exist. With rejection, the union
+                of LHS batches is space-filling per batch, not a strict
+                Latin hypercube.
+            max_oversample: Maximum number of re-draw batches before
+                returning fewer than n_samples with a warning
 
         Returns:
             DataFrame with columns for each variable plus 'case_id'
         """
         if method == "grid":
-            return self._sample_grid(grid_levels)
-        elif method == "random":
-            return self._sample_random(n_samples, seed)
+            df = self._sample_grid(grid_levels)
+            if validator is not None:
+                df = self._filter_valid(df, validator)
+            return df
+
+        if method == "random":
+            draw = self._sample_random
         elif method == "lhs":
-            return self._sample_lhs(n_samples, seed)
+            draw = self._sample_lhs
         else:
             raise ValueError(f"Unknown sampling method: {method}")
+
+        if validator is None:
+            return draw(n_samples, seed)
+
+        rows: list[dict[str, Any]] = []
+        drawn = 0
+        for attempt in range(max_oversample):
+            # Deterministic per-batch seed derived from the caller's seed
+            batch_seed = None if seed is None else seed + attempt * 7919
+            # Scale batch size to the observed acceptance rate so sparse
+            # feasible regions converge in a few batches
+            accept_rate = max(len(rows) / drawn, 1e-3) if drawn else 0.5
+            needed = n_samples - len(rows)
+            batch_n = min(max(n_samples, math.ceil(1.5 * needed / accept_rate)), 100_000)
+            batch = draw(batch_n, batch_seed).drop(columns="case_id")
+            drawn += batch_n
+            for rec in batch.to_dict("records"):
+                row = {str(k): v for k, v in rec.items()}
+                if validator(row):
+                    rows.append(row)
+                    if len(rows) == n_samples:
+                        break
+            if len(rows) == n_samples:
+                break
+
+        if not rows:
+            raise ValueError(
+                "No candidate samples passed the validator. If validating "
+                "architecture construction, ensure required fields (e.g. "
+                "array.nx, rf.tx_power_w_per_elem) are design variables or "
+                "supplied via base values."
+            )
+        if len(rows) < n_samples:
+            warnings.warn(
+                f"Only {len(rows)}/{n_samples} valid samples found after "
+                f"{max_oversample} oversampling batches; the feasible "
+                "fraction of the design space is very small.",
+                stacklevel=2,
+            )
+
+        df = pd.DataFrame(rows)
+        df.insert(0, "case_id", [f"case_{i:05d}" for i in range(len(df))])
+        return df
+
+    @staticmethod
+    def _filter_valid(
+        df: pd.DataFrame, validator: Callable[[dict[str, Any]], bool]
+    ) -> pd.DataFrame:
+        """Filter rows by validator and renumber case ids."""
+        keep = [
+            validator({str(k): v for k, v in row.items() if k != "case_id"})
+            for row in df.to_dict("records")
+        ]
+        out = df[keep].reset_index(drop=True)
+        out["case_id"] = [f"case_{i:05d}" for i in range(len(out))]
+        return out
 
     def _sample_grid(self, grid_levels: int | list[int] | None) -> pd.DataFrame:
         """Generate full factorial grid."""

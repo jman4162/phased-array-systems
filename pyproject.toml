@@ -58,6 +58,10 @@ plotting = [
     "plotly>=5.0",
     "kaleido>=0.2",
 ]
+mdao = [
+    "pymoo>=0.6",
+    "SALib>=1.4",
+]
 docs = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.4",
@@ -89,7 +93,9 @@ testpaths = ["tests"]
 addopts = "-v"
 
 [tool.mypy]
-python_version = "3.10"
+# 3.12: numpy>=2.2 stubs use `type` statements; runtime 3.10 compat is
+# covered by the CI test matrix, mypy runs on 3.12 only
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true

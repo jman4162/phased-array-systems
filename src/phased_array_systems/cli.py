@@ -97,13 +97,29 @@ Examples:
     )
     opt_parser.add_argument(
         "--method",
-        choices=["de", "da", "minimize"],
+        choices=["de", "da", "minimize", "nsga2"],
         default="de",
-        help="Solver: de (differential_evolution), da (dual_annealing), minimize (L-BFGS-B)",
+        help=(
+            "Solver: de (differential_evolution), da (dual_annealing), "
+            "minimize (L-BFGS-B), nsga2 (multi-objective Pareto; needs [mdao] extra)"
+        ),
+    )
+    opt_parser.add_argument(
+        "--objective2",
+        default=None,
+        help="Second objective for nsga2, as metric:sense (e.g. cost_usd:minimize)",
     )
     opt_parser.add_argument("--max-iter", type=int, default=200, help="Maximum iterations")
+    opt_parser.add_argument(
+        "--generations", type=int, default=100, help="NSGA-II generations (nsga2 only)"
+    )
+    opt_parser.add_argument(
+        "--population", type=int, default=50, help="NSGA-II population size (nsga2 only)"
+    )
     opt_parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    opt_parser.add_argument("-o", "--output", type=Path, help="Save result to JSON")
+    opt_parser.add_argument(
+        "-o", "--output", type=Path, help="Save result (JSON; parquet for nsga2)"
+    )
 
     # pasys pareto <results>
     pareto_parser = subparsers.add_parser("pareto", help="Extract Pareto frontier")
@@ -506,6 +522,9 @@ def cmd_optimize(args: argparse.Namespace) -> int:
             values=var.values,
         )
 
+    if args.method == "nsga2":
+        return _cmd_optimize_nsga2(args, design_space, scenario, requirements)
+
     # Map CLI method shorthand to full name
     method_map = {
         "de": "differential_evolution",
@@ -559,6 +578,58 @@ def cmd_optimize(args: argparse.Namespace) -> int:
         with open(args.output, "w") as f:
             json.dump(output_data, f, indent=2)
         print(f"\nResult saved to: {args.output}")
+
+    return 0
+
+
+def _cmd_optimize_nsga2(args, design_space, scenario, requirements) -> int:
+    """Run the multi-objective NSGA-II path of pasys optimize."""
+    try:
+        from phased_array_systems.trades.moo import optimize_pareto
+    except ImportError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    objectives: list[tuple[str, Literal["minimize", "maximize"]]] = [
+        (args.objective, cast(Literal["minimize", "maximize"], args.sense))
+    ]
+    if args.objective2:
+        try:
+            metric, sense = args.objective2.rsplit(":", 1)
+        except ValueError:
+            print("Error: --objective2 must be metric:sense", file=sys.stderr)
+            return 1
+        if sense not in ("minimize", "maximize"):
+            print("Error: --objective2 sense must be minimize or maximize", file=sys.stderr)
+            return 1
+        objectives.append((metric, cast(Literal["minimize", "maximize"], sense)))
+
+    print(f"Optimizing (NSGA-II): {', '.join(f'{s} {m}' for m, s in objectives)}")
+    print(f"Generations: {args.generations}, population: {args.population}, seed: {args.seed}")
+
+    try:
+        front = optimize_pareto(
+            design_space=design_space,
+            scenario=scenario,
+            objectives=objectives,
+            requirements=requirements,
+            n_generations=args.generations,
+            pop_size=args.population,
+            seed=args.seed,
+        )
+    except Exception as e:
+        print(f"Error during optimization: {e}", file=sys.stderr)
+        return 1
+
+    print(f"\nPareto-optimal designs: {len(front)}")
+    show_cols = ["case_id", *[m for m, _ in objectives]]
+    print(front[[c for c in show_cols if c in front.columns]].to_string(index=False))
+
+    if args.output:
+        from phased_array_systems.io.exporters import export_results
+
+        export_results(front, args.output)
+        print(f"\nPareto front saved to: {args.output}")
 
     return 0
 

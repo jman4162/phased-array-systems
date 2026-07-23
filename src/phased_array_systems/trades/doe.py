@@ -1,10 +1,42 @@
 """Design of Experiments (DOE) generation utilities."""
 
-from typing import Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 import pandas as pd
 
 from phased_array_systems.trades.design_space import DesignSpace
+
+
+def architecture_validator(
+    base_config: dict[str, Any] | None = None,
+) -> Callable[[dict[str, Any]], bool]:
+    """Build a feasibility predicate that tries Architecture construction.
+
+    A row is feasible iff `default_architecture_builder(base_config | row)`
+    succeeds — i.e. exactly the rows the batch runner would otherwise
+    record as per-case errors.
+
+    Args:
+        base_config: Constant architecture fields merged under each row
+            (required fields like array.nx / rf.tx_power_w_per_elem must
+            come from either the row or this dict)
+
+    Returns:
+        Predicate suitable for DesignSpace.sample(validator=...)
+    """
+    from phased_array_systems.trades.runner import default_architecture_builder
+
+    base = dict(base_config or {})
+
+    def _valid(row: dict[str, Any]) -> bool:
+        try:
+            default_architecture_builder({**base, **row})
+        except Exception:
+            return False
+        return True
+
+    return _valid
 
 
 def generate_doe(
@@ -13,6 +45,8 @@ def generate_doe(
     n_samples: int = 100,
     seed: int | None = None,
     grid_levels: int | list[int] | None = None,
+    validate: Literal["architecture"] | None = None,
+    base_config: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Generate a Design of Experiments from a design space.
 
@@ -27,6 +61,11 @@ def generate_doe(
         n_samples: Number of samples (for random/lhs methods)
         seed: Random seed for reproducibility
         grid_levels: Number of levels per variable for grid method
+        validate: "architecture" rejects samples that fail Architecture
+            construction (e.g. sub-array divisibility rules), re-drawing
+            until n_samples feasible cases exist; None keeps all samples
+        base_config: Constant architecture fields merged under each row
+            for validation (see `architecture_validator`)
 
     Returns:
         DataFrame with columns:
@@ -40,11 +79,18 @@ def generate_doe(
         >>> space.add_variable("rf.tx_power_w_per_elem", "float", low=0.5, high=2.0)
         >>> doe = generate_doe(space, method="lhs", n_samples=50, seed=42)
     """
+    validator = None
+    if validate == "architecture":
+        validator = architecture_validator(base_config)
+    elif validate is not None:
+        raise ValueError(f"Unknown validate mode: {validate}")
+
     return design_space.sample(
         method=method,
         n_samples=n_samples,
         seed=seed,
         grid_levels=grid_levels,
+        validator=validator,
     )
 
 

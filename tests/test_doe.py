@@ -214,3 +214,66 @@ class TestAugmentDOE:
 
         new_x = set(augmented["x"][10:].tolist())
         assert new_x.isdisjoint(set(original["x"].tolist()))
+
+
+class TestConstraintAwareDOE:
+    """Rejection sampling against architecture construction."""
+
+    @pytest.fixture
+    def constrained_space(self):
+        return (
+            DesignSpace()
+            .add_variable("array.nx", "int", low=4, high=64)
+            .add_variable("array.ny", "int", low=4, high=64)
+            .add_variable("rf.tx_power_w_per_elem", "float", low=0.5, high=2.0)
+        )
+
+    def test_validated_doe_is_fully_feasible(self, constrained_space):
+        from phased_array_systems.trades.runner import default_architecture_builder
+
+        doe = generate_doe(constrained_space, n_samples=30, seed=42, validate="architecture")
+        assert len(doe) == 30
+        for row in doe.drop(columns="case_id").to_dict("records"):
+            default_architecture_builder(row)  # must not raise
+
+    def test_validated_doe_deterministic(self, constrained_space):
+        a = generate_doe(constrained_space, n_samples=20, seed=7, validate="architecture")
+        b = generate_doe(constrained_space, n_samples=20, seed=7, validate="architecture")
+        assert a.equals(b)
+
+    def test_unvalidated_behavior_unchanged(self, constrained_space):
+        """validate=None must reproduce the historical sampling exactly."""
+        a = generate_doe(constrained_space, n_samples=20, seed=7)
+        b = constrained_space.sample(method="lhs", n_samples=20, seed=7)
+        assert a.equals(b)
+
+    def test_grid_filtering(self):
+        space = (
+            DesignSpace()
+            .add_variable("array.nx", "int", low=4, high=10)
+            .add_variable("array.ny", "categorical", values=[8])
+            .add_variable("rf.tx_power_w_per_elem", "categorical", values=[1.0])
+        )
+        doe = generate_doe(space, method="grid", grid_levels=7, validate="architecture")
+        # Only powers of two survive in 4..10 -> nx in {4, 8}
+        assert set(doe["array.nx"]) == {4, 8}
+        # case ids renumbered contiguously
+        assert doe["case_id"].tolist() == [f"case_{i:05d}" for i in range(len(doe))]
+
+    def test_base_config_supplies_required_fields(self):
+        """Swept vars alone can't build an Architecture; base_config fills in."""
+        space = DesignSpace().add_variable("array.nx", "int", low=4, high=32)
+        doe = generate_doe(
+            space,
+            n_samples=10,
+            seed=1,
+            validate="architecture",
+            base_config={"array.ny": 8, "rf.tx_power_w_per_elem": 1.0},
+        )
+        assert len(doe) == 10
+
+    def test_impossible_space_raises(self):
+        space = DesignSpace().add_variable("array.nx", "int", low=4, high=32)
+        # No base_config: rows can never build an Architecture (missing rf/ny)
+        with pytest.raises(ValueError, match="No candidate samples"):
+            generate_doe(space, n_samples=5, seed=1, validate="architecture")

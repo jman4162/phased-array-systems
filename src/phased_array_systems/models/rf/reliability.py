@@ -526,8 +526,8 @@ def plot_degradation_curves(
         fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
     failures = np.arange(0, max_failures + 1)
-    gain_losses = [degraded_gain(n_elements, n, "random") for n in failures]
-    sll_values = [degraded_sidelobe(n_elements, n, original_sll_db, "random") for n in failures]
+    gain_losses = [degraded_gain(n_elements, int(n), "random") for n in failures]
+    sll_values = [degraded_sidelobe(n_elements, int(n), original_sll_db, "random") for n in failures]
 
     # Gain plot
     ax[0].plot(failures, gain_losses, "b-", linewidth=2)

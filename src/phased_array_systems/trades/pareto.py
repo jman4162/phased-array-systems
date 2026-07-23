@@ -222,9 +222,9 @@ def compute_hypervolume(
     # Set reference point if not provided
     if reference_point is None:
         worst = obj_matrix.max(axis=0)
-        reference_point = worst * 1.1 + 0.1  # 10% beyond worst
-
-    ref = np.array(reference_point)
+        ref = np.asarray(worst * 1.1 + 0.1)  # 10% beyond worst
+    else:
+        ref = np.array(reference_point)
 
     # For 2D, compute exact hypervolume
     if n_obj == 2:

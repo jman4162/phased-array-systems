@@ -144,16 +144,19 @@ def _make_objective(
             else:  # minimize
                 obj_value += w * float(val)
 
-        # Constraint penalty from requirements
+        # Constraint penalty from requirements. Margins are normalized by
+        # the requirement threshold scale so mixed-unit requirements (dB,
+        # USD, hours) contribute comparably to the penalty.
         if requirements is not None and len(requirements) > 0:
             report = requirements.verify(metrics)
             if not report.passes:
                 penalty = 0.0
                 for result in report.results:
                     if not result.passes and result.margin is not None:
-                        penalty += abs(result.margin)
+                        scale = max(abs(result.requirement.value), 1.0)
+                        penalty += abs(result.margin) / scale
                     elif not result.passes:
-                        penalty += 100.0  # Missing metric penalty
+                        penalty += 1.0  # Missing metric penalty (normalized units)
                 obj_value += penalty_weight * penalty
 
         return obj_value
