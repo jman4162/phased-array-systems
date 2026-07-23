@@ -39,6 +39,13 @@ class HTMLReport(ReportGenerator):
         if self.config.include_summary:
             sections.append(self._generate_summary_section(stats, columns))
 
+        # Interactive Pareto plot (when plotly is available and two
+        # objectives are configured); silently omitted otherwise
+        if self.config.include_plots and len(self.config.objectives) >= 2:
+            plot_section = self._generate_interactive_pareto_section(results)
+            if plot_section:
+                sections.append(plot_section)
+
         # Results table section
         sections.append(self._generate_table_section(results, columns))
 
@@ -46,6 +53,42 @@ class HTMLReport(ReportGenerator):
         sections.append(self._generate_statistics_section(results, columns))
 
         return self._wrap_html(sections, metadata)
+
+    def _generate_interactive_pareto_section(self, results: pd.DataFrame) -> str | None:
+        """Embed a self-contained interactive Pareto plot, if possible."""
+        try:
+            from phased_array_systems.trades.pareto import extract_pareto
+            from phased_array_systems.viz.interactive import (
+                figure_to_html_div,
+                pareto_plot_interactive,
+            )
+
+            (x, x_dir), (y, y_dir) = self.config.objectives[0], self.config.objectives[1]
+            if x not in results.columns or y not in results.columns:
+                return None
+
+            objectives = [(x, x_dir), (y, y_dir)]
+            front = extract_pareto(results, objectives)  # type: ignore[arg-type]
+
+            feasible_mask = None
+            if "verification.passes" in results.columns:
+                feasible_mask = results["verification.passes"] == 1.0
+
+            fig = pareto_plot_interactive(
+                results,
+                x,
+                y,
+                pareto_front=front,
+                feasible_mask=feasible_mask,
+                title=f"Trade-off: {x} ({x_dir}) vs {y} ({y_dir})",
+            )
+            div = figure_to_html_div(fig)
+        except ImportError:
+            return None
+        except Exception:  # pragma: no cover - plot failure must not kill report
+            return None
+
+        return f'<section class="pareto-plot"><h2>Interactive Trade-off</h2>{div}</section>'
 
     def _wrap_html(self, sections: list[str], metadata: dict[str, Any]) -> str:
         """Wrap sections in HTML document structure.

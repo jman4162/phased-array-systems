@@ -7,3 +7,7 @@ __all__ = [
     "scatter_matrix",
     "trade_space_plot",
 ]
+
+# Interactive plotly variants live in phased_array_systems.viz.interactive
+# and require the [plotting] extra; imported lazily to keep matplotlib-only
+# installs working.
