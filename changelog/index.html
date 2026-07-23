@@ -714,6 +714,8 @@
       
         
       
+        
+      
     
     
     
@@ -953,6 +955,34 @@
     
   
     Pareto Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/mdao/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MDAO Tools
   
 
     
@@ -1987,6 +2017,8 @@
       
         
       
+        
+      
     
     
     
@@ -2155,6 +2187,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory/validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2266,6 +2326,28 @@
   
     <nav class="md-nav" aria-label="Recent Changes">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#090-2026-07-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.9.0] - 2026-07-22
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#080-2026-07-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.8.0] - 2026-07-22
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#070-2026-07-22" class="md-nav__link">
@@ -2401,6 +2483,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#090-2026-07-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.9.0] - 2026-07-22
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#080-2026-07-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.8.0] - 2026-07-22
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#070-2026-07-22" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2484,6 +2588,30 @@
 <p>For the full changelog, see:</p>
 <p><strong><a href="https://github.com/jman4162/phased-array-systems/blob/main/CHANGELOG.md">CHANGELOG.md on GitHub</a></strong></p>
 <h2 id="recent-changes">Recent Changes<a class="headerlink" href="#recent-changes" title="Permanent link">&para;</a></h2>
+<h3 id="090-2026-07-22">[0.9.0] - 2026-07-22<a class="headerlink" href="#090-2026-07-22" title="Permanent link">&para;</a></h3>
+<p><strong>Added:</strong>
+- NSGA-II multi-objective optimization (<code>optimize_pareto</code>, optional <code>[mdao]</code> extra); requirements as constraints
+- Constraint-aware DOE (<code>validate="architecture"</code>) — no more per-case construction errors
+- Sobol global sensitivity indices (<code>--sens-method sobol</code>)
+- Search timeline metrics (PRF + search volume -&gt; revisit rate, occupancy); see <a href="../user-guide/mdao/">MDAO Tools</a>
+- Thermal-reliability coupling: dissipated power -&gt; junction temperature -&gt; Arrhenius MTBF
+- Interactive plotly trade plots and self-contained report embeds</p>
+<p><strong>Changed:</strong>
+- Weighted-sum penalty normalized by requirement scale; round-robin interleaved timeline</p>
+<h3 id="080-2026-07-22">[0.8.0] - 2026-07-22<a class="headerlink" href="#080-2026-07-22" title="Permanent link">&para;</a></h3>
+<p><strong>Added:</strong>
+- Real ITU-R P.676-13 (line-by-line) and P.838-3 propagation with vendored coefficient tables
+- NRL sea clutter and Barton constant-gamma ground clutter (published models)
+- Swerling 0-4 threading through required SNR, integration gain, and Pd
+- Analytic error budget (quantization, RMS errors) wired into both antenna paths
+- Validation suite vs published references; <a href="../theory/validation/">validation table</a>
+- Seed threading, provenance stamps, sorted batch results, <code>pasys doe --resume</code>
+- mypy at zero errors, enforced in CI</p>
+<p><strong>Changed (numbers shift):</strong>
+- Atmospheric/rain losses, clutter sigma0, CFAR loss vs Pfa, exact required SNR
+  (golden margin -0.24 dB), radar honors cascaded NF (golden +1.16 dB SNR)</p>
+<p><strong>Removed:</strong>
+- Hand-fit placeholder coefficients, <code>compute_cost_per_db</code>, empirical Swerling/CFAR step tables</p>
 <h3 id="070-2026-07-22">[0.7.0] - 2026-07-22<a class="headerlink" href="#070-2026-07-22" title="Permanent link">&para;</a></h3>
 <p><strong>Added:</strong>
 - Digitization-level trades (element / subarray / analog) driving ADC count, data rate, compute, and power

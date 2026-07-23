@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://jman4162.github.io/phased-array-systems/theory/phased-arrays/">
+        <link rel="canonical" href="https://jman4162.github.io/phased-array-systems/theory/validation/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../pareto-optimization/">
       
       
-        <link rel="next" href="../link-budget-equations/">
+        <link rel="next" href="../../contributing/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Phased Array Fundamentals - phased-array-systems</title>
+        <title>Model Validation - phased-array-systems</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#phased-array-fundamentals" class="md-skip">
+        <a href="#model-validation" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Phased Array Fundamentals
+              Model Validation
             
           </span>
         </div>
@@ -2082,37 +2082,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Phased Array Fundamentals
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../phased-arrays/" class="md-nav__link">
         
   
   
@@ -2128,282 +2101,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#array-factor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Array Factor
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Array Factor">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#linear-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Linear Array
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rectangular-planar-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rectangular Planar Array
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antenna-gain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Antenna Gain
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Antenna Gain">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#directivity" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Directivity
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Gain
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#beamwidth" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Beamwidth
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Beamwidth">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#half-power-beamwidth-hpbw" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Half-Power Beamwidth (HPBW)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#beam-steering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Beam Steering
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Beam Steering">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scan-loss" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scan Loss
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#grating-lobes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Grating Lobes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sidelobe-level" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Sidelobe Level
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Sidelobe Level">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tapering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tapering
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#power-and-eirp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Power and EIRP
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Power and EIRP">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#total-radiated-power" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Total Radiated Power
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#eirp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EIRP
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-calculation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example Calculation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2497,10 +2194,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../validation/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Validation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2516,6 +2240,37 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documented-approximations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documented approximations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2636,255 +2391,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#documented-approximations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#array-factor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Array Factor
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Array Factor">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#linear-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Linear Array
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rectangular-planar-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rectangular Planar Array
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#antenna-gain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Antenna Gain
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Antenna Gain">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#directivity" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Directivity
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Gain
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#beamwidth" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Beamwidth
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Beamwidth">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#half-power-beamwidth-hpbw" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Half-Power Beamwidth (HPBW)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#beam-steering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Beam Steering
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Beam Steering">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scan-loss" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scan Loss
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#grating-lobes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Grating Lobes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sidelobe-level" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Sidelobe Level
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Sidelobe Level">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tapering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tapering
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#power-and-eirp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Power and EIRP
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Power and EIRP">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#total-radiated-power" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Total Radiated Power
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#eirp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EIRP
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-calculation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example Calculation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
+        Documented approximations
       
     </span>
   </a>
@@ -2911,254 +2421,145 @@
   
 
 
-<h1 id="phased-array-fundamentals">Phased Array Fundamentals<a class="headerlink" href="#phased-array-fundamentals" title="Permanent link">&para;</a></h1>
-<p>Theory of phased array antenna operation.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>A phased array is an antenna system that uses multiple radiating elements with controlled phase and amplitude to electronically steer the beam without mechanical movement.</p>
-<h2 id="array-factor">Array Factor<a class="headerlink" href="#array-factor" title="Permanent link">&para;</a></h2>
-<p>The array factor describes the radiation pattern contribution from element positioning:</p>
-<div class="arithmatex">\[
-AF(\theta, \phi) = \sum_{n=1}^{N} a_n e^{j(k \mathbf{r}_n \cdot \hat{\mathbf{r}} + \alpha_n)}
-\]</div>
-<p>Where:</p>
-<ul>
-<li><span class="arithmatex">\(a_n\)</span> = amplitude weight of element <span class="arithmatex">\(n\)</span></li>
-<li><span class="arithmatex">\(k = 2\pi/\lambda\)</span> = wavenumber</li>
-<li><span class="arithmatex">\(\mathbf{r}_n\)</span> = position of element <span class="arithmatex">\(n\)</span></li>
-<li><span class="arithmatex">\(\hat{\mathbf{r}}\)</span> = unit vector in observation direction</li>
-<li><span class="arithmatex">\(\alpha_n\)</span> = phase of element <span class="arithmatex">\(n\)</span></li>
-</ul>
-<h3 id="linear-array">Linear Array<a class="headerlink" href="#linear-array" title="Permanent link">&para;</a></h3>
-<p>For a uniform linear array along the z-axis with spacing <span class="arithmatex">\(d\)</span>:</p>
-<div class="arithmatex">\[
-AF(\theta) = \sum_{n=0}^{N-1} e^{jn(kd\cos\theta + \beta)}
-\]</div>
-<p>Where <span class="arithmatex">\(\beta\)</span> is the progressive phase shift.</p>
-<p>Closed form:</p>
-<div class="arithmatex">\[
-AF(\theta) = \frac{\sin(N\psi/2)}{\sin(\psi/2)}, \quad \psi = kd\cos\theta + \beta
-\]</div>
-<h3 id="rectangular-planar-array">Rectangular Planar Array<a class="headerlink" href="#rectangular-planar-array" title="Permanent link">&para;</a></h3>
-<p>For an <span class="arithmatex">\(N_x \times N_y\)</span> array:</p>
-<div class="arithmatex">\[
-AF(\theta, \phi) = AF_x(\theta, \phi) \cdot AF_y(\theta, \phi)
-\]</div>
-<div class="arithmatex">\[
-AF_x = \frac{\sin(N_x \psi_x / 2)}{\sin(\psi_x / 2)}, \quad \psi_x = kd_x \sin\theta\cos\phi + \beta_x
-\]</div>
-<div class="arithmatex">\[
-AF_y = \frac{\sin(N_y \psi_y / 2)}{\sin(\psi_y / 2)}, \quad \psi_y = kd_y \sin\theta\sin\phi + \beta_y
-\]</div>
-<h2 id="antenna-gain">Antenna Gain<a class="headerlink" href="#antenna-gain" title="Permanent link">&para;</a></h2>
-<h3 id="directivity">Directivity<a class="headerlink" href="#directivity" title="Permanent link">&para;</a></h3>
-<p>The directivity is the ratio of radiation intensity in a given direction to the average:</p>
-<div class="arithmatex">\[
-D = \frac{4\pi U(\theta, \phi)}{P_{rad}}
-\]</div>
-<p>Peak directivity for a uniform array (boresight):</p>
-<div class="arithmatex">\[
-D_0 \approx \frac{4\pi A_{eff}}{\lambda^2} = \frac{4\pi}{\lambda^2} \cdot N_x d_x \cdot N_y d_y \cdot \lambda^2 = 4\pi N_x d_x N_y d_y
-\]</div>
-<h3 id="gain">Gain<a class="headerlink" href="#gain" title="Permanent link">&para;</a></h3>
-<p>Gain includes efficiency:</p>
-<div class="arithmatex">\[
-G = \eta_a \cdot D
-\]</div>
-<p>Where aperture efficiency <span class="arithmatex">\(\eta_a\)</span> typically ranges from 0.5 to 0.8.</p>
-<p>For uniform amplitude and half-wavelength spacing (<span class="arithmatex">\(d = 0.5\lambda\)</span>):</p>
-<div class="arithmatex">\[
-G \approx \eta_a \cdot \pi \cdot N_x \cdot N_y
-\]</div>
-<p>In dB:</p>
-<div class="arithmatex">\[
-G_{dB} = 10\log_{10}(\eta_a \cdot \pi \cdot N)
-\]</div>
-<p>For <span class="arithmatex">\(\eta_a = 0.65\)</span> and <span class="arithmatex">\(N = 64\)</span> elements:</p>
-<div class="arithmatex">\[
-G_{dB} = 10\log_{10}(0.65 \cdot \pi \cdot 64) \approx 22.1 \text{ dB}
-\]</div>
-<h2 id="beamwidth">Beamwidth<a class="headerlink" href="#beamwidth" title="Permanent link">&para;</a></h2>
-<h3 id="half-power-beamwidth-hpbw">Half-Power Beamwidth (HPBW)<a class="headerlink" href="#half-power-beamwidth-hpbw" title="Permanent link">&para;</a></h3>
-<p>For a uniform linear array:</p>
-<div class="arithmatex">\[
-\theta_{3dB} \approx \frac{0.886 \lambda}{N d \cos\theta_0}
-\]</div>
-<p>At boresight (<span class="arithmatex">\(\theta_0 = 0\)</span>) with <span class="arithmatex">\(d = 0.5\lambda\)</span>:</p>
-<div class="arithmatex">\[
-\theta_{3dB} \approx \frac{1.77}{N} \text{ radians} = \frac{101°}{N}
-\]</div>
-<p>For a rectangular array:</p>
-<div class="arithmatex">\[
-\theta_{3dB,x} \approx \frac{101°}{N_x}, \quad \theta_{3dB,y} \approx \frac{101°}{N_y}
-\]</div>
-<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<h1 id="model-validation">Model Validation<a class="headerlink" href="#model-validation" title="Permanent link">&para;</a></h1>
+<p>Every physics model with published reference data is validated against
+that data in CI (<code>tests/test_validation.py</code>). The table below lists the
+model, its source, the reference points checked, and the asserted
+tolerance. Models without an external reference are checked against
+independent hand assemblies of their governing equations or exact
+closed-form identities.</p>
 <table>
 <thead>
 <tr>
-<th>Array</th>
-<th>Elements</th>
-<th>HPBW</th>
+<th>Model</th>
+<th>Reference</th>
+<th>Checked against</th>
+<th>Tolerance</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>8×8</td>
-<td>64</td>
-<td>12.6° × 12.6°</td>
+<td>Gaseous attenuation (line-by-line)</td>
+<td>ITU-R P.676-13, Annex 1</td>
+<td>γ at 10, 22.235, 60, 94, 118.75, 183.31 GHz, standard surface conditions, cross-checked with ITU-Rpy</td>
+<td>2%</td>
 </tr>
 <tr>
-<td>16×16</td>
-<td>256</td>
-<td>6.3° × 6.3°</td>
+<td>Rain specific attenuation k, α</td>
+<td>ITU-R P.838-3, Tables 1–4</td>
+<td>k/α at 10, 20, 40, 100 GHz, H and V polarization</td>
+<td>0.1%</td>
 </tr>
 <tr>
-<td>32×32</td>
-<td>1024</td>
-<td>3.2° × 3.2°</td>
+<td>Sea clutter σ⁰</td>
+<td>NRL model, Gregers-Hansen &amp; Mittal, NRL/MR/5310-12-9346 (2012); fits Nathanson tables within ~2.3 dB</td>
+<td>Closed-form spot value (9.3 GHz, SS3, 1°, HH = −43.8 dB); VV &gt; HH at low grazing; monotonicity</td>
+<td>0.05 dB (spot)</td>
+</tr>
+<tr>
+<td>Ground clutter σ⁰</td>
+<td>Barton constant-γ model, published median γ per terrain</td>
+<td>γ·sin ψ identity; terrain ordering</td>
+<td>exact</td>
+</tr>
+<tr>
+<td>CA-CFAR loss</td>
+<td>Gregers-Hansen universal curve; Richards ch. 16</td>
+<td>2.0 dB at N=16, 0.97 dB at N=32 (Pfa = 1e-6); monotonicity in N and Pfa</td>
+<td>0.1 dB</td>
+</tr>
+<tr>
+<td>Detection probability (Swerling 0)</td>
+<td>Marcum Q via noncentral χ²</td>
+<td><code>scipy.stats.ncx2.sf</code> identity; required SNR 13.18 dB at Pd=0.9/Pfa=1e-6</td>
+<td>exact / 0.15 dB</td>
+</tr>
+<tr>
+<td>Detection probability (Swerling 1–4)</td>
+<td>Gamma-mixture of noncentral χ²</td>
+<td>Swerling 1 closed form Pfa^(1/(1+SNR)); Swerling 2 gamma closed form; SW1−SW0 penalty 7–9.5 dB at Pd=0.9</td>
+<td>1e-6</td>
+</tr>
+<tr>
+<td>Albersheim's equation</td>
+<td>Richards, <em>Fundamentals of Radar Signal Processing</em></td>
+<td>13.1 dB (n=1), ~5.0 dB (n=10) at Pd=0.9/Pfa=1e-6; agreement with exact inversion</td>
+<td>0.2–0.3 dB</td>
+</tr>
+<tr>
+<td>Radar range equation</td>
+<td>Independent hand assembly</td>
+<td>Full <code>RadarModel</code> vs Pt·G²λ²σ/((4π)³R⁴LkT_sysB); R⁻⁴ and σ scaling laws</td>
+<td>1e-6 dB</td>
+</tr>
+<tr>
+<td>System noise temperature</td>
+<td>T_sys = T_ant + T₀(F−1)</td>
+<td>Identity with kTB+NF at 290 K; satcom case T_ant=60 K, NF=1 dB → T_sys=135.1 K</td>
+<td>exact</td>
+</tr>
+<tr>
+<td>Friis cascade</td>
+<td>Pozar, <em>Microwave Engineering</em></td>
+<td>3-stage textbook chain; stage contributions sum to 100%</td>
+<td>exact</td>
+</tr>
+<tr>
+<td>ADC quantization SNR</td>
+<td>6.02·ENOB + 1.76 dB</td>
+<td>12-bit → 74.0 dB</td>
+<td>0.1 dB</td>
+</tr>
+<tr>
+<td>ADC jitter SNR</td>
+<td>−20·log₁₀(2πf·t_j)</td>
+<td>1 ps at 1 GHz → 44.03 dB</td>
+<td>0.02 dB</td>
+</tr>
+<tr>
+<td>Phase quantization loss</td>
+<td>Mailloux ch. 7</td>
+<td>3 bits → 0.223 dB, Ruze form</td>
+<td>0.01 dB</td>
+</tr>
+<tr>
+<td>Taper loss</td>
+<td>scipy window functions</td>
+<td>Computed from actual windows (no fitted curves); Taylor −30 dB → 0.69 dB</td>
+<td>exact</td>
+</tr>
+<tr>
+<td>Search timeline</td>
+<td>Beam-packing identity</td>
+<td>Frame time = ceil(Ω_search/Ω_beam)·(dwell+overhead), hand-reproduced</td>
+<td>1e-9</td>
+</tr>
+<tr>
+<td>Thermal-reliability coupling</td>
+<td>Energy balance + Arrhenius</td>
+<td>T_j = T_amb + R_th·(P_DC−P_RF)/N hand value; MTBF monotone in duty cycle</td>
+<td>exact</td>
 </tr>
 </tbody>
 </table>
-<h2 id="beam-steering">Beam Steering<a class="headerlink" href="#beam-steering" title="Permanent link">&para;</a></h2>
-<p>Electronic beam steering is achieved by applying a progressive phase shift:</p>
-<div class="arithmatex">\[
-\beta_x = -kd_x \sin\theta_0 \cos\phi_0
-$$
-$$
-\beta_y = -kd_y \sin\theta_0 \sin\phi_0
-\]</div>
-<p>Where <span class="arithmatex">\((\theta_0, \phi_0)\)</span> is the desired beam direction.</p>
-<h3 id="scan-loss">Scan Loss<a class="headerlink" href="#scan-loss" title="Permanent link">&para;</a></h3>
-<p>When scanning off boresight, gain is reduced:</p>
-<div class="arithmatex">\[
-G(\theta) \approx G_0 \cos^p(\theta)
-\]</div>
-<p>Where <span class="arithmatex">\(p\)</span> depends on element pattern (typically <span class="arithmatex">\(p \approx 1.2-1.5\)</span>).</p>
-<p>Approximate scan loss:</p>
-<table>
-<thead>
-<tr>
-<th>Scan Angle</th>
-<th>Approximate Loss</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>0°</td>
-<td>0 dB</td>
-</tr>
-<tr>
-<td>30°</td>
-<td>1-2 dB</td>
-</tr>
-<tr>
-<td>45°</td>
-<td>2-3 dB</td>
-</tr>
-<tr>
-<td>60°</td>
-<td>3-5 dB</td>
-</tr>
-</tbody>
-</table>
-<h2 id="grating-lobes">Grating Lobes<a class="headerlink" href="#grating-lobes" title="Permanent link">&para;</a></h2>
-<p>Grating lobes appear when element spacing exceeds <span class="arithmatex">\(\lambda\)</span>. To avoid grating lobes when scanning to angle <span class="arithmatex">\(\theta_0\)</span>:</p>
-<div class="arithmatex">\[
-d &lt; \frac{\lambda}{1 + |\sin\theta_0|}
-\]</div>
-<p>For <span class="arithmatex">\(\theta_0 = 60°\)</span>:</p>
-<div class="arithmatex">\[
-d &lt; \frac{\lambda}{1 + \sin(60°)} = \frac{\lambda}{1.866} \approx 0.54\lambda
-\]</div>
-<p>This is why half-wavelength spacing (<span class="arithmatex">\(d = 0.5\lambda\)</span>) is common.</p>
-<h2 id="sidelobe-level">Sidelobe Level<a class="headerlink" href="#sidelobe-level" title="Permanent link">&para;</a></h2>
-<p>For a uniform amplitude array, the first sidelobe is approximately -13.2 dB below the main lobe.</p>
-<h3 id="tapering">Tapering<a class="headerlink" href="#tapering" title="Permanent link">&para;</a></h3>
-<p>Amplitude tapering reduces sidelobes at the cost of beamwidth and gain:</p>
-<table>
-<thead>
-<tr>
-<th>Taper</th>
-<th>First SLL</th>
-<th>Beamwidth Factor</th>
-<th>Efficiency</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Uniform</td>
-<td>-13.2 dB</td>
-<td>1.0</td>
-<td>1.0</td>
-</tr>
-<tr>
-<td>Hamming</td>
-<td>-42 dB</td>
-<td>1.36</td>
-<td>0.73</td>
-</tr>
-<tr>
-<td>Taylor -25 dB</td>
-<td>-25 dB</td>
-<td>1.1</td>
-<td>0.95</td>
-</tr>
-<tr>
-<td>Taylor -35 dB</td>
-<td>-35 dB</td>
-<td>1.2</td>
-<td>0.87</td>
-</tr>
-</tbody>
-</table>
-<h2 id="power-and-eirp">Power and EIRP<a class="headerlink" href="#power-and-eirp" title="Permanent link">&para;</a></h2>
-<h3 id="total-radiated-power">Total Radiated Power<a class="headerlink" href="#total-radiated-power" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-P_{rad} = N \cdot P_{elem} \cdot \eta_{feed}
-\]</div>
-<p>Where:</p>
+<h2 id="documented-approximations">Documented approximations<a class="headerlink" href="#documented-approximations" title="Permanent link">&para;</a></h2>
+<p>Where a model is deliberately simpler than the full reference, the
+limitation is stated in the module docstring:</p>
 <ul>
-<li><span class="arithmatex">\(N\)</span> = number of elements</li>
-<li><span class="arithmatex">\(P_{elem}\)</span> = power per element</li>
-<li><span class="arithmatex">\(\eta_{feed}\)</span> = feed network efficiency</li>
-</ul>
-<h3 id="eirp">EIRP<a class="headerlink" href="#eirp" title="Permanent link">&para;</a></h3>
-<p>Effective Isotropic Radiated Power:</p>
-<div class="arithmatex">\[
-EIRP = P_{rad} \cdot G = N \cdot P_{elem} \cdot \eta_{feed} \cdot G
-\]</div>
-<p>In dB:</p>
-<div class="arithmatex">\[
-EIRP_{dBW} = P_{rad,dBW} + G_{dB}
-\]</div>
-<h2 id="example-calculation">Example Calculation<a class="headerlink" href="#example-calculation" title="Permanent link">&para;</a></h2>
-<p>For an 8×8 array with:</p>
-<ul>
-<li><span class="arithmatex">\(d_x = d_y = 0.5\lambda\)</span></li>
-<li><span class="arithmatex">\(P_{elem} = 1\)</span> W</li>
-<li><span class="arithmatex">\(\eta_a = 0.65\)</span></li>
-<li><span class="arithmatex">\(\eta_{feed} = 0.8\)</span></li>
-</ul>
-<p><strong>Gain:</strong>
-$$
-G = 0.65 \cdot \pi \cdot 64 = 130.7 = 21.2 \text{ dB}
-$$</p>
-<p><strong>Radiated Power:</strong>
-$$
-P_{rad} = 64 \cdot 1 \cdot 0.8 = 51.2 \text{ W} = 17.1 \text{ dBW}
-$$</p>
-<p><strong>EIRP:</strong>
-$$
-EIRP = 17.1 + 21.2 = 38.3 \text{ dBW}
-$$</p>
-<p><strong>Beamwidth:</strong>
-$$
-\theta_{3dB} \approx \frac{101°}{8} = 12.6°
-$$</p>
-<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../link-budget-equations/">Link Budget Equations</a></li>
-<li><a href="../radar-equation/">Radar Equation</a></li>
-<li><a href="../../user-guide/architecture/">User Guide: Architecture</a></li>
+<li><strong>Slant-path atmospherics</strong>: specific attenuation over
+  min(range, equivalent-height/sin el) with h_O₂ = 6.1 km,
+  h_H₂O = 2.4 km (away-from-line values); the layered integration of
+  P.676 Annex 1 §2 is not implemented.</li>
+<li><strong>Effective rain path</strong>: ITU-R P.530 distance factor applied to the
+  scenario rain rate directly (P.530 defines it for the 0.01%-exceeded
+  rate).</li>
+<li><strong>Cross-polarized sea clutter</strong>: copolarized NRL value −10 dB (the NRL
+  model has no cross-pol term; spread in the literature is 5–15 dB).</li>
+<li><strong>OS/GO/SO CFAR losses</strong>: published homogeneous-clutter deltas on the
+  CA universal curve, not per-type analytic curves.</li>
+<li><strong>Constant-γ ground clutter</strong> is frequency-independent by
+  construction; terrain γ values are medians with several dB of
+  real-world spread.</li>
 </ul>
 
 
@@ -3199,7 +2600,7 @@ $$</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Theory">
+          <a href="../pareto-optimization/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Pareto Optimization">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3209,20 +2610,20 @@ $$</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Theory
+                Pareto Optimization
               </div>
             </div>
           </a>
         
         
           
-          <a href="../link-budget-equations/" class="md-footer__link md-footer__link--next" aria-label="Next: Link Budget Equations">
+          <a href="../../contributing/" class="md-footer__link md-footer__link--next" aria-label="Next: Contributing">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Link Budget Equations
+                Contributing
               </div>
             </div>
             <div class="md-footer__button md-icon">
