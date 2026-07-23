@@ -6,6 +6,19 @@ For the full changelog, see:
 
 ## Recent Changes
 
+### [0.9.0] - 2026-07-22
+
+**Added:**
+- NSGA-II multi-objective optimization (`optimize_pareto`, optional `[mdao]` extra); requirements as constraints
+- Constraint-aware DOE (`validate="architecture"`) — no more per-case construction errors
+- Sobol global sensitivity indices (`--sens-method sobol`)
+- Search timeline metrics (PRF + search volume -> revisit rate, occupancy); see [MDAO Tools](user-guide/mdao.md)
+- Thermal-reliability coupling: dissipated power -> junction temperature -> Arrhenius MTBF
+- Interactive plotly trade plots and self-contained report embeds
+
+**Changed:**
+- Weighted-sum penalty normalized by requirement scale; round-robin interleaved timeline
+
 ### [0.8.0] - 2026-07-22
 
 **Added:**

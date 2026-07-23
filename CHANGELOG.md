@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-22
+
+### Added
+- True multi-objective optimization: `optimize_pareto()` (trades/moo.py)
+  runs mixed-variable NSGA-II via pymoo and returns the nondominated set
+  with full metrics; must-severity requirements become normalized
+  inequality constraints. CLI: `pasys optimize --method nsga2`
+- Optional `[mdao]` extra (pymoo, SALib); core install unchanged
+- Constraint-aware DOE: `generate_doe(validate="architecture")` rejection-
+  samples against Architecture construction with adaptive oversampling,
+  eliminating per-case construction errors from batch studies
+- Sobol global sensitivity: `sobol_sensitivity()` with S1/ST indices and
+  confidence intervals; `pasys sensitivity --sens-method sobol`
+- Search timeline metrics: radar scenarios accept prf_hz, search extents,
+  beam overhead, and frame budget; antenna beamwidths and n_pulses/PRF
+  dwell time drive dwell_time_ms, n_beam_positions, search_frame_time_s,
+  search_update_rate_hz, timeline_occupancy
+- Thermal-reliability coupling: `reliability.thermal_resistance_c_per_w`
+  + `ambient_temp_c` estimate junction temperature from dissipated power
+  and feed the Arrhenius MTBF derating (new junction_temp_c metric)
+- Interactive plotly plots (`viz/interactive.py`, [plotting] extra) and
+  self-contained interactive Pareto embeds in HTML reports
+
+### Changed
+- Weighted-sum optimizer penalty normalizes margins by requirement scale
+  (mixed-unit requirements previously biased the penalty)
+- `interleaved_timeline` uses deterministic priority-weighted round-robin
+  instead of the placeholder priority sort
+- mypy analysis target is 3.12 (numpy 2.2+ stubs); runtime 3.10 support
+  unchanged, still tested in CI
+
 ## [0.8.0] - 2026-07-22
 
 ### Added

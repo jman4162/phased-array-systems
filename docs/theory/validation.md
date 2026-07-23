@@ -24,6 +24,8 @@ closed-form identities.
 | ADC jitter SNR | −20·log₁₀(2πf·t_j) | 1 ps at 1 GHz → 44.03 dB | 0.02 dB |
 | Phase quantization loss | Mailloux ch. 7 | 3 bits → 0.223 dB, Ruze form | 0.01 dB |
 | Taper loss | scipy window functions | Computed from actual windows (no fitted curves); Taylor −30 dB → 0.69 dB | exact |
+| Search timeline | Beam-packing identity | Frame time = ceil(Ω_search/Ω_beam)·(dwell+overhead), hand-reproduced | 1e-9 |
+| Thermal-reliability coupling | Energy balance + Arrhenius | T_j = T_amb + R_th·(P_DC−P_RF)/N hand value; MTBF monotone in duty cycle | exact |
 
 ## Documented approximations
 

@@ -39,27 +39,34 @@ K_B = 1.380649e-23  # J/K
 
 
 def friis_nf_simple(stages: list[tuple[float, float]]) -> dict:
-    """Simple Friis calculation for demo mode."""
+    """Simple Friis calculation for demo mode.
+
+    Stage shares use the v0.8 convention: percentage of the total excess
+    noise factor (sums to 100), not per-stage dB values.
+    """
     if not stages:
-        return {"total_nf_db": 0, "total_gain_db": 0, "stage_contributions_db": []}
+        return {"total_nf_db": 0, "total_gain_db": 0, "stage_contribution_pct": []}
 
     gains_linear = [10 ** (g / 10) for g, _ in stages]
     nfs_linear = [10 ** (nf / 10) for _, nf in stages]
 
     f_total = nfs_linear[0]
     cumulative_gain = gains_linear[0]
-    contributions = [10 * np.log10(nfs_linear[0])]
+    contributions = [nfs_linear[0] - 1]
 
     for i in range(1, len(stages)):
         contribution = (nfs_linear[i] - 1) / cumulative_gain
         f_total += contribution
-        contributions.append(10 * np.log10(1 + contribution))
+        contributions.append(contribution)
         cumulative_gain *= gains_linear[i]
+
+    excess = f_total - 1.0
+    contribution_pct = [100.0 * c / excess if excess > 0 else 0.0 for c in contributions]
 
     return {
         "total_nf_db": 10 * np.log10(f_total),
         "total_gain_db": sum(g for g, _ in stages),
-        "stage_contributions_db": contributions,
+        "stage_contribution_pct": contribution_pct,
     }
 
 
@@ -232,7 +239,7 @@ else:
         "total_gain_db": nf_result["total_gain_db"],
         "total_nf_db": nf_result["total_nf_db"],
         "noise_temp_k": T0 * (10 ** (nf_result["total_nf_db"] / 10) - 1),
-        "stage_nf_contributions_db": nf_result["stage_contributions_db"],
+        "stage_nf_contribution_pct": nf_result["stage_contribution_pct"],
         "iip3_dbm": iip3_result["iip3_dbm"],
         "oip3_dbm": iip3_result["oip3_dbm"],
         "sfdr_db": sfdr_db,
@@ -339,9 +346,9 @@ with tab1:
     st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
-    st.subheader("Noise Figure Contributions by Stage")
+    st.subheader("Noise Contribution Share by Stage")
 
-    contributions = results.get("stage_nf_contributions_db", [])
+    contributions = results.get("stage_nf_contribution_pct", [])
 
     if contributions:
         # Bar chart of NF contributions
@@ -354,15 +361,15 @@ with tab2:
                 marker_color=[
                     "#FF6B6B" if i == 0 else "#4ECDC4" for i in range(len(contributions))
                 ],
-                text=[f"{c:.2f} dB" for c in contributions],
+                text=[f"{c:.1f}%" for c in contributions],
                 textposition="outside",
-                hovertemplate="%{x}<br>NF Contribution: %{y:.3f} dB<extra></extra>",
+                hovertemplate="%{x}<br>Share of excess noise: %{y:.1f}%<extra></extra>",
             )
         )
 
         fig.update_layout(
             xaxis_title="Stage",
-            yaxis_title="Noise Figure Contribution (dB)",
+            yaxis_title="Share of excess noise factor (%)",
             height=400,
         )
 

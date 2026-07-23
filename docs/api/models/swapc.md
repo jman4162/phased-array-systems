@@ -30,7 +30,6 @@ from phased_array_systems.models.swapc import PowerModel, CostModel
     options:
       show_root_heading: true
 
-::: phased_array_systems.models.swapc.cost.compute_cost_per_db
     options:
       show_root_heading: true
 
@@ -84,14 +83,12 @@ print(f"NRE: ${metrics['nre_cost_usd']:,.0f}")
 ### Cost Analysis Utilities
 
 ```python
-from phased_array_systems.models.swapc.cost import compute_cost_per_watt, compute_cost_per_db
+from phased_array_systems.models.swapc.cost import compute_cost_per_watt
 
 # Cost efficiency metrics
 cost_per_watt = compute_cost_per_watt(total_cost_usd=50000, rf_power_w=100)
-cost_per_db = compute_cost_per_db(total_cost_usd=50000, eirp_dbw=45)
 
 print(f"Cost per Watt: ${cost_per_watt:.0f}/W")
-print(f"Cost per dB EIRP: ${cost_per_db:.0f}/dB")
 ```
 
 ## Power Equations
