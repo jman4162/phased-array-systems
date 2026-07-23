@@ -82,6 +82,15 @@ Examples:
     sens_parser.add_argument("config", type=Path, help="Config file (YAML/JSON)")
     sens_parser.add_argument("-o", "--output", type=Path, help="Output file (CSV/Parquet)")
     sens_parser.add_argument("-n", "--steps", type=int, default=5, help="Steps per parameter")
+    sens_parser.add_argument(
+        "--sens-method",
+        choices=["oat", "sobol"],
+        default="oat",
+        help="oat (one-at-a-time sweeps) or sobol (global indices; needs [mdao] extra)",
+    )
+    sens_parser.add_argument(
+        "--samples", type=int, default=256, help="Sobol base sample count (sobol only)"
+    )
     sens_parser.add_argument("--plot", action="store_true", help="Generate tornado plots")
     sens_parser.add_argument("--metric", type=str, default="g_peak_db", help="Metric for plot")
 
@@ -634,6 +643,66 @@ def _cmd_optimize_nsga2(args, design_space, scenario, requirements) -> int:
     return 0
 
 
+def _cmd_sensitivity_sobol(args, config, scenario, requirements) -> int:
+    """Run the Sobol path of pasys sensitivity."""
+    try:
+        from phased_array_systems.trades.sensitivity import sobol_sensitivity
+    except ImportError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    from phased_array_systems.trades.design_space import DesignSpace
+
+    doe_config = config.doe
+    if doe_config is None or not doe_config.variables:
+        print("Error: Config must define a doe section with variables", file=sys.stderr)
+        return 1
+
+    design_space = DesignSpace(name=config.name or "Sobol")
+    for var in doe_config.variables:
+        if var.type == "categorical":
+            print(f"Skipping categorical variable for Sobol: {var.name}")
+            continue
+        design_space.add_variable(var.name, type=var.type, low=var.low, high=var.high)
+
+    if design_space.n_dims == 0:
+        print("Error: No numeric variables for Sobol analysis", file=sys.stderr)
+        return 1
+
+    # Constant architecture fields come from the config's architecture block
+    arch = config.get_architecture()
+    base_config = {
+        k: v for k, v in arch.model_dump_flat().items() if k not in design_space.variable_names
+    }
+
+    metric_keys = [args.metric] if args.metric else ["g_peak_db"]
+    print(f"Sobol sensitivity: {design_space.n_dims} variables, n_base={args.samples}")
+
+    try:
+        df = sobol_sensitivity(
+            design_space,
+            scenario,
+            metric_keys,
+            requirements=requirements,
+            base_config=base_config,
+            n_base=args.samples,
+            seed=42,
+        )
+    except Exception as e:
+        print(f"Error during Sobol analysis: {e}", file=sys.stderr)
+        return 1
+
+    print(df.to_string(index=False))
+
+    if args.output:
+        from phased_array_systems.io.exporters import export_results
+
+        export_results(df, args.output)
+        print(f"\nSaved to: {args.output}")
+
+    return 0
+
+
 def cmd_sensitivity(args: argparse.Namespace) -> int:
     """Execute OAT sensitivity analysis."""
     from phased_array_systems.io import load_config
@@ -659,6 +728,9 @@ def cmd_sensitivity(args: argparse.Namespace) -> int:
     if scenario is None:
         print("Error: Config must define a scenario", file=sys.stderr)
         return 1
+
+    if getattr(args, "sens_method", "oat") == "sobol":
+        return _cmd_sensitivity_sobol(args, config, scenario, requirements)
 
     # Build param_ranges from DOE config if available
     doe_config = config.doe

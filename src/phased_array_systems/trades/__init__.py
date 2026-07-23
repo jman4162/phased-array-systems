@@ -9,6 +9,7 @@ from phased_array_systems.trades.runner import BatchRunner
 from phased_array_systems.trades.sensitivity import (
     compute_sensitivity_coefficients,
     oat_sensitivity,
+    sobol_sensitivity,
 )
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "filter_feasible",
     "rank_pareto",
     "oat_sensitivity",
+    "sobol_sensitivity",
     "compute_sensitivity_coefficients",
     "optimize_design",
     "optimize_pareto",

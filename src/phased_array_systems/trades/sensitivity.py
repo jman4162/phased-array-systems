@@ -160,3 +160,133 @@ def compute_sensitivity_coefficients(
             )
 
     return pd.DataFrame(rows)
+
+
+def sobol_sensitivity(
+    design_space: Any,
+    scenario: Scenario,
+    metric_keys: list[str],
+    requirements: RequirementSet | None = None,
+    base_config: dict[str, Any] | None = None,
+    n_base: int = 256,
+    seed: int | None = None,
+    n_workers: int = 1,
+) -> pd.DataFrame:
+    """Global Sobol sensitivity indices via SALib Saltelli sampling.
+
+    Unlike one-at-a-time sweeps, Sobol indices capture interaction
+    effects: S1 is the first-order share of output variance, ST the
+    total share including interactions. Requires the optional [mdao]
+    extra (pip install "phased-array-systems[mdao]").
+
+    Args:
+        design_space: DesignSpace with float/int variables only
+            (categorical variables are not supported by variance-based
+            sensitivity; encode them as separate studies)
+        scenario: Scenario to evaluate against
+        metric_keys: Output metrics to analyze
+        requirements: Optional requirements (verification metrics added)
+        base_config: Constant architecture fields (e.g. {"array.nx": 8})
+            added as fixed columns to every sampled case
+        n_base: Saltelli base sample count (total runs = n_base * (2D + 2));
+            powers of two converge best
+        seed: Random seed for reproducibility
+        n_workers: Parallel workers for the batch evaluation
+
+    Returns:
+        DataFrame with columns: parameter, metric, S1, S1_conf, ST, ST_conf
+
+    Raises:
+        ImportError: If SALib is not installed
+        ValueError: If the design space contains categorical variables
+    """
+    try:
+        from SALib.analyze import sobol as sobol_analyze
+        from SALib.sample import sobol as sobol_sample
+    except ImportError as e:  # pragma: no cover
+        raise ImportError(
+            "SALib is required for sobol_sensitivity. Install the MDAO "
+            'extra: pip install "phased-array-systems[mdao]"'
+        ) from e
+
+    import numpy as np
+
+    from phased_array_systems.trades.runner import BatchRunner
+
+    for var in design_space.variables:
+        if var.type == "categorical":
+            raise ValueError(
+                f"Variable '{var.name}' is categorical; Sobol indices need "
+                "numeric variables (run one study per category instead)"
+            )
+        if var.low == var.high:
+            raise ValueError(
+                f"Variable '{var.name}' has degenerate bounds; move fixed "
+                "values into base_config instead"
+            )
+
+    problem = {
+        "num_vars": design_space.n_dims,
+        "names": design_space.variable_names,
+        "bounds": [[float(v.low), float(v.high)] for v in design_space.variables],
+    }
+
+    samples = sobol_sample.sample(problem, n_base, calc_second_order=False, seed=seed)
+
+    # Round integer variables to valid values (SALib samples continuously)
+    cases = pd.DataFrame(samples, columns=design_space.variable_names)
+    for var in design_space.variables:
+        if var.type == "int":
+            cases[var.name] = cases[var.name].round().astype(int)
+    for key, value in (base_config or {}).items():
+        cases[key] = value
+    cases.insert(0, "case_id", [f"case_{i:05d}" for i in range(len(cases))])
+
+    runner = BatchRunner(scenario, requirements)
+    results = runner.run(cases, n_workers=n_workers)
+
+    if "meta.error" in results.columns:
+        failed_frac = float(results["meta.error"].notna().mean())
+        if failed_frac > 0.5:
+            raise ValueError(
+                f"{failed_frac:.0%} of Saltelli samples failed evaluation. "
+                "Variance-based sensitivity needs a (nearly) rectangular "
+                "feasible domain; exclude constrained integer variables "
+                "(e.g. array.nx under the sub-array rule) or disable the "
+                "constraint via base_config."
+            )
+        if failed_frac > 0:
+            import warnings
+
+            warnings.warn(
+                f"{failed_frac:.1%} of samples failed evaluation; their "
+                "outputs are imputed with the column mean, diluting the "
+                "indices.",
+                stacklevel=2,
+            )
+
+    rows: list[dict[str, Any]] = []
+    for metric in metric_keys:
+        if metric not in results.columns:
+            continue
+        y = results[metric].to_numpy(dtype=float)
+        if np.isnan(y).all():
+            continue
+        if np.isnan(y).any():
+            # SALib cannot handle NaN outputs; substitute the column mean
+            # (cases that failed evaluation dilute, not break, the indices)
+            y = np.where(np.isnan(y), np.nanmean(y), y)
+        si = sobol_analyze.analyze(problem, y, calc_second_order=False, seed=seed)
+        for i, name in enumerate(design_space.variable_names):
+            rows.append(
+                {
+                    "parameter": name,
+                    "metric": metric,
+                    "S1": float(si["S1"][i]),
+                    "S1_conf": float(si["S1_conf"][i]),
+                    "ST": float(si["ST"][i]),
+                    "ST_conf": float(si["ST_conf"][i]),
+                }
+            )
+
+    return pd.DataFrame(rows)
