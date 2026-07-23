@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://jman4162.github.io/phased-array-systems/theory/link-budget-equations/">
+        <link rel="canonical" href="https://jman4162.github.io/phased-array-systems/cli/sensitivity/">
       
       
-        <link rel="prev" href="../phased-arrays/">
+        <link rel="prev" href="../optimize/">
       
       
-        <link rel="next" href="../radar-equation/">
+        <link rel="next" href="../report/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Link Budget Equations - phased-array-systems</title>
+        <title>pasys sensitivity - phased-array-systems</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#link-budget-equations" class="md-skip">
+        <a href="#pasys-sensitivity" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Link Budget Equations
+              pasys sensitivity
             
           </span>
         </div>
@@ -325,11 +325,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../cli/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -369,13 +371,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../theory/" class="md-tabs__link">
           
   
   
@@ -1259,6 +1259,8 @@
       
   
   
+    
+  
   
   
     
@@ -1284,22 +1286,23 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../cli/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -1317,13 +1320,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1343,7 +1346,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../cli/run/" class="md-nav__link">
+      <a href="../run/" class="md-nav__link">
         
   
   
@@ -1371,7 +1374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../cli/doe/" class="md-nav__link">
+      <a href="../doe/" class="md-nav__link">
         
   
   
@@ -1399,7 +1402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../cli/optimize/" class="md-nav__link">
+      <a href="../optimize/" class="md-nav__link">
         
   
   
@@ -1424,10 +1427,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../cli/sensitivity/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pasys sensitivity
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1443,6 +1473,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synopsis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synopsis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arguments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a method
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1455,7 +1571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../cli/report/" class="md-nav__link">
+      <a href="../report/" class="md-nav__link">
         
   
   
@@ -1483,7 +1599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../cli/pareto/" class="md-nav__link">
+      <a href="../pareto/" class="md-nav__link">
         
   
   
@@ -2060,8 +2176,6 @@
       
   
   
-    
-  
   
   
     
@@ -2085,23 +2199,22 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../theory/" class="md-nav__link ">
               
   
   
@@ -2119,13 +2232,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="">
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2145,7 +2258,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../phased-arrays/" class="md-nav__link">
+      <a href="../../theory/phased-arrays/" class="md-nav__link">
         
   
   
@@ -2170,37 +2283,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Link Budget Equations
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../theory/link-budget-equations/" class="md-nav__link">
         
   
   
@@ -2216,292 +2302,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#link-budget-equation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Link Budget Equation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#eirp-effective-isotropic-radiated-power" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EIRP (Effective Isotropic Radiated Power)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="EIRP (Effective Isotropic Radiated Power)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-phased-arrays" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Phased Arrays
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#path-loss" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Path Loss
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Path Loss">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#free-space-path-loss-fspl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Free Space Path Loss (FSPL)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-10-ghz-100-km" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example: 10 GHz, 100 km
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#additional-losses" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Additional Losses
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#received-power" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Received Power
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#noise-power" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Noise Power
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Noise Power">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#thermal-noise" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Thermal Noise
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#system-noise-temperature" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        System Noise Temperature
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#noise-figure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Noise Figure
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#signal-to-noise-ratio" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Signal-to-Noise Ratio
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#link-margin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Link Margin
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#gt-figure-of-merit" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        G/T Figure of Merit
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#complete-link-budget-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Complete Link Budget Example
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#trade-offs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Trade-offs
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Trade-offs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#eirp-improvements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EIRP Improvements
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#reducing-path-loss" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reducing Path Loss
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improving-receiver" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Improving Receiver
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2514,7 +2314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../radar-equation/" class="md-nav__link">
+      <a href="../../theory/radar-equation/" class="md-nav__link">
         
   
   
@@ -2542,7 +2342,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pareto-optimization/" class="md-nav__link">
+      <a href="../../theory/pareto-optimization/" class="md-nav__link">
         
   
   
@@ -2570,7 +2370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../validation/" class="md-nav__link">
+      <a href="../../theory/validation/" class="md-nav__link">
         
   
   
@@ -2706,10 +2506,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#synopsis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Synopsis
       
     </span>
   </a>
@@ -2717,10 +2517,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#link-budget-equation" class="md-nav__link">
+  <a href="#description" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Link Budget Equation
+        Description
       
     </span>
   </a>
@@ -2728,88 +2528,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#eirp-effective-isotropic-radiated-power" class="md-nav__link">
+  <a href="#arguments" class="md-nav__link">
     <span class="md-ellipsis">
       
-        EIRP (Effective Isotropic Radiated Power)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="EIRP (Effective Isotropic Radiated Power)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-phased-arrays" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For Phased Arrays
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#path-loss" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Path Loss
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Path Loss">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#free-space-path-loss-fspl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Free Space Path Loss (FSPL)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-10-ghz-100-km" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example: 10 GHz, 100 km
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#additional-losses" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Additional Losses
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#received-power" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Received Power
+        Arguments
       
     </span>
   </a>
@@ -2817,60 +2539,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#noise-power" class="md-nav__link">
+  <a href="#options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Noise Power
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Noise Power">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#thermal-noise" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Thermal Noise
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#system-noise-temperature" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        System Noise Temperature
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#noise-figure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Noise Figure
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#signal-to-noise-ratio" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Signal-to-Noise Ratio
+        Options
       
     </span>
   </a>
@@ -2878,10 +2550,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#link-margin" class="md-nav__link">
+  <a href="#choosing-a-method" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Link Margin
+        Choosing a method
       
     </span>
   </a>
@@ -2889,82 +2561,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#gt-figure-of-merit" class="md-nav__link">
+  <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
-        G/T Figure of Merit
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#complete-link-budget-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Complete Link Budget Example
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#trade-offs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Trade-offs
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Trade-offs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#eirp-improvements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        EIRP Improvements
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#reducing-path-loss" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reducing Path Loss
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improving-receiver" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Improving Receiver
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
+        Examples
       
     </span>
   </a>
@@ -2991,255 +2591,101 @@
   
 
 
-<h1 id="link-budget-equations">Link Budget Equations<a class="headerlink" href="#link-budget-equations" title="Permanent link">&para;</a></h1>
-<p>Complete derivation of communications link budget calculations.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>A link budget accounts for all gains and losses in a communications link, from transmitter to receiver.</p>
-<h2 id="link-budget-equation">Link Budget Equation<a class="headerlink" href="#link-budget-equation" title="Permanent link">&para;</a></h2>
-<p>The fundamental equation:</p>
-<div class="arithmatex">\[
-P_{rx} = P_{tx} + G_{tx} - L_{tx} - L_{path} + G_{rx} - L_{rx}
-\]</div>
-<p>All quantities in dB.</p>
-<h2 id="eirp-effective-isotropic-radiated-power">EIRP (Effective Isotropic Radiated Power)<a class="headerlink" href="#eirp-effective-isotropic-radiated-power" title="Permanent link">&para;</a></h2>
-<p>EIRP is the power that would be radiated by an isotropic antenna to produce the same field intensity:</p>
-<div class="arithmatex">\[
-EIRP = P_{tx} + G_{tx} - L_{tx}
-\]</div>
-<p>Where:</p>
-<ul>
-<li><span class="arithmatex">\(P_{tx}\)</span> = Transmitter power output (dBW)</li>
-<li><span class="arithmatex">\(G_{tx}\)</span> = Transmit antenna gain (dBi)</li>
-<li><span class="arithmatex">\(L_{tx}\)</span> = Transmit losses (feed, radome, etc.) (dB)</li>
-</ul>
-<h3 id="for-phased-arrays">For Phased Arrays<a class="headerlink" href="#for-phased-arrays" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-P_{tx} = 10\log_{10}(N \cdot P_{elem})
-\]</div>
-<p>Where <span class="arithmatex">\(N\)</span> is element count and <span class="arithmatex">\(P_{elem}\)</span> is power per element in watts.</p>
-<h2 id="path-loss">Path Loss<a class="headerlink" href="#path-loss" title="Permanent link">&para;</a></h2>
-<h3 id="free-space-path-loss-fspl">Free Space Path Loss (FSPL)<a class="headerlink" href="#free-space-path-loss-fspl" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-L_{FSPL} = 20\log_{10}\left(\frac{4\pi d f}{c}\right)
-\]</div>
-<p>Or equivalently:</p>
-<div class="arithmatex">\[
-L_{FSPL} = 32.45 + 20\log_{10}(f_{MHz}) + 20\log_{10}(d_{km})
-\]</div>
-<p>Or:</p>
-<div class="arithmatex">\[
-L_{FSPL} = 92.45 + 20\log_{10}(f_{GHz}) + 20\log_{10}(d_{km})
-\]</div>
-<h3 id="example-10-ghz-100-km">Example: 10 GHz, 100 km<a class="headerlink" href="#example-10-ghz-100-km" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-L_{FSPL} = 92.45 + 20\log_{10}(10) + 20\log_{10}(100) = 92.45 + 20 + 40 = 152.45 \text{ dB}
-\]</div>
-<h3 id="additional-losses">Additional Losses<a class="headerlink" href="#additional-losses" title="Permanent link">&para;</a></h3>
-<p>Total path loss:</p>
-<div class="arithmatex">\[
-L_{path} = L_{FSPL} + L_{atm} + L_{rain} + L_{pol} + L_{misc}
-\]</div>
+<h1 id="pasys-sensitivity">pasys sensitivity<a class="headerlink" href="#pasys-sensitivity" title="Permanent link">&para;</a></h1>
+<p>Rank design-variable influence on output metrics, one-at-a-time or with
+Sobol global indices.</p>
+<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pasys<span class="w"> </span>sensitivity<span class="w"> </span>&lt;config&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</span></code></pre></div>
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
+<p>The <code>sensitivity</code> command sweeps the variables in the config's
+<code>doe.variables</code> section. The default one-at-a-time (OAT) mode sweeps each
+variable across its range while holding the others at the architecture
+baseline. Sobol mode (<code>--sens-method sobol</code>, requires the <code>[mdao]</code> extra)
+computes variance-based S1 (first-order) and ST (total, including
+interactions) indices from a Saltelli sample.</p>
+<h2 id="arguments">Arguments<a class="headerlink" href="#arguments" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Loss Type</th>
-<th>Typical Range</th>
+<th>Argument</th>
+<th>Required</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Atmospheric</td>
-<td>0.1-2 dB (depends on f, elevation)</td>
-</tr>
-<tr>
-<td>Rain fade</td>
-<td>0-20 dB (depends on f, availability)</td>
-</tr>
-<tr>
-<td>Polarization</td>
-<td>0-3 dB (mismatch)</td>
+<td><code>config</code></td>
+<td>Yes</td>
+<td>Path to configuration file (YAML or JSON)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="received-power">Received Power<a class="headerlink" href="#received-power" title="Permanent link">&para;</a></h2>
-<div class="arithmatex">\[
-P_{rx} = EIRP - L_{path} + G_{rx}
-\]</div>
-<h2 id="noise-power">Noise Power<a class="headerlink" href="#noise-power" title="Permanent link">&para;</a></h2>
-<h3 id="thermal-noise">Thermal Noise<a class="headerlink" href="#thermal-noise" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-N = kTB
-\]</div>
-<p>Where:</p>
-<ul>
-<li><span class="arithmatex">\(k\)</span> = Boltzmann constant = 1.38×10⁻²³ J/K</li>
-<li><span class="arithmatex">\(T\)</span> = System noise temperature (K)</li>
-<li><span class="arithmatex">\(B\)</span> = Bandwidth (Hz)</li>
-</ul>
-<p>In dB:</p>
-<div class="arithmatex">\[
-N_{dBW} = 10\log_{10}(kTB) = -228.6 + 10\log_{10}(T) + 10\log_{10}(B)
-\]</div>
-<h3 id="system-noise-temperature">System Noise Temperature<a class="headerlink" href="#system-noise-temperature" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-T_{sys} = T_{ant} + T_{rx}
-\]</div>
-<p>Where:</p>
-<div class="arithmatex">\[
-T_{rx} = T_0(F - 1)
-\]</div>
-<ul>
-<li><span class="arithmatex">\(T_0\)</span> = Reference temperature (290 K)</li>
-<li><span class="arithmatex">\(F\)</span> = Noise figure (linear)</li>
-</ul>
-<h3 id="noise-figure">Noise Figure<a class="headerlink" href="#noise-figure" title="Permanent link">&para;</a></h3>
-<div class="arithmatex">\[
-F_{dB} = 10\log_{10}(F) = 10\log_{10}\left(1 + \frac{T_{rx}}{T_0}\right)
-\]</div>
-<p>Total noise power including noise figure:</p>
-<div class="arithmatex">\[
-N_{dBW} = 10\log_{10}(kT_0B) + NF_{dB}
-\]</div>
-<h2 id="signal-to-noise-ratio">Signal-to-Noise Ratio<a class="headerlink" href="#signal-to-noise-ratio" title="Permanent link">&para;</a></h2>
-<div class="arithmatex">\[
-SNR = P_{rx} - N
-\]</div>
-<p>Expanding:</p>
-<div class="arithmatex">\[
-SNR = EIRP - L_{path} + G_{rx} - 10\log_{10}(kT_0B) - NF
-\]</div>
-<h2 id="link-margin">Link Margin<a class="headerlink" href="#link-margin" title="Permanent link">&para;</a></h2>
-<div class="arithmatex">\[
-M = SNR - SNR_{required}
-\]</div>
-<p>Positive margin indicates the link closes with room to spare.</p>
-<h2 id="gt-figure-of-merit">G/T Figure of Merit<a class="headerlink" href="#gt-figure-of-merit" title="Permanent link">&para;</a></h2>
-<p>For receive systems, G/T characterizes sensitivity:</p>
-<div class="arithmatex">\[
-\frac{G}{T} = G_{rx} - 10\log_{10}(T_{sys})
-\]</div>
-<p>Units: dB/K</p>
-<h2 id="complete-link-budget-example">Complete Link Budget Example<a class="headerlink" href="#complete-link-budget-example" title="Permanent link">&para;</a></h2>
-<p><strong>Given:</strong>
-- Frequency: 10 GHz
-- Range: 100 km
-- TX array: 8×8, 1 W/element, 65% efficiency
-- TX losses: 1.5 dB
-- RX antenna gain: 30 dBi
-- RX noise figure: 3 dB
-- RX noise temp: 290 K
-- Bandwidth: 10 MHz
-- Required SNR: 10 dB
-- Atmospheric loss: 0.5 dB</p>
-<p><strong>Calculation:</strong></p>
-<ol>
-<li>
-<p><strong>TX Power:</strong>
-$$
-P_{tx} = 10\log_{10}(64 \times 1) = 18.1 \text{ dBW}
-$$</p>
-</li>
-<li>
-<p><strong>TX Gain:</strong>
-$$
-G_{tx} = 10\log_{10}(0.65 \times \pi \times 64) = 21.2 \text{ dB}
-$$</p>
-</li>
-<li>
-<p><strong>EIRP:</strong>
-$$
-EIRP = 18.1 + 21.2 - 1.5 = 37.8 \text{ dBW}
-$$</p>
-</li>
-<li>
-<p><strong>Path Loss:</strong>
-$$
-L_{path} = 152.4 + 0.5 = 152.9 \text{ dB}
-$$</p>
-</li>
-<li>
-<p><strong>Received Power:</strong>
-$$
-P_{rx} = 37.8 - 152.9 + 30 = -85.1 \text{ dBW}
-$$</p>
-</li>
-<li>
-<p><strong>Noise Power:</strong>
-$$
-N = 10\log_{10}(1.38 \times 10^{-23} \times 290 \times 10^7) + 3 = -131.0 \text{ dBW}
-$$</p>
-</li>
-<li>
-<p><strong>SNR:</strong>
-$$
-SNR = -85.1 - (-131.0) = 45.9 \text{ dB}
-$$</p>
-</li>
-<li>
-<p><strong>Link Margin:</strong>
-$$
-M = 45.9 - 10 = 35.9 \text{ dB}
-$$</p>
-</li>
-</ol>
-<h2 id="trade-offs">Trade-offs<a class="headerlink" href="#trade-offs" title="Permanent link">&para;</a></h2>
-<h3 id="eirp-improvements">EIRP Improvements<a class="headerlink" href="#eirp-improvements" title="Permanent link">&para;</a></h3>
+<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Change</th>
-<th>EIRP Gain</th>
+<th>Option</th>
+<th>Short</th>
+<th>Default</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Double TX power</td>
-<td>+3 dB</td>
+<td><code>--sens-method</code></td>
+<td></td>
+<td><code>oat</code></td>
+<td><code>oat</code> or <code>sobol</code></td>
 </tr>
 <tr>
-<td>Double elements (2×)</td>
-<td>+6 dB (gain + power)</td>
+<td><code>--steps</code></td>
+<td><code>-n</code></td>
+<td><code>5</code></td>
+<td>Steps per parameter (OAT)</td>
 </tr>
 <tr>
-<td>Double aperture</td>
-<td>+6 dB</td>
+<td><code>--samples</code></td>
+<td></td>
+<td><code>256</code></td>
+<td>Sobol base sample count (total runs = samples × (2D + 2))</td>
+</tr>
+<tr>
+<td><code>--metric</code></td>
+<td></td>
+<td><code>g_peak_db</code></td>
+<td>Metric to analyze</td>
+</tr>
+<tr>
+<td><code>--plot</code></td>
+<td></td>
+<td></td>
+<td>Generate tornado plots (OAT)</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td><code>-o</code></td>
+<td></td>
+<td>Save results (CSV/Parquet)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="reducing-path-loss">Reducing Path Loss<a class="headerlink" href="#reducing-path-loss" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Lower frequency (but larger antenna for same gain)</li>
-<li>Shorter range (<span class="arithmatex">\(L \propto d^2\)</span>)</li>
-</ul>
-<h3 id="improving-receiver">Improving Receiver<a class="headerlink" href="#improving-receiver" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Change</th>
-<th>Effect</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Higher G/T</td>
-<td>Better sensitivity</td>
-</tr>
-<tr>
-<td>Lower NF</td>
-<td>+1 dB NF reduction = +1 dB SNR</td>
-</tr>
-<tr>
-<td>Narrower BW</td>
-<td>Lower noise (but also signal BW)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../phased-arrays/">Phased Array Fundamentals</a></li>
-<li><a href="../radar-equation/">Radar Equation</a></li>
-<li><a href="../../user-guide/link-budget/">User Guide: Link Budget</a></li>
-</ul>
+<h2 id="choosing-a-method">Choosing a method<a class="headerlink" href="#choosing-a-method" title="Permanent link">&para;</a></h2>
+<p>OAT is cheap and shows local trends, but misses interactions between
+variables. Sobol attributes shares of the output variance to each input
+(and, via ST−S1, to its interactions), at the cost of many more
+evaluations.</p>
+<p>Sobol needs a near-rectangular feasible domain: variables constrained by
+the sub-array rules (like <code>array.nx</code>) should stay fixed in the config's
+architecture section rather than being swept.</p>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># One-at-a-time tornado analysis</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pasys<span class="w"> </span>sensitivity<span class="w"> </span>config.yaml<span class="w"> </span>-n<span class="w"> </span><span class="m">7</span><span class="w"> </span>--metric<span class="w"> </span>link_margin_db<span class="w"> </span>--plot
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Sobol global indices</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>pasys<span class="w"> </span>sensitivity<span class="w"> </span>config.yaml<span class="w"> </span>--sens-method<span class="w"> </span>sobol<span class="w"> </span>--samples<span class="w"> </span><span class="m">256</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span>--metric<span class="w"> </span>eirp_dbw<span class="w"> </span>-o<span class="w"> </span>sobol.parquet
+</span></code></pre></div>
 
 
 
@@ -3279,7 +2725,7 @@ $$</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../phased-arrays/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Phased Array Fundamentals">
+          <a href="../optimize/" class="md-footer__link md-footer__link--prev" aria-label="Previous: pasys optimize">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3289,20 +2735,20 @@ $$</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Phased Array Fundamentals
+                pasys optimize
               </div>
             </div>
           </a>
         
         
           
-          <a href="../radar-equation/" class="md-footer__link md-footer__link--next" aria-label="Next: Radar Equation">
+          <a href="../report/" class="md-footer__link md-footer__link--next" aria-label="Next: pasys report">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Radar Equation
+                pasys report
               </div>
             </div>
             <div class="md-footer__button md-icon">
