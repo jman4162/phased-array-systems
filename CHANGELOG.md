@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-08-11
+
+### Fixed
+- `n_failed_elements` reported the survivors: the failure mask is True for
+  failed elements and the metric counted the zeros, so a 2% failure rate on
+  256 elements reported 251 "failures". The applied physics (zeroed weights)
+  was correct; only the reported count was inverted.
+
 ## [0.10.0] - 2026-08-10
 
 ### Fixed

@@ -722,3 +722,26 @@ class TestAdapterPathParity:
         metrics = adapter._evaluate_analytical(arch, scenario, 0.0)
         assert metrics["sll_db"] > -60.0
         assert metrics["sll_db"] == pytest.approx(metrics["rms_sidelobe_floor_db"])
+
+
+@pytest.mark.skipif(not HAS_PAM, reason="phased_array library not installed")
+def test_n_failed_counts_failures_not_survivors():
+    """Regression: fail_mask is True for failed elements; n_failed_elements
+    counted the zeros, reporting the survivors (251 of 256 at a 2% rate)."""
+    scenario = CommsLinkScenario(
+        freq_hz=10e9,
+        bandwidth_hz=10e6,
+        range_m=100e3,
+        required_snr_db=10.0,
+        scan_angle_deg=0.0,
+    )
+    arch = Architecture(
+        array=ArrayConfig(nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5,
+                          enforce_subarray_constraint=False),
+        rf=RFChainConfig(tx_power_w_per_elem=1.0),
+    )
+    metrics = PhasedArrayAdapter(use_analytical_fallback=False).evaluate(
+        arch, scenario, {"failure_rate": 0.02, "meta.seed": 101}
+    )
+    # ~2% of 256 elements: a handful, never hundreds.
+    assert 0 < metrics["n_failed_elements"] < 26

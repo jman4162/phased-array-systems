@@ -178,7 +178,10 @@ class PhasedArrayAdapter:
         if failure_rate > 0:
             seed = context.get("meta.seed")
             weights, fail_mask = simulate_element_failures(weights, failure_rate, seed=seed)
-            n_failed = int(np.sum(fail_mask == 0))
+            # The library's mask is True for FAILED elements; counting the
+            # zeros counted the survivors (251 "failures" out of 256 at a 2%
+            # rate).
+            n_failed = int(np.sum(fail_mask))
 
         # 5. Compute patterns using total_pattern (includes element pattern)
         theta_deg = np.linspace(-90, 90, 721)
