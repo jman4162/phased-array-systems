@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-10
+
+### Fixed
+- `compute_sidelobe_level` reported a sample on the main-lobe skirt instead
+  of a sidelobe. It excluded the main beam out to one half-power beamwidth
+  each side of the peak, but the first null of a tapered aperture sits at
+  roughly 1.3 to 1.8 times the HPBW, and further as the taper deepens. The
+  main lobe is now excluded out to its first null on each side. Pass
+  `main_lobe_width_deg` to force a fixed angular exclusion window instead.
+
+  **This changes reported `sll_db` values, in some cases by more than 20 dB.**
+  A 32x32 Taylor -35 dB design at broadside previously reported -14.0 dB and
+  now reports -35.2 dB. The golden-case snapshot moved from -16.56 dB to
+  -30.39 dB. Any recorded trade study, Pareto front, or requirement
+  verification that used `sll_db` should be re-run.
+
+  Two reported symptoms came from the same cause and are also fixed.
+  `sll_db` was non-monotonic in taper depth (-25 dB design read -17.5,
+  -35 dB read -14.0, -45 dB read -14.7), because a deeper taper widens the
+  beam and steepens the skirt, moving the first unmasked sample to a
+  different point on it. And `sll_db` was nearly insensitive to `phase_bits`
+  off broadside, because quantization lobes near -25 dB sat far below the
+  skirt reading. A 32x32 Taylor -35 dB design scanned to 45 degrees now
+  reports -4.96, -16.14, -28.64 and -32.26 dB for 2-bit, 3-bit, 6-bit and
+  ideal phase control. At broadside every steering phase is zero, so
+  quantization remains a no-op there, which is correct.
+
+  This also closes a disagreement between the two code paths: the analytic
+  fallback used when `phased-array-modeling` is absent returns the taper
+  design SLL floored by the quantization error floor, so it read about
+  -35 dB where the full-pattern path read about -14 dB. The two now agree to
+  0.24 dB on that case.
+
 ## [0.9.0] - 2026-07-22
 
 ### Added

@@ -6,6 +6,13 @@ For the full changelog, see:
 
 ## Recent Changes
 
+### [0.10.0] - 2026-08-10
+
+**Fixed:**
+- `compute_sidelobe_level` reported a sample on the main-lobe skirt instead of a sidelobe. It excluded the main beam out to one half-power beamwidth each side of the peak, but the first null of a tapered aperture sits at roughly 1.3 to 1.8 times the HPBW. The main lobe is now excluded out to its first null.
+- **Reported `sll_db` values change, in some cases by more than 20 dB.** A 32x32 Taylor -35 dB design at broadside went from -14.0 dB to -35.2 dB. Re-run any recorded trade study or requirement verification that used `sll_db`.
+- Same cause, also fixed: `sll_db` was non-monotonic in taper depth, and nearly insensitive to `phase_bits` off broadside.
+
 ### [0.9.0] - 2026-07-22
 
 **Added:**

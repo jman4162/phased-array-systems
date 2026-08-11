@@ -59,6 +59,34 @@ def compute_beamwidth(
     return float(abs(right_angle - left_angle))
 
 
+def _first_null_index(
+    pattern_db: NDArray[np.floating],
+    peak_idx: int,
+    step: int,
+) -> int | None:
+    """Walk outward from the peak to the first null on one side.
+
+    Args:
+        pattern_db: Pattern magnitude in dB
+        peak_idx: Index of the main-beam peak
+        step: -1 to walk left, +1 to walk right
+
+    Returns:
+        Index of the first local minimum encountered, or None if the pattern
+        decays monotonically to the end of the array on that side.
+    """
+    n = len(pattern_db)
+    i = peak_idx
+    # A rise of more than this counts as leaving the null, which keeps
+    # floating-point wobble at the bottom of a deep null from stopping the walk.
+    rise_tol = 1e-9
+    while 0 <= i + step < n:
+        if pattern_db[i + step] > pattern_db[i] + rise_tol:
+            return i
+        i += step
+    return None
+
+
 def compute_sidelobe_level(
     pattern_db: NDArray[np.floating],
     angles_deg: NDArray[np.floating],
@@ -66,36 +94,49 @@ def compute_sidelobe_level(
 ) -> float:
     """Compute peak sidelobe level relative to main beam.
 
+    The main lobe is excluded out to its first null on each side. A mask
+    derived from the half-power beamwidth is not wide enough: the first null
+    of a tapered aperture sits at roughly 1.3 to 1.8 times the HPBW from the
+    peak, and further as the taper deepens, so a beamwidth-derived mask leaves
+    the main-lobe skirt in the search region and reports a point on that skirt
+    as the sidelobe. That reading is both far too high and non-monotonic in
+    taper depth.
+
     Args:
         pattern_db: Pattern magnitude in dB
         angles_deg: Corresponding angles in degrees
-        main_lobe_width_deg: Width of main lobe to exclude (auto-detected if None)
+        main_lobe_width_deg: Explicit main-lobe width to exclude, in degrees,
+            centered on the peak. Overrides first-null detection.
 
     Returns:
-        Peak sidelobe level in dB (negative value)
+        Peak sidelobe level in dB (negative value), or -inf if the pattern has
+        no sidelobe outside the main beam.
     """
-    peak_db = np.max(pattern_db)
+    pattern_db = np.asarray(pattern_db, dtype=float)
+    angles_deg = np.asarray(angles_deg, dtype=float)
+
+    peak_db = float(np.max(pattern_db))
     peak_idx = int(np.argmax(pattern_db))
-    peak_angle = angles_deg[peak_idx]
 
-    # Auto-detect main lobe width if not provided
-    if main_lobe_width_deg is None:
-        bw = compute_beamwidth(pattern_db, angles_deg, -3.0)
-        if np.isnan(bw):
-            bw = 10.0  # Default fallback
-        main_lobe_width_deg = bw * 2  # Use 2x beamwidth as exclusion zone
-
-    # Mask out main lobe region
-    half_width = main_lobe_width_deg / 2
-    mask = np.abs(angles_deg - peak_angle) > half_width
+    if main_lobe_width_deg is not None:
+        peak_angle = float(angles_deg[peak_idx])
+        half_width = main_lobe_width_deg / 2
+        mask = np.abs(angles_deg - peak_angle) > half_width
+    else:
+        left_null = _first_null_index(pattern_db, peak_idx, -1)
+        right_null = _first_null_index(pattern_db, peak_idx, +1)
+        # A side with no null has no sidelobe on it, so mask it out entirely.
+        lo = 0 if left_null is None else left_null
+        hi = len(pattern_db) - 1 if right_null is None else right_null
+        mask = np.ones(len(pattern_db), dtype=bool)
+        mask[lo : hi + 1] = False
 
     if not np.any(mask):
         return float("-inf")
 
-    sidelobe_pattern = pattern_db[mask]
-    peak_sidelobe_db = np.max(sidelobe_pattern)
+    peak_sidelobe_db = float(np.max(pattern_db[mask]))
 
-    return float(peak_sidelobe_db - peak_db)
+    return peak_sidelobe_db - peak_db
 
 
 def compute_scan_loss(scan_angle_deg: float, model: str = "cosine") -> float:

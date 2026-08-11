@@ -21,6 +21,41 @@ from phased_array_systems.models.antenna.metrics import (
 from phased_array_systems.scenarios import CommsLinkScenario
 
 
+def _taylor_cut(
+    n_elements: int = 32,
+    design_sll_db: float | None = 35.0,
+    spacing_lambda: float = 0.5,
+    n_angles: int = 4001,
+) -> tuple[np.ndarray, np.ndarray]:
+    """A broadside linear-array cut, Taylor tapered or uniform.
+
+    Returns (angles_deg, pattern_db) with the pattern normalized to a 0 dB peak.
+    """
+    from scipy.signal.windows import taylor
+
+    weights = (
+        np.ones(n_elements)
+        if design_sll_db is None
+        else taylor(n_elements, nbar=4, sll=design_sll_db)
+    )
+    positions = np.arange(n_elements) - (n_elements - 1) / 2
+    angles_deg = np.linspace(-90.0, 90.0, n_angles)
+    phase = 2 * np.pi * spacing_lambda * np.outer(np.sin(np.radians(angles_deg)), positions)
+    af = np.abs(np.exp(1j * phase) @ weights)
+    return angles_deg, 20 * np.log10(af / np.max(af) + 1e-12)
+
+
+def _true_peak_sidelobe(angles_deg: np.ndarray, pattern_db: np.ndarray) -> float:
+    """Peak sidelobe found by independent local-maximum detection."""
+    from scipy.signal import find_peaks
+
+    peaks, _ = find_peaks(pattern_db)
+    main_idx = int(np.argmax(pattern_db))
+    return max(
+        float(pattern_db[i]) for i in peaks if abs(angles_deg[i] - angles_deg[main_idx]) > 1e-9
+    )
+
+
 class TestMetricFunctions:
     """Tests for metric extraction functions."""
 
@@ -49,6 +84,61 @@ class TestMetricFunctions:
         sll = compute_sidelobe_level(pattern_db, angles)
         # Sinc first sidelobe is about -13.2 dB
         assert -15.0 < sll < -12.0
+
+    def test_sidelobe_level_matches_taylor_design_level(self):
+        """A Taylor taper must report near its design SLL, not the main-lobe skirt.
+
+        Excluding only the half-power beamwidth leaves the main-lobe skirt in
+        the search region, which reported about -14 dB for a -35 dB design.
+        """
+        angles, pattern_db = _taylor_cut(n_elements=32, design_sll_db=35.0)
+
+        sll = compute_sidelobe_level(pattern_db, angles)
+
+        assert sll == pytest.approx(_true_peak_sidelobe(angles, pattern_db), abs=0.01)
+        assert -36.0 < sll < -34.0
+
+    def test_sidelobe_level_uniform_taper_near_minus_13_2(self):
+        """Uniform illumination has a -13.2 dB first sidelobe."""
+        angles, pattern_db = _taylor_cut(n_elements=32, design_sll_db=None)
+
+        sll = compute_sidelobe_level(pattern_db, angles)
+
+        assert sll == pytest.approx(-13.2, abs=0.2)
+
+    def test_sidelobe_level_monotonic_in_taper_depth(self):
+        """Deeper taper must lower the reported SLL at every step.
+
+        The beamwidth-derived mask was non-monotonic here (-25 dB design read
+        -17.5, -35 dB read -14.0, -45 dB read -14.7) because a deeper taper
+        widens the beam and steepens the skirt, moving the first unmasked
+        sample to a different point on it.
+        """
+        levels = []
+        for design_sll_db in (25.0, 35.0, 45.0):
+            angles, pattern_db = _taylor_cut(n_elements=32, design_sll_db=design_sll_db)
+            levels.append(compute_sidelobe_level(pattern_db, angles))
+
+        assert levels == sorted(levels, reverse=True)
+        assert levels[0] == pytest.approx(-25.3, abs=0.3)
+        assert levels[1] == pytest.approx(-35.1, abs=0.3)
+
+    def test_sidelobe_level_no_sidelobe_returns_neg_inf(self):
+        """A pattern that decays monotonically has no sidelobe to report."""
+        angles = np.linspace(-60, 60, 601)
+        pattern_db = -((angles / 10.0) ** 2)
+
+        assert compute_sidelobe_level(pattern_db, angles) == float("-inf")
+
+    def test_sidelobe_level_explicit_width_overrides_null_detection(self):
+        """An explicit main-lobe width still masks a fixed angular window."""
+        angles, pattern_db = _taylor_cut(n_elements=32, design_sll_db=35.0)
+
+        wide = compute_sidelobe_level(pattern_db, angles, main_lobe_width_deg=180.0)
+        narrow = compute_sidelobe_level(pattern_db, angles, main_lobe_width_deg=1.0)
+
+        assert wide == float("-inf")
+        assert narrow > -1.0
 
     def test_compute_scan_loss_boresight(self):
         """Test scan loss at boresight (should be 0)."""
@@ -443,6 +533,65 @@ class TestImpairments:
         assert m_2bit["sll_db"] > m_ideal["sll_db"]
         assert "phase_quantization_bits" in m_2bit
         assert m_2bit["phase_quantization_bits"] == 2
+
+    def test_sll_ordered_by_phase_bit_depth(self, adapter):
+        """Off broadside, coarser phase shifters must give a worse SLL.
+
+        Reading the main-lobe skirt hid this: quantization lobes near -25 dB
+        sit far below a skirt reading around -12.6 dB, so the reported SLL
+        barely moved with bit depth.
+        """
+        scenario_scan = CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+            scan_angle_deg=45.0,
+        )
+
+        def sll_for(phase_bits):
+            arch = Architecture(
+                array=ArrayConfig(
+                    nx=32,
+                    ny=32,
+                    dx_lambda=0.5,
+                    dy_lambda=0.5,
+                    taper_type="taylor",
+                    taper_sll_db=-35.0,
+                    phase_bits=phase_bits,
+                    enforce_subarray_constraint=False,
+                ),
+                rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            )
+            return adapter.evaluate(arch, scenario_scan, {})["sll_db"]
+
+        levels = [sll_for(b) for b in (2, 3, 6, None)]
+
+        # Coarser shifters give a worse (less negative) SLL at every step.
+        assert levels == sorted(levels, reverse=True)
+        # 2-bit quantization lobes dominate a -35 dB design by a wide margin.
+        assert levels[0] > levels[-1] + 20.0
+
+    def test_sll_insensitive_to_phase_bits_at_broadside(self, adapter, scenario):
+        """At broadside every steering phase is zero, so quantization is a no-op."""
+
+        def sll_for(phase_bits):
+            arch = Architecture(
+                array=ArrayConfig(
+                    nx=32,
+                    ny=32,
+                    dx_lambda=0.5,
+                    dy_lambda=0.5,
+                    taper_type="taylor",
+                    taper_sll_db=-35.0,
+                    phase_bits=phase_bits,
+                    enforce_subarray_constraint=False,
+                ),
+                rf=RFChainConfig(tx_power_w_per_elem=1.0),
+            )
+            return adapter.evaluate(arch, scenario, {})["sll_db"]
+
+        assert sll_for(2) == pytest.approx(sll_for(None))
 
     def test_element_failures_reduce_gain(self, adapter, scenario):
         """5% failure rate should reduce gain."""
