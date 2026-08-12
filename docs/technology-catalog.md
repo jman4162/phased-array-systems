@@ -29,7 +29,7 @@ the [ETH IDEAS LNA Survey](https://ideas.ethz.ch/Surveys/lna-survey.html)
 
 | field | value | units | source | confidence |
 |---|---|---|---|---|
-| pa_psat_w_per_mm | 1.5 | W/mm (about) | [Frenzel, Electronic Design](https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers) (accessed 2026-08-11) | medium |
+| pa_psat_w_per_mm | [1.0, 1.5] | W/mm | [1.5: Frenzel, Electronic Design; 1.0: Qorvo, 'GaN RF Technology For Dummies', 2015](https://www.mouser.com/pdfDocs/Qorvo_GaN_RF_Technology.pdf) (accessed 2026-08-11) | medium |
 | pa_class_dbm | [30.0, 35.0] | dBm (5G front-end context) | [Watanabe et al., arXiv:2009.07208](https://arxiv.org/abs/2009.07208) (accessed 2026-08-11) | high |
 | pa_pae_pct | [20.0, 50.0] | % (handset PA class) | [Frenzel, Electronic Design](https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers) (accessed 2026-08-11) | medium |
 | single_device_power_w | 5.0 | W (up to, single device) | [Frenzel, Electronic Design](https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers) (accessed 2026-08-11) | medium |
@@ -43,6 +43,7 @@ the [ETH IDEAS LNA Survey](https://ideas.ethz.ch/Surveys/lna-survey.html)
 |---|---|---|---|---|
 | pa_psat_w_per_mm | [5.0, 12.0] | W/mm | [Frenzel, 'What's the Difference Between GaAs and GaN RF Power Amplifiers?', Electronic Design](https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers) (accessed 2026-08-11) | medium |
 | pa_psat_w_per_mm_example | 10.6 | W/mm | [Wolfspeed 0.25 um X-band GaN HEMT (sunken field plate), Semiconductor Today, Feb 2022](https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml) (accessed 2026-08-11) | high |
+| pa_psat_w_per_mm_practical | 5.0 | W/mm (thermally limited practical operating point; > 20 W/mm on paper) | [Qorvo, 'GaN RF Technology For Dummies', Wiley Special Edition, 2015](https://www.mouser.com/pdfDocs/Qorvo_GaN_RF_Technology.pdf) (accessed 2026-08-11) | high |
 | pa_class_dbm | 45.0 | dBm (capability floor, 5G front-end context) | [Watanabe et al., 'A Review of 5G Front-End Systems Package Integration', arXiv:2009.07208](https://arxiv.org/abs/2009.07208) (accessed 2026-08-11) | high |
 | pa_pae_example_pct | 64.0 | % (3.5 GHz accelerated-life test device) | [Wolfspeed via Semiconductor Today, Feb 2022](https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml) (accessed 2026-08-11) | high |
 | breakdown_v | 80.0 | V (typical commercial process ceiling) | [Frenzel, Electronic Design](https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers) (accessed 2026-08-11) | medium |
@@ -51,6 +52,7 @@ the [ETH IDEAS LNA Survey](https://ideas.ethz.ch/Surveys/lna-survey.html)
 | lna_nf_db | [1.0, 2.0] | dB | [RF Essentials, 'What is an LNA?' technology comparison](https://rfessentials.com/resources/rf-glossary/lna/) (accessed 2026-08-11) | medium |
 | lna_iip3_dbm | [15.0, 25.0] | dBm | [RF Essentials, 'What is an LNA?' technology comparison](https://rfessentials.com/resources/rf-glossary/lna/) (accessed 2026-08-11) | medium |
 | tj_max_c | 225.0 | C (junction temperature at which MTTF > 6e7 h was demonstrated) | [Wolfspeed via Semiconductor Today, Feb 2022](https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml) (accessed 2026-08-11) | high |
+| mttf_hours_at_200c | 1.0e7 | hours (extrapolated median time to failure, channel temperature 200 C) | [Qorvo, 'GaN RF Technology For Dummies', Wiley Special Edition, 2015 (0.25 um GaN FET, Arrhenius extrapolation)](https://www.mouser.com/pdfDocs/Qorvo_GaN_RF_Technology.pdf) (accessed 2026-08-11) | high |
 
 ## ldmos — Si LDMOS
 

@@ -58,8 +58,8 @@ class TestPlausibility:
 
     def test_gan_power_density_exceeds_gaas_exceeds_ldmos_wafer(self):
         gan_lo = entry("gan")["pa_psat_w_per_mm"][0]
-        gaas = entry("gaas")["pa_psat_w_per_mm"]
-        assert gan_lo > gaas
+        gaas_hi = entry("gaas")["pa_psat_w_per_mm"][1]
+        assert gan_lo > gaas_hi
 
     def test_lna_nf_ordering(self):
         """GaAs pHEMT < SiGe < GaN < CMOS upper bounds."""

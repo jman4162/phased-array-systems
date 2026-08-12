@@ -29,6 +29,15 @@ gan:
     kind: "published device result"
     confidence: "high"
     quote: "Psat 10.6 W/mm, PAE 64%, 50 V, MTTF > 6e7 h at 225 C junction"
+  pa_psat_w_per_mm_practical:
+    value: 5.0
+    units: "W/mm (thermally limited practical operating point; > 20 W/mm on paper)"
+    source: "Qorvo, 'GaN RF Technology For Dummies', Wiley Special Edition, 2015"
+    url: "https://www.mouser.com/pdfDocs/Qorvo_GaN_RF_Technology.pdf"
+    accessed: "2026-08-11"
+    kind: "vendor technology guide"
+    confidence: "high"
+    quote: "GaN can deliver a power density in excess of 20 W/mm ... in practice limited to 5 W/mm or less because of the high temperature"
   pa_class_dbm:
     value: 45.0
     units: "dBm (capability floor, 5G front-end context)"
@@ -101,18 +110,27 @@ gan:
     kind: "published reliability result"
     confidence: "high"
     quote: "more than 6e7 hour lifetime at 225 C junction temperature"
+  mttf_hours_at_200c:
+    value: 1.0e7
+    units: "hours (extrapolated median time to failure, channel temperature 200 C)"
+    source: "Qorvo, 'GaN RF Technology For Dummies', Wiley Special Edition, 2015 (0.25 um GaN FET, Arrhenius extrapolation)"
+    url: "https://www.mouser.com/pdfDocs/Qorvo_GaN_RF_Technology.pdf"
+    accessed: "2026-08-11"
+    kind: "vendor reliability data"
+    confidence: "high"
+    quote: "MTTF in excess of 10 million hours at temperatures as high as 200 C ... fallout rates below 0.002 percent at 1 million hours"
 
 gaas:
   name: "GaAs pHEMT / HBT"
   pa_psat_w_per_mm:
-    value: 1.5
-    units: "W/mm (about)"
-    source: "Frenzel, Electronic Design"
-    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    value: [1.0, 1.5]
+    units: "W/mm"
+    source: "1.5: Frenzel, Electronic Design; 1.0: Qorvo, 'GaN RF Technology For Dummies', 2015"
+    url: "https://www.mouser.com/pdfDocs/Qorvo_GaN_RF_Technology.pdf"
     accessed: "2026-08-11"
-    kind: "trade-press review"
+    kind: "trade-press review + vendor technology guide"
     confidence: "medium"
-    quote: "about 1.5 W/mm"
+    quote: "about 1.5 W/mm (Frenzel); approximately 1 W/mm for GaAs (Qorvo, vs 0.3 W/mm for Si)"
   pa_class_dbm:
     value: [30.0, 35.0]
     units: "dBm (5G front-end context)"
