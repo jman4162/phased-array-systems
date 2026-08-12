@@ -345,9 +345,46 @@ class DigitalConfig(BaseModel):
     adc_fom_fj: float = Field(
         default=100.0, gt=0, description="ADC Walden FOM (fJ/conversion-step)"
     )
+    adc_bits: int | None = Field(
+        default=None,
+        ge=4,
+        le=24,
+        description=(
+            "Physical ADC bit width for data-rate sizing; None derives "
+            "ceil(adc_enob) + 2 (physical bits run 1-3 above ENOB)"
+        ),
+    )
     dsp_efficiency_gops_per_w: float = Field(
         default=50.0, gt=0, description="Beamformer compute efficiency (GOPS/W)"
     )
+
+    # TX digital path (DAC); None leaves the TX path unmodeled
+    dac_enob: float | None = Field(
+        default=None, ge=4, le=18, description="DAC effective number of bits; None=no DAC model"
+    )
+    dac_fom_fj: float = Field(
+        default=100.0,
+        gt=0,
+        description="DAC power figure of merit (fJ/conversion-step, Walden-form estimate)",
+    )
+    dac_full_scale_dbm: float = Field(default=0.0, description="DAC full-scale output power (dBm)")
+    dac_backoff_db: float = Field(
+        default=6.0, ge=0, description="DAC operating backoff from full scale (dB)"
+    )
+
+    @property
+    def adc_bits_physical(self) -> int:
+        """Physical ADC bit width: explicit adc_bits, else ceil(ENOB) + 2."""
+        if self.adc_bits is not None:
+            return self.adc_bits
+        return math.ceil(self.adc_enob) + 2
+
+    @property
+    def dac_bits_physical(self) -> int | None:
+        """Physical DAC bit width (ceil(ENOB) + 2), None without a DAC."""
+        if self.dac_enob is None:
+            return None
+        return math.ceil(self.dac_enob) + 2
 
 
 class Architecture(BaseModel):

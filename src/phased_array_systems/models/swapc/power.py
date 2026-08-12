@@ -79,8 +79,9 @@ class PowerModel:
         # Receive chain DC power (LNA, phase shifter, control per element)
         rx_dc_power_w = n_elements * arch.rf.rx_power_w_per_elem
 
-        # Digital section power (ADCs + beamformer compute)
+        # Digital section power (ADCs + DACs + beamformer compute)
         adc_power = 0.0
+        dac_power = 0.0
         dsp_power = 0.0
         if arch.digital is not None:
             from phased_array_systems.models.digital.bandwidth import beamformer_operations
@@ -93,10 +94,16 @@ class PowerModel:
             adc_power = n_channels * adc_power_w(
                 arch.digital.adc_enob, sample_rate_hz, arch.digital.adc_fom_fj
             )
+            if arch.digital.dac_enob is not None:
+                # Walden-form estimate applied to the DAC; same caveats as
+                # for the ADC (survey-level scaling, not a datasheet number)
+                dac_power = n_channels * adc_power_w(
+                    arch.digital.dac_enob, sample_rate_hz, arch.digital.dac_fom_fj
+                )
             ops = beamformer_operations(n_channels, arch.digital.n_beams, sample_rate_hz)
             dsp_power = ops["total_gops"] / arch.digital.dsp_efficiency_gops_per_w
 
-        dc_power_w = pa_dc_power_w + rx_dc_power_w + adc_power + dsp_power
+        dc_power_w = pa_dc_power_w + rx_dc_power_w + adc_power + dac_power + dsp_power
 
         # Prime power (including overhead)
         prime_power_w = dc_power_w * (1 + self.overhead_factor)
@@ -107,6 +114,7 @@ class PowerModel:
             "pa_dc_power_w": pa_dc_power_w,
             "rx_dc_power_w": rx_dc_power_w,
             "adc_power_w": adc_power,
+            "dac_power_w": dac_power,
             "dsp_power_w": dsp_power,
             "dc_power_w": dc_power_w,
             "prime_power_w": prime_power_w,

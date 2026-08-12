@@ -712,3 +712,68 @@ class TestTXCascadeIntegration:
         m0 = evaluate_case(tx_architecture, sample_scenario)
         m3 = evaluate_case(tx_architecture, backed_off)
         assert m3["tx_min_p1db_headroom_db"] - m0["tx_min_p1db_headroom_db"] == pytest.approx(3.0)
+
+
+class TestDACIntegration:
+    """Tests for the TX digital (DAC) path in evaluate_case."""
+
+    def _arch(self, **digital_kwargs):
+        return Architecture(
+            array=ArrayConfig(nx=8, ny=8, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, noise_figure_db=3.0),
+            cost=CostConfig(cost_per_elem_usd=100.0),
+            digital=DigitalConfig(digitization_level="element", **digital_kwargs),
+        )
+
+    def _scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def test_bits_per_sample_uses_physical_bits(self):
+        """ENOB 11 -> 13 physical bits -> 26 bits/sample, not int(11)*2."""
+        arch = self._arch(adc_enob=11.0)
+        assert arch.digital.adc_bits_physical == 13
+        m = evaluate_case(arch, self._scenario())
+        # Data rate scales linearly in bits/sample; verify against an
+        # explicit adc_bits that matches the derived value
+        arch_explicit = self._arch(adc_enob=11.0, adc_bits=13)
+        m_explicit = evaluate_case(arch_explicit, self._scenario())
+        assert m["bf_data_rate_gbps"] == m_explicit["bf_data_rate_gbps"]
+
+    def test_explicit_adc_bits_override(self):
+        m16 = evaluate_case(self._arch(adc_enob=11.0, adc_bits=16), self._scenario())
+        m13 = evaluate_case(self._arch(adc_enob=11.0, adc_bits=13), self._scenario())
+        assert m16["bf_data_rate_gbps"] == pytest.approx(m13["bf_data_rate_gbps"] * 16.0 / 13.0)
+
+    def test_no_dac_no_dac_metrics(self):
+        m = evaluate_case(self._arch(), self._scenario())
+        assert "dac_operating_power_dbm" not in m
+        assert "tx_bf_data_rate_gbps" not in m
+        assert m["dac_power_w"] == 0.0
+
+    def test_dac_metrics_present(self):
+        m = evaluate_case(self._arch(dac_enob=10.0), self._scenario())
+        # 6.02*10 + 1.76 = 61.96 dB SNR; 0 dBm full scale - 6 dB backoff
+        assert m["dac_snr_db"] == pytest.approx(61.96)
+        assert m["dac_operating_power_dbm"] == pytest.approx(-6.0)
+        assert m["tx_bf_data_rate_gbps"] > 0
+        assert m["dac_power_w"] > 0
+
+    def test_dac_power_joins_dc_budget(self):
+        m_no_dac = evaluate_case(self._arch(), self._scenario())
+        m_dac = evaluate_case(self._arch(dac_enob=10.0), self._scenario())
+        assert m_dac["dc_power_w"] - m_no_dac["dc_power_w"] == pytest.approx(m_dac["dac_power_w"])
+
+    def test_dac_power_walden_hand_value(self):
+        """64 channels * 100 fJ * 2^10 * 25 MHz = 0.16384 W."""
+        m = evaluate_case(self._arch(dac_enob=10.0), self._scenario())
+        assert m["dac_power_w"] == pytest.approx(64 * 100e-15 * 2**10 * 25e6)
+
+    def test_tx_rate_mirrors_rx_at_equal_bits(self):
+        """Same ENOB both directions -> same stream rate."""
+        m = evaluate_case(self._arch(adc_enob=10.0, dac_enob=10.0), self._scenario())
+        assert m["tx_bf_data_rate_gbps"] == pytest.approx(m["bf_data_rate_gbps"])

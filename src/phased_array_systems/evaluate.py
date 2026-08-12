@@ -209,7 +209,9 @@ def evaluate_case(
 
         bw = getattr(scenario, "bandwidth_hz", 1e6)
         sample_rate = bw * arch.digital.oversampling_ratio
-        bits_per_sample = int(arch.digital.adc_enob) * 2  # I + Q
+        # Physical bit width sizes the data stream, not ENOB (a 12-bit
+        # converter with 10.5 effective bits still moves 12-bit words)
+        bits_per_sample = arch.digital.adc_bits_physical * 2  # I + Q
 
         # Digitized channel count follows the digitization level
         # (element / subarray / analog), not the raw element count
@@ -258,6 +260,28 @@ def evaluate_case(
             pm = processing_margin(arch.digital.fpga_throughput_gops, bf_ops["total_gops"])
             metrics["processing_margin_db"] = pm["margin_db"]
             metrics["fpga_utilization_pct"] = pm["utilization_percent"]
+
+        # TX digital path (if a DAC is configured)
+        if arch.digital.dac_enob is not None:
+            from phased_array_systems.models.digital.converters import dac_output_power
+
+            dac = dac_output_power(
+                arch.digital.dac_enob,
+                arch.digital.dac_full_scale_dbm,
+                backoff_db=arch.digital.dac_backoff_db,
+            )
+            metrics["dac_operating_power_dbm"] = dac["operating_power_dbm"]
+            metrics["dac_snr_db"] = dac["snr_db"]
+            metrics["dac_sfdr_db"] = dac["sfdr_db"]
+            # TX stream mirrors the RX one at the same digitization level
+            dac_bits = arch.digital.dac_bits_physical
+            assert dac_bits is not None
+            tx_rate = digital_beamformer_data_rate(
+                n_channels,
+                sample_rate,
+                dac_bits * 2,  # I + Q
+            )
+            metrics["tx_bf_data_rate_gbps"] = tx_rate["with_overhead_gbps"]
 
     # Evaluate scenario-specific models
     if isinstance(scenario, CommsLinkScenario):
