@@ -151,6 +151,12 @@ def compute_rain_loss(
     gamma_R = k * R^alpha with the published Table 1-4 coefficients,
     applied over the ITU-R P.530 effective rain path length.
 
+    Terrestrial paths only: P.530's effective path assumes the whole link
+    sits in rain. For earth-space (slant) paths use an ITU-R P.618
+    implementation and pass the result in via the scenario's
+    ``rain_loss_db`` override; applying this model to a slant range
+    overpredicts rain loss by an order of magnitude at Ka-band.
+
     Args:
         freq_hz: Frequency (Hz)
         range_m: Path length (m)

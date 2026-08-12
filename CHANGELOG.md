@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-11
+
+RF and digital front-end depth: T/R modules, the nonlinearity chain, the
+DAC path, load-pull against EdgeFEM active-impedance scans, and a cited
+technology catalog. All new behavior is opt-in; with default configs the
+only metric drift is the adc_bits fix noted below.
+
+### Added
+- **T/R module abstraction**: `TRComponent` and `TRModuleConfig`
+  (`Architecture.trm`). One component list (reliability vocabulary: lna,
+  pa, phase_shifter, attenuator, switch, control_asic) derives the RF
+  aggregates the models already consume — rx/tx stages, composite noise
+  figure, RX DC power, TX output P1dB. Explicit `RFChainConfig` fields
+  always override; an equivalence test pins that a TRM reproducing the
+  explicit aggregates yields identical metrics.
+- **Nonlinearity chain**: `cascade_p1db` (reciprocal-sum cascaded P1dB),
+  `rapp_compression_db` (Rapp soft limiter, exactly 1 dB at P1dB by
+  construction), `compression_check` (per-stage headroom and binding
+  stage), `sndr_with_imd3` (thermal SNR + two-tone IM3 -> SNDR, EVM).
+  `cascade_analysis` reports ip1db/op1db/headroom/compressed. TX chains:
+  `RFChainConfig.tx_stages` runs the same cascade with headroom checked at
+  the commanded drive level. Link budget: `tx_backoff_db` and
+  `pa_op1db_dbm_per_elem` (Rapp-compressed EIRP), and
+  `nonlinear_impairments=True` scores `link_margin_db` against SNDR when
+  the RX cascade provides IIP3 (emits `sndr_rx_db`, `imd3_dbc`,
+  `evm_rms_pct`).
+- **DAC path**: `DigitalConfig.dac_enob/dac_fom_fj/dac_full_scale_dbm/
+  dac_backoff_db`; DAC power joins the DC budget (Walden-form estimate,
+  same caveats as the ADC); TX beamformer stream rate mirrors RX
+  (`tx_bf_data_rate_gbps`); `dac_output_power` finally has a caller.
+- **Load-pull + active impedance** (`models/rf/loadpull.py`):
+  `LoadPullModel` (analytic elliptical contours; documented small-mismatch
+  simplifications) and `LoadPullTable` (measured contours from CSV — the
+  measurement seam); `load_scan_csv` reads EdgeFEM's `export_scan_csv`
+  artifact (producer-owned contract, revision 2; golden fixture vendored
+  under `tests/fixtures/edgefem/` with a refresh script); `eirp_vs_scan`
+  aggregates per-element degradation into EIRP delta, PAE drop, and worst
+  VSWR per scan angle.
+- **Technology catalog** (`data/technologies.yaml`,
+  `models/rf/technology.py`): SiGe / GaAs / GaN / CMOS / LDMOS survey and
+  review ranges, every number carrying a fetched citation (source, url,
+  access date, quote); `docs/technology-catalog.md` is generated from it.
+  `TRModuleConfig.technology` fills lna NF/IIP3 and pa P1dB midpoints for
+  components left at defaults.
+
+### Fixed
+- `bits_per_sample` for beamformer data rate used `int(adc_enob) * 2`,
+  conflating ENOB with the physical word width a stream actually moves.
+  Now `adc_bits` (explicit) or `ceil(adc_enob) + 2` sizes the stream.
+  **Golden case drift**: `bf_data_rate_gbps` 110 -> 130 (22 -> 26
+  bits/sample at the reference 11-ENOB ADC).
+
+### Documentation
+- `compute_rain_loss` is a terrestrial (P.530 effective-path) model and is
+  now documented as unsuitable for slant paths, in the docstring and in
+  `docs/theory/validation.md`: at 28 GHz / 8 mm/h it overpredicts an
+  earth-space rain loss by an order of magnitude versus ITU-R P.618
+  (finding from the AEDL t3-001 calibration). Use `rain_loss_db` to inject
+  a P.618 value for satcom scenarios.
+
 ## [0.10.1] - 2026-08-11
 
 ### Fixed

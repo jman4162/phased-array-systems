@@ -38,7 +38,14 @@ limitation is stated in the module docstring:
   P.676 Annex 1 §2 is not implemented.
 - **Effective rain path**: ITU-R P.530 distance factor applied to the
   scenario rain rate directly (P.530 defines it for the 0.01%-exceeded
-  rate).
+  rate). **This is a terrestrial model and unsuitable for slant paths**:
+  P.530 assumes the whole path sits in rain, while a satellite link exits
+  the rain layer within a few kilometers of altitude. On a 28 GHz LEO
+  link at 8 mm/h the P.530 form over the full slant range predicts tens
+  of dB where ITU-R P.618 predicts under 1 dB (measured against
+  opensatcom's P.618 implementation during AEDL t3-001 calibration,
+  2026-08-11). For earth-space links, take rain from a P.618
+  implementation and pass it in via `rain_loss_db`.
 - **Cross-polarized sea clutter**: copolarized NRL value −10 dB (the NRL
   model has no cross-pol term; spread in the literature is 5–15 dB).
 - **OS/GO/SO CFAR losses**: published homogeneous-clutter deltas on the
