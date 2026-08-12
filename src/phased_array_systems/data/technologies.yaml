@@ -1,0 +1,342 @@
+# Semiconductor technology catalog for T/R module trades.
+#
+# Every number carries a citation that was fetched and read when the row was
+# written (accessed dates below). Values are survey/review RANGES or single
+# published data points, not device commitments: use them to compare
+# technologies, then replace with datasheet values for a real design.
+# Numeric fields are provenance mappings {value | [lo, hi], units, source,
+# url, accessed, kind, confidence, quote}; structural fields are scalars.
+# The provenance table in docs/technology-catalog.md is generated from this
+# file. Midpoints of [lo, hi] ranges are what `technology_defaults` returns.
+
+gan:
+  name: "GaN HEMT (on SiC)"
+  pa_psat_w_per_mm:
+    value: [5.0, 12.0]
+    units: "W/mm"
+    source: "Frenzel, 'What's the Difference Between GaAs and GaN RF Power Amplifiers?', Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "ranging from 5 to 12 W/mm"
+  pa_psat_w_per_mm_example:
+    value: 10.6
+    units: "W/mm"
+    source: "Wolfspeed 0.25 um X-band GaN HEMT (sunken field plate), Semiconductor Today, Feb 2022"
+    url: "https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml"
+    accessed: "2026-08-11"
+    kind: "published device result"
+    confidence: "high"
+    quote: "Psat 10.6 W/mm, PAE 64%, 50 V, MTTF > 6e7 h at 225 C junction"
+  pa_class_dbm:
+    value: 45.0
+    units: "dBm (capability floor, 5G front-end context)"
+    source: "Watanabe et al., 'A Review of 5G Front-End Systems Package Integration', arXiv:2009.07208"
+    url: "https://arxiv.org/abs/2009.07208"
+    accessed: "2026-08-11"
+    kind: "review paper"
+    confidence: "high"
+    quote: "GaN providing capabilities beyond 45 dBm"
+  pa_pae_example_pct:
+    value: 64.0
+    units: "% (3.5 GHz accelerated-life test device)"
+    source: "Wolfspeed via Semiconductor Today, Feb 2022"
+    url: "https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml"
+    accessed: "2026-08-11"
+    kind: "published device result"
+    confidence: "high"
+    quote: "power density of 10.6 W/mm with 64% power-added efficiency"
+  breakdown_v:
+    value: 80.0
+    units: "V (typical commercial process ceiling)"
+    source: "Frenzel, Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "up to 80 V or so"
+  supply_v:
+    value: [28.0, 50.0]
+    units: "V"
+    source: "28 V: 'Reliability of 150 nm, 28 V GaN HEMT Process up to Ka-band' (paper title); 50 V: Wolfspeed X-band device rating"
+    url: "https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml"
+    accessed: "2026-08-11"
+    kind: "published device results"
+    confidence: "high"
+    quote: "50-V drain voltage rating (Wolfspeed); 28 V process (paper title)"
+  ft_ghz:
+    value: 200.0
+    units: "GHz (up to)"
+    source: "Frenzel, Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "Typical transistor fTs are up to 200 GHz"
+  lna_nf_db:
+    value: [1.0, 2.0]
+    units: "dB"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "GaN NF 1-2 dB, IIP3 +15 to +25 dBm (dense environments / EW)"
+  lna_iip3_dbm:
+    value: [15.0, 25.0]
+    units: "dBm"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "IIP3 +15 to +25 dBm"
+  tj_max_c:
+    value: 225.0
+    units: "C (junction temperature at which MTTF > 6e7 h was demonstrated)"
+    source: "Wolfspeed via Semiconductor Today, Feb 2022"
+    url: "https://www.semiconductor-today.com/news_items/2022/feb/wolfspeed-170222.shtml"
+    accessed: "2026-08-11"
+    kind: "published reliability result"
+    confidence: "high"
+    quote: "more than 6e7 hour lifetime at 225 C junction temperature"
+
+gaas:
+  name: "GaAs pHEMT / HBT"
+  pa_psat_w_per_mm:
+    value: 1.5
+    units: "W/mm (about)"
+    source: "Frenzel, Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "about 1.5 W/mm"
+  pa_class_dbm:
+    value: [30.0, 35.0]
+    units: "dBm (5G front-end context)"
+    source: "Watanabe et al., arXiv:2009.07208"
+    url: "https://arxiv.org/abs/2009.07208"
+    accessed: "2026-08-11"
+    kind: "review paper"
+    confidence: "high"
+    quote: "GaAs achieves 30-35 dBm"
+  pa_pae_pct:
+    value: [20.0, 50.0]
+    units: "% (handset PA class)"
+    source: "Frenzel, Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "maximum power-added efficiencies (PAEs) in the 20% to 50% range"
+  single_device_power_w:
+    value: 5.0
+    units: "W (up to, single device)"
+    source: "Frenzel, Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "up to about 5 W"
+  ft_ghz:
+    value: 150.0
+    units: "GHz (typical range)"
+    source: "Frenzel, Electronic Design"
+    url: "https://www.electronicdesign.com/communications/what-s-difference-between-gaas-and-gan-rf-power-amplifiers"
+    accessed: "2026-08-11"
+    kind: "trade-press review"
+    confidence: "medium"
+    quote: "fT ... in the range of 150 GHz"
+  lna_nf_db:
+    value: [0.3, 0.5]
+    units: "dB at 2 GHz"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "GaAs pHEMT 0.3-0.5 dB at 2 GHz (workhorse)"
+  lna_iip3_dbm:
+    value: [-5.0, 5.0]
+    units: "dBm"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "IIP3 -5 to +5 dBm"
+
+sige:
+  name: "SiGe BiCMOS (HBT)"
+  pa_class_dbm:
+    value: 25.0
+    units: "dBm (optimization target, 5G front-end context)"
+    source: "Watanabe et al., arXiv:2009.07208"
+    url: "https://arxiv.org/abs/2009.07208"
+    accessed: "2026-08-11"
+    kind: "review paper"
+    confidence: "high"
+    quote: "CMOS and SiGe PAs are optimized for 25 dBm power and 30% power efficiency"
+  pa_pae_pct:
+    value: 30.0
+    units: "% (optimization target, same source)"
+    source: "Watanabe et al., arXiv:2009.07208"
+    url: "https://arxiv.org/abs/2009.07208"
+    accessed: "2026-08-11"
+    kind: "review paper"
+    confidence: "high"
+    quote: "optimized for 25 dBm power and 30% power efficiency"
+  pa_example:
+    value: 19.7
+    units: "dBm Psat at 64 GHz, 3.3 V supply, OP1dB 18 dBm (130 nm SiGe BiCMOS)"
+    source: "'A V-Band Wideband Power Amplifier with High Gain in a 130 nm SiGe BiCMOS Process', Micromachines 15(9):1077, 2024 (PMC11434341)"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11434341/"
+    accessed: "2026-08-11"
+    kind: "published device result"
+    confidence: "high"
+    quote: "Psat 19.7 dBm, peak gain 27.3 dB at 64 GHz, 3.3 V supply"
+  bvceo_v:
+    value: 1.7
+    units: "V (open-base; RF swing can exceed this toward BVCBO)"
+    source: "Jain et al., 'DC and RF breakdown voltage characteristics of SiGe HBTs for WiFi PA applications', IEEE (document 7738948)"
+    url: "https://ieeexplore.ieee.org/document/7738948/"
+    accessed: "2026-08-11"
+    kind: "paper (values as quoted in abstract; full text paywalled)"
+    confidence: "medium"
+    quote: "BVCEO = 1.7 V and BVCBO = 5.9 V"
+  bvcbo_v:
+    value: 5.9
+    units: "V"
+    source: "Jain et al., IEEE document 7738948"
+    url: "https://ieeexplore.ieee.org/document/7738948/"
+    accessed: "2026-08-11"
+    kind: "paper (values as quoted in abstract; full text paywalled)"
+    confidence: "medium"
+    quote: "BVCEO = 1.7 V and BVCBO = 5.9 V"
+  lna_nf_db:
+    value: [0.5, 1.5]
+    units: "dB at 2 GHz"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "SiGe BiCMOS 0.5-1.5 dB at 2 GHz, highly integrated (SOC)"
+  lna_iip3_dbm:
+    value: [0.0, 10.0]
+    units: "dBm"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "IIP3 0 to +10 dBm"
+
+cmos:
+  name: "Bulk / SOI CMOS"
+  pa_class_dbm:
+    value: 25.0
+    units: "dBm (optimization target, 5G front-end context)"
+    source: "Watanabe et al., arXiv:2009.07208"
+    url: "https://arxiv.org/abs/2009.07208"
+    accessed: "2026-08-11"
+    kind: "review paper"
+    confidence: "high"
+    quote: "CMOS and SiGe PAs are optimized for 25 dBm power and 30% power efficiency"
+  pa_pae_pct:
+    value: 30.0
+    units: "% (optimization target, same source)"
+    source: "Watanabe et al., arXiv:2009.07208"
+    url: "https://arxiv.org/abs/2009.07208"
+    accessed: "2026-08-11"
+    kind: "review paper"
+    confidence: "high"
+    quote: "optimized for 25 dBm power and 30% power efficiency"
+  lna_nf_db:
+    value: [1.5, 3.0]
+    units: "dB"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "CMOS 1.5-3 dB, lowest cost, consumer"
+  lna_iip3_dbm:
+    value: [-5.0, 5.0]
+    units: "dBm"
+    source: "RF Essentials, 'What is an LNA?' technology comparison"
+    url: "https://rfessentials.com/resources/rf-glossary/lna/"
+    accessed: "2026-08-11"
+    kind: "reference guide"
+    confidence: "medium"
+    quote: "IIP3 -5 to +5 dBm"
+  cost_class: "lowest (consumer volume; RF Essentials LNA guide)"
+
+ldmos:
+  name: "Si LDMOS"
+  freq_max_ghz:
+    value: 4.0
+    units: "GHz"
+    source: "Theeuwen & Qureshi, 'LDMOS Technology for RF Power Amplifiers', IEEE TMTT 60(6):1755-1763, 2012 (Ampleon reprint)"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "now covering a range from 1 MHz up to 4 GHz"
+  supply_v:
+    value: [28.0, 50.0]
+    units: "V (30 V mainstream base station; 50 V broadcast/ISM)"
+    source: "Theeuwen & Qureshi, IEEE TMTT 2012"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "supply voltage ... is around 30 V ... development of a 50-V supply voltage LDMOS"
+  breakdown_v:
+    value: [70.0, 120.0]
+    units: "V (30-V and 50-V technology respectively)"
+    source: "Theeuwen & Qureshi, IEEE TMTT 2012"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "typical breakdown voltage of 70 and 120 V, respectively"
+  pa_psat_w_per_mm:
+    value: [1.4, 2.0]
+    units: "W/mm (on-wafer; 30-V and 50-V technology)"
+    source: "Theeuwen & Qureshi, IEEE TMTT 2012"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "power density of 30-V LDMOS is 1.4 W/mm ... more than 2 W/mm for this 50-V LDMOS"
+  peak_drain_eff_pct:
+    value: [62.0, 72.0]
+    units: "% (72% max; 68% at 3 GHz; 62% at 4 GHz, class-AB on-wafer)"
+    source: "Theeuwen & Qureshi, IEEE TMTT 2012"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "maximum drain efficiency ... is 72% ... 68% at 3 GHz ... falls off to 62% at 4 GHz"
+  doherty_backoff_eff_pct:
+    value: 47.0
+    units: "% at 7.5 dB back-off (700 W peak, 1.8 GHz, 3-way Doherty)"
+    source: "Theeuwen & Qureshi, IEEE TMTT 2012"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "7.5-dB back-off efficiency of 47% at 1.8 GHz with a peak power of 700 W"
+  gain_db_at_2ghz:
+    value: 21.0
+    units: "dB (15 dB at 4 GHz, -6 dB/octave)"
+    source: "Theeuwen & Qureshi, IEEE TMTT 2012"
+    url: "https://www.ampleon.com/documents/published-paper/AMP-PP-2017-0503.pdf.pdf"
+    accessed: "2026-08-11"
+    kind: "journal paper"
+    confidence: "high"
+    quote: "The gain at 2 GHz is 21 dB, while the gain at 4 GHz is 15 dB"
+  cost_class: "low (named alongside high gain, efficiency, reliability as LDMOS strengths; Theeuwen & Qureshi 2012)"

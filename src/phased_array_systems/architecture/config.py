@@ -423,8 +423,12 @@ class Architecture(BaseModel):
         """
         if self.trm is None:
             return self
-        from phased_array_systems.models.rf.trm import derive_rf_chain_fields
+        from phased_array_systems.models.rf.trm import (
+            apply_technology_defaults,
+            derive_rf_chain_fields,
+        )
 
+        self.trm = apply_technology_defaults(self.trm)
         derived = derive_rf_chain_fields(self.trm, self.rf)
         if derived:
             self.rf = self.rf.model_copy(update=derived)

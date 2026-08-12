@@ -81,6 +81,46 @@ def chain_rf_stages(chain: list[TRComponent]) -> list[RFStage]:
     ]
 
 
+def apply_technology_defaults(trm: TRModuleConfig) -> TRModuleConfig:
+    """Fill component parameters a technology choice implies.
+
+    For a TRM with ``technology`` set, components still carrying their
+    field defaults get catalog midpoints: an ``lna``'s noise figure and
+    IIP3, and a ``pa``'s P1dB (from the catalog's saturated power class —
+    an optimistic upper bound, documented in the catalog). A value the
+    user set explicitly (pydantic ``model_fields_set``) is never touched.
+    Returns a new TRModuleConfig; the input is not mutated.
+    """
+    if trm.technology is None:
+        return trm
+    from phased_array_systems.models.rf.technology import technology_defaults
+
+    defaults = technology_defaults(trm.technology)
+
+    def fill(component):  # type: ignore[no-untyped-def]
+        explicit = component.model_fields_set
+        updates = {}
+        if component.name == "lna":
+            if "noise_figure_db" not in explicit and "lna_nf_db" in defaults:
+                updates["noise_figure_db"] = defaults["lna_nf_db"]
+            if "iip3_dbm" not in explicit and "lna_iip3_dbm" in defaults:
+                updates["iip3_dbm"] = defaults["lna_iip3_dbm"]
+        if (
+            component.name == "pa"
+            and "p1db_dbm" not in explicit
+            and "pa_p1db_dbm" in defaults
+        ):
+            updates["p1db_dbm"] = defaults["pa_p1db_dbm"]
+        return component.model_copy(update=updates) if updates else component
+
+    return trm.model_copy(
+        update={
+            "tx_chain": [fill(c) for c in trm.tx_chain],
+            "rx_chain": [fill(c) for c in trm.rx_chain],
+        }
+    )
+
+
 def derive_rf_chain_fields(trm: TRModuleConfig, rf: RFChainConfig) -> dict[str, object]:
     """Fields of RFChainConfig that a T/R module description implies.
 
