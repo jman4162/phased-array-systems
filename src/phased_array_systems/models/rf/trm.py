@@ -105,11 +105,7 @@ def apply_technology_defaults(trm: TRModuleConfig) -> TRModuleConfig:
                 updates["noise_figure_db"] = defaults["lna_nf_db"]
             if "iip3_dbm" not in explicit and "lna_iip3_dbm" in defaults:
                 updates["iip3_dbm"] = defaults["lna_iip3_dbm"]
-        if (
-            component.name == "pa"
-            and "p1db_dbm" not in explicit
-            and "pa_p1db_dbm" in defaults
-        ):
+        if component.name == "pa" and "p1db_dbm" not in explicit and "pa_p1db_dbm" in defaults:
             updates["p1db_dbm"] = defaults["pa_p1db_dbm"]
         return component.model_copy(update=updates) if updates else component
 
