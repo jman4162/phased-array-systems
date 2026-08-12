@@ -279,6 +279,160 @@ def cascade_oip3(
     return result
 
 
+def cascade_p1db(
+    stages: list[tuple[float, float]],
+) -> dict[str, float]:
+    """Calculate cascaded input-referred 1 dB compression point.
+
+    Uses the reciprocal-sum approximation, the same form as the IIP3 cascade:
+
+        1/P1dB_in,total = 1/P1dB_in,1 + G1/P1dB_in,2 + G1*G2/P1dB_in,3 + ...
+
+    (linear power). This assumes stage compressions combine independently,
+    which is the standard first-order bookkeeping approximation; a driven
+    stage near saturation compresses slightly earlier than this predicts.
+
+    Args:
+        stages: List of (gain_db, p1db_in_dbm) tuples for each stage
+
+    Returns:
+        Dictionary with:
+            - ip1db_dbm: Cascaded input-referred P1dB in dBm
+            - op1db_dbm: Cascaded output-referred P1dB (input P1dB + gain - 1)
+            - total_gain_db: Cascaded gain
+    """
+    if not stages:
+        return {"ip1db_dbm": float("inf"), "op1db_dbm": float("inf"), "total_gain_db": 0}
+
+    gains_linear = [10 ** (g / 10) for g, _ in stages]
+    p1dbs_linear = [10 ** (p / 10) for _, p in stages]
+
+    inv_total = 1 / p1dbs_linear[0]
+    cumulative_gain = gains_linear[0]
+    for i in range(1, len(stages)):
+        inv_total += cumulative_gain / p1dbs_linear[i]
+        cumulative_gain *= gains_linear[i]
+
+    ip1db_dbm = 10 * math.log10(1 / inv_total)
+    total_gain_db = sum(g for g, _ in stages)
+    return {
+        "ip1db_dbm": ip1db_dbm,
+        # At the 1 dB compression point the chain delivers gain - 1 dB.
+        "op1db_dbm": ip1db_dbm + total_gain_db - 1.0,
+        "total_gain_db": total_gain_db,
+    }
+
+
+def rapp_compression_db(
+    input_power_dbm: float,
+    ip1db_dbm: float,
+    smoothness: float = 2.0,
+) -> float:
+    """Gain compression (dB, >= 0) at an operating point, Rapp soft limiter.
+
+    The Rapp AM/AM model on power quantities:
+
+        P_out = G * P_in / (1 + (G * P_in / P_sat)^p)^(1/p)
+
+    with P_sat chosen in closed form so that the 1 dB compression point sits
+    exactly at *ip1db_dbm*: r = (10^(0.1 p) - 1)^(1/p) and
+    P_sat = linear(op1db) / r. At input backoffs of 10 dB or more the
+    compression is negligible; at the P1dB point it is exactly 1 dB by
+    construction.
+
+    Args:
+        input_power_dbm: Operating input power (dBm)
+        ip1db_dbm: Input-referred 1 dB compression point (dBm)
+        smoothness: Rapp smoothness parameter p (2.0 is a typical solid-state
+            PA knee; larger is sharper)
+
+    Returns:
+        Compression in dB (subtract from the linear-gain output power).
+    """
+    p = smoothness
+    # Ratio of drive to saturation drive that yields exactly 1 dB compression.
+    r_1db = (10 ** (0.1 * p) - 1.0) ** (1.0 / p)
+    # Drive relative to the 1 dB point, then relative to saturation.
+    drive_rel_sat = r_1db * 10 ** ((input_power_dbm - ip1db_dbm) / 10.0)
+    return 10.0 / p * math.log10(1.0 + drive_rel_sat**p)
+
+
+def compression_check(
+    stages: list[RFStage],
+    input_power_dbm: float,
+) -> dict[str, float | str | list[float]]:
+    """Check each stage's drive level against its output P1dB.
+
+    Tracks linear levels through the chain (the same walk cascade_analysis
+    does) and reports per-stage headroom to op1db_dbm and the binding stage.
+
+    Args:
+        stages: RFStage list in signal-flow order
+        input_power_dbm: Operating input power (dBm)
+
+    Returns:
+        Dictionary with:
+            - stage_headroom_db: output-P1dB headroom per stage (list)
+            - min_headroom_db: the worst headroom
+            - binding_stage: name of the stage with least headroom
+            - compressed: True when any stage output exceeds its op1db
+    """
+    level = input_power_dbm
+    headrooms: list[float] = []
+    names: list[str] = []
+    for stage in stages:
+        level += stage.gain_db
+        headrooms.append(stage.op1db_dbm - level)
+        names.append(stage.name)
+    if not headrooms:
+        return {
+            "stage_headroom_db": [],
+            "min_headroom_db": float("inf"),
+            "binding_stage": "",
+            "compressed": False,
+        }
+    idx = int(min(range(len(headrooms)), key=headrooms.__getitem__))
+    return {
+        "stage_headroom_db": headrooms,
+        "min_headroom_db": headrooms[idx],
+        "binding_stage": names[idx],
+        "compressed": headrooms[idx] < 0.0,
+    }
+
+
+def sndr_with_imd3(
+    snr_db: float,
+    carrier_power_dbm: float,
+    iip3_dbm: float,
+) -> dict[str, float]:
+    """Combine thermal SNR with two-tone third-order distortion.
+
+    IM3 products sit 2*(IIP3 - P_in) below the carrier (per-tone two-tone
+    approximation), so:
+
+        imd3_dbc = 2 * (iip3_dbm - carrier_power_dbm)
+        sndr = -10 log10(10^(-snr/10) + 10^(-imd3_dbc/10))
+
+    EVM follows as the RMS error-vector fraction of an ideal constellation
+    limited by that SNDR: evm_rms = 10^(-sndr/20).
+
+    Args:
+        snr_db: Thermal signal-to-noise ratio (dB)
+        carrier_power_dbm: Operating carrier power at the chain input (dBm)
+        iip3_dbm: Cascaded input-referred IP3 (dBm)
+
+    Returns:
+        Dictionary with sndr_db, imd3_dbc, evm_rms_pct.
+    """
+    imd3_dbc = 2.0 * (iip3_dbm - carrier_power_dbm)
+    sndr_db = -10.0 * math.log10(10 ** (-snr_db / 10.0) + 10 ** (-imd3_dbc / 10.0))
+    return {
+        "sndr_db": sndr_db,
+        "imd3_dbc": imd3_dbc,
+        "evm_rms_pct": 100.0 * 10 ** (-sndr_db / 20.0),
+    }
+
+
 def sfdr_from_iip3(
     iip3_dbm: float,
     noise_floor_dbm_hz: float,
@@ -444,6 +598,8 @@ def cascade_analysis(
     # Cascade calculations
     nf_result = friis_noise_figure(nf_stages)
     iip3_result = cascade_iip3(iip3_stages)
+    p1db_result = cascade_p1db([(s.gain_db, s.p1db_dbm) for s in stages])
+    compression = compression_check(stages, input_power_dbm)
 
     # MDS
     mds_result = mds_from_noise_figure(
@@ -477,6 +633,11 @@ def cascade_analysis(
         # Linearity
         "iip3_dbm": iip3_result["iip3_dbm"],
         "oip3_dbm": iip3_result["oip3_dbm"],
+        "ip1db_dbm": p1db_result["ip1db_dbm"],
+        "op1db_dbm": p1db_result["op1db_dbm"],
+        "min_p1db_headroom_db": compression["min_headroom_db"],
+        "p1db_binding_stage": compression["binding_stage"],
+        "compressed": compression["compressed"],
         # Dynamic range
         "sfdr_db": sfdr_result["sfdr_db"],
         "mds_dbm": mds_result["mds_dbm"],

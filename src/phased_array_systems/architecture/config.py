@@ -188,6 +188,23 @@ class RFChainConfig(BaseModel):
         default=None,
         description="RX chain stages: list of {name, gain_db, nf_db, iip3_dbm, p1db_dbm}",
     )
+    tx_stages: list[dict[str, float | str]] | None = Field(
+        default=None,
+        description="TX chain stages (driver to antenna): same shape as rx_stages",
+    )
+    pa_op1db_dbm_per_elem: float | None = Field(
+        default=None,
+        description=(
+            "Per-element PA output P1dB (dBm). When set, the delivered "
+            "per-element power follows a Rapp soft limiter instead of the "
+            "commanded tx_power_w_per_elem; None keeps the linear behavior."
+        ),
+    )
+    pa_compression_smoothness: float = Field(
+        default=2.0,
+        gt=0,
+        description="Rapp smoothness parameter for the PA compression model",
+    )
 
     @field_validator("pa_efficiency")
     @classmethod

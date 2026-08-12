@@ -736,8 +736,9 @@ def test_n_failed_counts_failures_not_survivors():
         scan_angle_deg=0.0,
     )
     arch = Architecture(
-        array=ArrayConfig(nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5,
-                          enforce_subarray_constraint=False),
+        array=ArrayConfig(
+            nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5, enforce_subarray_constraint=False
+        ),
         rf=RFChainConfig(tx_power_w_per_elem=1.0),
     )
     metrics = PhasedArrayAdapter(use_analytical_fallback=False).evaluate(

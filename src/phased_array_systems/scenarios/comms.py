@@ -54,6 +54,18 @@ class CommsLinkScenario(ScenarioBase):
     elevation_deg: float = Field(
         default=90.0, ge=0, le=90, description="Link elevation angle (deg, 90=zenith)"
     )
+    tx_backoff_db: float = Field(
+        default=0.0,
+        ge=0,
+        description="TX output backoff from the commanded power (dB), e.g. waveform PAPR headroom",
+    )
+    nonlinear_impairments: bool = Field(
+        default=False,
+        description=(
+            "When True and the RX cascade provides IIP3, the link margin uses "
+            "SNDR (thermal + IM3) instead of thermal-only SNR"
+        ),
+    )
     # Manual loss overrides (additive to computed losses)
     atmospheric_loss_db: float = Field(default=0.0, ge=0, description="Atmospheric loss (dB)")
     rain_loss_db: float = Field(default=0.0, ge=0, description="Rain loss margin (dB)")

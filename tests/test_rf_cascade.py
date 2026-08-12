@@ -1,5 +1,7 @@
 """Tests for RF cascade model functions."""
 
+import math
+
 import pytest
 
 from phased_array_systems.models.rf.cascade import (
@@ -220,3 +222,180 @@ class TestCascadeAnalysis:
         """Empty stages list should return empty dict."""
         result = cascade_analysis([])
         assert result == {}
+
+
+class TestCascadeP1dB:
+    """Tests for cascaded 1 dB compression point."""
+
+    def test_single_stage(self):
+        from phased_array_systems.models.rf.cascade import cascade_p1db
+
+        result = cascade_p1db([(20.0, -10.0)])
+        assert result["ip1db_dbm"] == pytest.approx(-10.0, abs=1e-9)
+        assert result["op1db_dbm"] == pytest.approx(-10.0 + 20.0 - 1.0, abs=1e-9)
+
+    def test_two_stage_hand_computed(self):
+        """Hand computation, reciprocal-sum form.
+
+        Stage 1: G = 20 dB (x100), IP1dB = -10 dBm (0.1 mW)
+        Stage 2: G = 10 dB (x10),  IP1dB = +10 dBm (10 mW)
+        1/P = 1/0.1 + 100/10 = 20  ->  P = 0.05 mW = -13.0103 dBm
+        """
+        from phased_array_systems.models.rf.cascade import cascade_p1db
+
+        result = cascade_p1db([(20.0, -10.0), (10.0, 10.0)])
+        assert result["ip1db_dbm"] == pytest.approx(10 * math.log10(0.05), abs=1e-9)
+        assert result["total_gain_db"] == pytest.approx(30.0)
+        assert result["op1db_dbm"] == pytest.approx(10 * math.log10(0.05) + 29.0, abs=1e-9)
+
+    def test_late_stage_dominates_with_gain_in_front(self):
+        """High gain ahead of a weak stage drags the cascade P1dB down."""
+        from phased_array_systems.models.rf.cascade import cascade_p1db
+
+        weak_last = cascade_p1db([(30.0, 20.0), (0.0, 0.0)])
+        # Input-referred: the last stage's 0 dBm P1dB seen through 30 dB of
+        # gain caps the cascade near -30 dBm
+        assert weak_last["ip1db_dbm"] < -29.0
+
+    def test_empty_is_ideal(self):
+        from phased_array_systems.models.rf.cascade import cascade_p1db
+
+        result = cascade_p1db([])
+        assert math.isinf(result["ip1db_dbm"])
+
+
+class TestRappCompression:
+    """Tests for the Rapp soft-limiter compression model."""
+
+    def test_exactly_1db_at_p1db(self):
+        from phased_array_systems.models.rf.cascade import rapp_compression_db
+
+        for p in (1.0, 2.0, 3.0, 6.0):
+            comp = rapp_compression_db(-5.0, -5.0, smoothness=p)
+            assert comp == pytest.approx(1.0, abs=1e-12)
+
+    def test_negligible_at_large_backoff(self):
+        from phased_array_systems.models.rf.cascade import rapp_compression_db
+
+        comp = rapp_compression_db(-25.0, -5.0, smoothness=2.0)
+        # Hand value: r^2 = 10^0.2 - 1 = 0.5848932; x = r^2 * 10^-4;
+        # 5*log10(1 + x) = 1.27e-4 dB
+        assert comp == pytest.approx(5 * math.log10(1 + 0.5848932 * 1e-4), rel=1e-4)
+        assert comp < 0.001
+
+    def test_monotonic_in_drive(self):
+        from phased_array_systems.models.rf.cascade import rapp_compression_db
+
+        drives = [-20.0, -10.0, -5.0, 0.0, 5.0]
+        comps = [rapp_compression_db(d, -5.0) for d in drives]
+        assert all(b > a for a, b in zip(comps, comps[1:], strict=False))
+
+    def test_deep_saturation_output_clamps(self):
+        """Far past P1dB the output power approaches Psat: every extra input
+        dB is eaten by compression."""
+        from phased_array_systems.models.rf.cascade import rapp_compression_db
+
+        out_a = 40.0 - rapp_compression_db(40.0, -5.0)
+        out_b = 50.0 - rapp_compression_db(50.0, -5.0)
+        assert out_b - out_a == pytest.approx(0.0, abs=0.01)
+
+
+class TestCompressionCheck:
+    """Tests for per-stage compression headroom."""
+
+    def test_binding_stage_and_headroom(self):
+        """driver: G=20, IP1dB=0 (OP1dB=20); pa: G=10, IP1dB=15 (OP1dB=25).
+        At -10 dBm input: level 10 after driver (headroom 10),
+        level 20 after pa (headroom 5) -> pa binds."""
+        from phased_array_systems.models.rf.cascade import RFStage, compression_check
+
+        stages = [
+            RFStage(name="driver", gain_db=20.0, noise_figure_db=5.0, p1db_dbm=0.0),
+            RFStage(name="pa", gain_db=10.0, noise_figure_db=8.0, p1db_dbm=15.0),
+        ]
+        result = compression_check(stages, -10.0)
+        assert result["stage_headroom_db"] == pytest.approx([10.0, 5.0])
+        assert result["min_headroom_db"] == pytest.approx(5.0)
+        assert result["binding_stage"] == "pa"
+        assert result["compressed"] is False
+
+    def test_overdrive_flags_compressed(self):
+        from phased_array_systems.models.rf.cascade import RFStage, compression_check
+
+        stages = [
+            RFStage(name="driver", gain_db=20.0, noise_figure_db=5.0, p1db_dbm=0.0),
+            RFStage(name="pa", gain_db=10.0, noise_figure_db=8.0, p1db_dbm=15.0),
+        ]
+        result = compression_check(stages, 7.0)
+        # After driver: 27 dBm vs OP1dB 20 -> -7 dB headroom
+        # After pa: 37 dBm vs OP1dB 25 -> -12 dB headroom (binds)
+        assert result["stage_headroom_db"] == pytest.approx([-7.0, -12.0])
+        assert result["min_headroom_db"] == pytest.approx(-12.0)
+        assert result["binding_stage"] == "pa"
+        assert result["compressed"] is True
+
+    def test_empty_chain(self):
+        from phased_array_systems.models.rf.cascade import compression_check
+
+        result = compression_check([], 0.0)
+        assert result["compressed"] is False
+        assert math.isinf(result["min_headroom_db"])
+
+
+class TestSndrWithImd3:
+    """Tests for SNDR combining thermal noise with IM3."""
+
+    def test_thermal_dominated(self):
+        """IM3 60 dB down barely moves a 20 dB SNR."""
+        from phased_array_systems.models.rf.cascade import sndr_with_imd3
+
+        result = sndr_with_imd3(20.0, -40.0, -10.0)
+        assert result["imd3_dbc"] == pytest.approx(60.0)
+        # -10log10(10^-2 + 10^-6) = 19.99957 dB
+        assert result["sndr_db"] == pytest.approx(-10 * math.log10(1e-2 + 1e-6), abs=1e-9)
+        assert result["sndr_db"] < 20.0
+
+    def test_equal_contributions_cost_3db(self):
+        from phased_array_systems.models.rf.cascade import sndr_with_imd3
+
+        # imd3_dbc = 2*(iip3 - carrier) = 20 dB, equal to SNR
+        result = sndr_with_imd3(20.0, -20.0, -10.0)
+        assert result["imd3_dbc"] == pytest.approx(20.0)
+        assert result["sndr_db"] == pytest.approx(20.0 - 10 * math.log10(2), abs=1e-9)
+
+    def test_evm_from_sndr(self):
+        from phased_array_systems.models.rf.cascade import sndr_with_imd3
+
+        result = sndr_with_imd3(20.0, -40.0, -10.0)
+        assert result["evm_rms_pct"] == pytest.approx(
+            100 * 10 ** (-result["sndr_db"] / 20), rel=1e-12
+        )
+
+    def test_ideal_iip3_reduces_to_snr(self):
+        from phased_array_systems.models.rf.cascade import sndr_with_imd3
+
+        result = sndr_with_imd3(20.0, -60.0, 100.0)
+        assert result["sndr_db"] == pytest.approx(20.0, abs=1e-9)
+
+
+class TestCascadeAnalysisP1dBKeys:
+    """cascade_analysis emits the new P1dB / compression keys."""
+
+    def test_keys_present_and_consistent(self):
+        stages = [
+            RFStage(name="lna", gain_db=20.0, noise_figure_db=1.5, iip3_dbm=-5.0, p1db_dbm=-15.0),
+            RFStage(name="mixer", gain_db=-7.0, noise_figure_db=7.0, iip3_dbm=15.0, p1db_dbm=5.0),
+        ]
+        result = cascade_analysis(stages, bandwidth_hz=1e6, input_power_dbm=-60.0)
+        for key in (
+            "ip1db_dbm",
+            "op1db_dbm",
+            "min_p1db_headroom_db",
+            "p1db_binding_stage",
+            "compressed",
+        ):
+            assert key in result
+        # At -60 dBm drive nothing compresses
+        assert result["compressed"] is False
+        # Cascade P1dB is input-referred below the first stage's own P1dB
+        assert result["ip1db_dbm"] < -15.0

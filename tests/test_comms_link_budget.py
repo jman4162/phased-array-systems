@@ -355,3 +355,105 @@ class TestComputeLinkMargin:
         # SNR and margin should be computed
         assert "snr_db" in result
         assert "margin_db" in result
+
+
+class TestNonlinearLink:
+    """Backoff, PA compression, and SNDR wiring in the link budget."""
+
+    @pytest.fixture
+    def arch(self):
+        return Architecture(
+            array=ArrayConfig(
+                nx=8,
+                ny=8,
+                dx_lambda=0.5,
+                dy_lambda=0.5,
+                enforce_subarray_constraint=False,
+            ),
+            rf=RFChainConfig(
+                tx_power_w_per_elem=1.0,  # 30 dBm per element
+                pa_efficiency=0.3,
+                noise_figure_db=3.0,
+                feed_loss_db=1.0,
+            ),
+        )
+
+    def _scenario(self, **overrides):
+        base = {
+            "freq_hz": 10e9,
+            "bandwidth_hz": 10e6,
+            "range_m": 100e3,
+            "required_snr_db": 10.0,
+            "rx_antenna_gain_db": 0.0,
+            "rx_noise_temp_k": 290.0,
+        }
+        base.update(overrides)
+        return CommsLinkScenario(**base)
+
+    def test_defaults_unchanged(self, arch):
+        """With defaults the new fields are inert: no compression, margin
+        equals thermal SNR margin, EVM consistent with SNR."""
+        model = CommsLinkModel()
+        m = model.evaluate(arch, self._scenario(), {"g_peak_db": 25.0})
+        assert m["pa_compression_db"] == 0.0
+        assert m["sndr_rx_db"] == m["snr_rx_db"]
+        assert m["link_margin_db"] == pytest.approx(m["snr_rx_db"] - 10.0)
+
+    def test_backoff_reduces_eirp_db_for_db(self, arch):
+        model = CommsLinkModel()
+        ctx = {"g_peak_db": 25.0}
+        m0 = model.evaluate(arch, self._scenario(), ctx)
+        m3 = model.evaluate(arch, self._scenario(tx_backoff_db=3.0), ctx)
+        assert m0["eirp_dbw"] - m3["eirp_dbw"] == pytest.approx(3.0)
+        assert m0["link_margin_db"] - m3["link_margin_db"] == pytest.approx(3.0)
+
+    def test_pa_compression_at_p1db_costs_1db(self, arch):
+        """Element drive (30 dBm) exactly at the PA's OP1dB: Rapp gives
+        exactly 1 dB of compression."""
+        model = CommsLinkModel()
+        arch.rf.pa_op1db_dbm_per_elem = 30.0
+        m = model.evaluate(arch, self._scenario(), {"g_peak_db": 25.0})
+        assert m["pa_compression_db"] == pytest.approx(1.0, abs=1e-9)
+
+    def test_backed_off_pa_barely_compresses(self, arch):
+        model = CommsLinkModel()
+        arch.rf.pa_op1db_dbm_per_elem = 40.0  # 10 dB above the 30 dBm drive
+        m = model.evaluate(arch, self._scenario(), {"g_peak_db": 25.0})
+        assert 0.0 < m["pa_compression_db"] < 0.05
+
+    def test_backoff_moves_operating_point_off_the_knee(self, arch):
+        """Backoff reduces drive, so compression drops too."""
+        model = CommsLinkModel()
+        arch.rf.pa_op1db_dbm_per_elem = 30.0
+        ctx = {"g_peak_db": 25.0}
+        m0 = model.evaluate(arch, self._scenario(), ctx)
+        m6 = model.evaluate(arch, self._scenario(tx_backoff_db=6.0), ctx)
+        assert m6["pa_compression_db"] < m0["pa_compression_db"]
+
+    def test_sndr_flag_off_ignores_iip3(self, arch):
+        model = CommsLinkModel()
+        ctx = {"g_peak_db": 25.0, "cascade_iip3_dbm": -20.0}
+        m = model.evaluate(arch, self._scenario(), ctx)
+        assert m["sndr_rx_db"] == m["snr_rx_db"]
+
+    def test_sndr_flag_on_degrades_margin(self, arch):
+        """With nonlinear_impairments on and a finite cascade IIP3, the
+        margin comes from SNDR and sits below the thermal-only margin."""
+        model = CommsLinkModel()
+        scenario = self._scenario(nonlinear_impairments=True)
+        m0 = model.evaluate(arch, self._scenario(), {"g_peak_db": 25.0})
+        # Pick an IIP3 close to the received power so IM3 bites hard
+        rx_dbm = m0["rx_power_dbw"] + 30.0
+        ctx = {"g_peak_db": 25.0, "cascade_iip3_dbm": rx_dbm + 5.0}
+        m = model.evaluate(arch, scenario, ctx)
+        assert m["imd3_dbc"] == pytest.approx(10.0)
+        assert m["sndr_rx_db"] < m["snr_rx_db"]
+        assert m["link_margin_db"] == pytest.approx(m["sndr_rx_db"] - 10.0)
+        assert m["link_margin_db"] < m0["link_margin_db"]
+
+    def test_sndr_flag_on_without_iip3_falls_back_to_snr(self, arch):
+        model = CommsLinkModel()
+        scenario = self._scenario(nonlinear_impairments=True)
+        m = model.evaluate(arch, scenario, {"g_peak_db": 25.0})
+        assert m["sndr_rx_db"] == m["snr_rx_db"]
+        assert m["link_margin_db"] == pytest.approx(m["snr_rx_db"] - 10.0)

@@ -635,3 +635,80 @@ class TestThermalReliabilityCoupling:
         m = evaluate_case(self._arch(r_th=None), self._scenario())
         assert "junction_temp_c" not in m
         assert "trm_mtbf_hours" in m
+
+
+class TestTXCascadeIntegration:
+    """Tests for TX cascade integration in evaluate_case."""
+
+    @pytest.fixture
+    def tx_architecture(self):
+        return Architecture(
+            array=ArrayConfig(nx=8, ny=8, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(
+                tx_power_w_per_elem=1.0,  # 30 dBm at the element
+                noise_figure_db=3.0,
+                feed_loss_db=1.0,
+                tx_stages=[
+                    {"name": "driver", "gain_db": 20.0, "nf_db": 5.0, "p1db_dbm": 5.0},
+                    {"name": "pa", "gain_db": 13.0, "nf_db": 8.0, "p1db_dbm": 20.0},
+                ],
+            ),
+            cost=CostConfig(cost_per_elem_usd=100.0),
+        )
+
+    @pytest.fixture
+    def sample_scenario(self):
+        return CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+        )
+
+    def test_tx_cascade_metrics_present(self, tx_architecture, sample_scenario):
+        metrics = evaluate_case(tx_architecture, sample_scenario)
+        for key in (
+            "tx_cascade_gain_db",
+            "tx_cascade_op1db_dbm",
+            "tx_cascade_ip1db_dbm",
+            "tx_min_p1db_headroom_db",
+            "tx_p1db_binding_stage",
+            "tx_compressed",
+        ):
+            assert key in metrics
+
+    def test_tx_gain_is_sum(self, tx_architecture, sample_scenario):
+        metrics = evaluate_case(tx_architecture, sample_scenario)
+        assert metrics["tx_cascade_gain_db"] == pytest.approx(33.0)
+
+    def test_tx_headroom_hand_computed(self, tx_architecture, sample_scenario):
+        """30 dBm out through 33 dB gain -> -3 dBm chain input.
+        driver: level 17 vs OP1dB 25 -> headroom 8
+        pa: level 30 vs OP1dB 33 -> headroom 3 (binds)."""
+        metrics = evaluate_case(tx_architecture, sample_scenario)
+        assert metrics["tx_min_p1db_headroom_db"] == pytest.approx(3.0)
+        assert metrics["tx_p1db_binding_stage"] == "pa"
+        assert metrics["tx_compressed"] is False
+
+    def test_no_tx_stages_no_tx_metrics(self, sample_scenario):
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, noise_figure_db=3.0),
+            cost=CostConfig(cost_per_elem_usd=100.0),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        assert "tx_cascade_gain_db" not in metrics
+
+    def test_backoff_shifts_operating_point(self, tx_architecture, sample_scenario):
+        """3 dB scenario backoff lowers the drive level, so headroom grows
+        by exactly 3 dB."""
+        backed_off = CommsLinkScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=100e3,
+            required_snr_db=10.0,
+            tx_backoff_db=3.0,
+        )
+        m0 = evaluate_case(tx_architecture, sample_scenario)
+        m3 = evaluate_case(tx_architecture, backed_off)
+        assert m3["tx_min_p1db_headroom_db"] - m0["tx_min_p1db_headroom_db"] == pytest.approx(3.0)

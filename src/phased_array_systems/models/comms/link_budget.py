@@ -63,12 +63,25 @@ class CommsLinkModel:
                 - snr_rx_db: Received SNR (dB)
                 - link_margin_db: Link margin (dB)
         """
-        # Get transmit power
+        # Get transmit power. Commanded power backs off by the waveform's
+        # tx_backoff_db, then compresses through the Rapp soft limiter when a
+        # per-element PA P1dB is configured; both default off.
         n_elements = arch.array.n_elements
         tx_power_per_elem_w = arch.rf.tx_power_w_per_elem
-        tx_power_total_w = tx_power_per_elem_w * n_elements
-        tx_power_total_dbw = W_TO_DBW(tx_power_total_w)
-        tx_power_per_elem_dbw = W_TO_DBW(tx_power_per_elem_w)
+        tx_power_per_elem_dbm = W_TO_DBW(tx_power_per_elem_w) + 30.0 - scenario.tx_backoff_db
+        pa_compression_db = 0.0
+        if arch.rf.pa_op1db_dbm_per_elem is not None:
+            from phased_array_systems.models.rf.cascade import rapp_compression_db
+
+            # The configured op1db is output-referred for a unity-drive
+            # bookkeeping chain, so compare delivered power directly.
+            pa_compression_db = rapp_compression_db(
+                tx_power_per_elem_dbm,
+                arch.rf.pa_op1db_dbm_per_elem,
+                smoothness=arch.rf.pa_compression_smoothness,
+            )
+        tx_power_per_elem_dbw = tx_power_per_elem_dbm - 30.0 - pa_compression_db
+        tx_power_total_dbw = tx_power_per_elem_dbw + 10.0 * math.log10(n_elements)
 
         # Get antenna gain from context or compute approximate
         if "g_peak_db" in context:
@@ -152,12 +165,33 @@ class CommsLinkModel:
         # SNR
         snr_rx_db = rx_power_dbw - noise_power_dbw
 
-        # Link margin
-        link_margin_db = snr_rx_db - scenario.required_snr_db
+        # Optional nonlinearity: fold two-tone IM3 into an SNDR when the RX
+        # cascade provided an IIP3 and the scenario asks for it. Default off,
+        # so thermal-only behavior (and every recorded golden value) is
+        # unchanged.
+        sndr_rx_db = snr_rx_db
+        imd3_dbc = float("inf")
+        evm_rms_pct = 100.0 * 10 ** (-snr_rx_db / 20.0)
+        cascade_iip3 = context.get("cascade_iip3_dbm")
+        if scenario.nonlinear_impairments and isinstance(cascade_iip3, (int, float)):
+            from phased_array_systems.models.rf.cascade import sndr_with_imd3
+
+            rx_power_dbm = rx_power_dbw + 30.0
+            nonlin = sndr_with_imd3(snr_rx_db, rx_power_dbm, float(cascade_iip3))
+            sndr_rx_db = nonlin["sndr_db"]
+            imd3_dbc = nonlin["imd3_dbc"]
+            evm_rms_pct = nonlin["evm_rms_pct"]
+
+        # Link margin (against SNDR when nonlinearity is enabled)
+        link_margin_db = sndr_rx_db - scenario.required_snr_db
 
         return {
             "tx_power_total_dbw": tx_power_total_dbw,
             "tx_power_per_elem_dbw": tx_power_per_elem_dbw,
+            "pa_compression_db": pa_compression_db,
+            "sndr_rx_db": sndr_rx_db,
+            "imd3_dbc": imd3_dbc,
+            "evm_rms_pct": evm_rms_pct,
             "g_tx_db": g_tx_db,
             "eirp_dbw": eirp_dbw,
             "path_loss_db": total_path_loss_db,

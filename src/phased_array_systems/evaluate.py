@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -104,6 +105,50 @@ def evaluate_case(
         )
         # Override NF in context so link budget uses cascaded value
         context["cascade_nf_db"] = cascade_metrics["total_nf_db"]
+        # Expose IIP3 so the link budget can fold IM3 into an SNDR when the
+        # scenario enables nonlinear impairments
+        context["cascade_iip3_dbm"] = float(cascade_metrics["iip3_dbm"])
+
+    # TX cascade analysis (if tx_stages configured): gain, composite P1dB, and
+    # a per-stage compression check at the commanded per-element drive level
+    if arch.rf.tx_stages:
+        from phased_array_systems.models.rf.cascade import (
+            RFStage,
+            cascade_analysis,
+            compression_check,
+        )
+
+        tx_rf_stages = [
+            RFStage(
+                name=str(s.get("name", f"tx_stage_{i}")),
+                gain_db=float(s["gain_db"]),
+                noise_figure_db=float(s["nf_db"]),
+                iip3_dbm=float(s.get("iip3_dbm", 100.0)),
+                p1db_dbm=float(s.get("p1db_dbm", 100.0)),
+            )
+            for i, s in enumerate(arch.rf.tx_stages)
+        ]
+        bw = getattr(scenario, "bandwidth_hz", 1e6)
+        tx_cascade: dict[str, Any] = cascade_analysis(tx_rf_stages, bandwidth_hz=bw)
+        # Drive level into the TX chain: the commanded per-element power
+        # referred to the chain input (subtract the cascade gain), minus any
+        # scenario backoff
+        tx_out_dbm = 10.0 * math.log10(arch.rf.tx_power_w_per_elem * 1e3)
+        tx_out_dbm -= getattr(scenario, "tx_backoff_db", 0.0)
+        tx_in_dbm = tx_out_dbm - float(tx_cascade["total_gain_db"])
+        tx_comp = compression_check(tx_rf_stages, tx_in_dbm)
+        tx_min_headroom = tx_comp["min_headroom_db"]
+        assert isinstance(tx_min_headroom, float)
+        metrics.update(
+            {
+                "tx_cascade_gain_db": float(tx_cascade["total_gain_db"]),
+                "tx_cascade_op1db_dbm": float(tx_cascade["op1db_dbm"]),
+                "tx_cascade_ip1db_dbm": float(tx_cascade["ip1db_dbm"]),
+                "tx_min_p1db_headroom_db": tx_min_headroom,
+                "tx_p1db_binding_stage": str(tx_comp["binding_stage"]),
+                "tx_compressed": bool(tx_comp["compressed"]),
+            }
+        )
 
     # Reliability analysis (if configured)
     if arch.reliability is not None:
@@ -155,8 +200,6 @@ def evaluate_case(
 
     # Digital beamformer analysis (if configured)
     if arch.digital is not None:
-        import math
-
         from phased_array_systems.models.digital.bandwidth import (
             beamformer_operations,
             digital_beamformer_data_rate,
@@ -233,8 +276,6 @@ def evaluate_case(
             and scenario.search_az_extent_deg is not None
             and scenario.search_el_extent_deg is not None
         ):
-            import math
-
             from phased_array_systems.models.digital.scheduling import max_update_rate
 
             dwell_time_s = scenario.n_pulses / scenario.prf_hz
