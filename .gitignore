@@ -148,3 +148,6 @@ package_design_and_requirements.txt
 
 # slopcheck virtualenv
 scripts/.slopvenv/
+
+# Vendored EdgeFEM contract fixture is committed (refresh via scripts/refresh_edgefem_fixture.py)
+!tests/fixtures/edgefem/*.csv
