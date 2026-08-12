@@ -41,21 +41,38 @@ def compute_beamwidth(
             right_idx = i
             break
 
-    if left_idx == peak_idx or right_idx == peak_idx:
+    if left_idx == peak_idx and right_idx == peak_idx:
+        # Pattern never drops below the threshold on either side.
         return float("nan")
 
-    # Linear interpolation for more accurate crossing points
-    left_angle = np.interp(
-        threshold,
-        [pattern_db[left_idx], pattern_db[left_idx + 1]],
-        [angles_deg[left_idx], angles_deg[left_idx + 1]],
-    )
-    right_angle = np.interp(
-        threshold,
-        [pattern_db[right_idx], pattern_db[right_idx - 1]],
-        [angles_deg[right_idx], angles_deg[right_idx - 1]],
-    )
-
+    # Linear interpolation for more accurate crossing points. When the
+    # peak sits at (or the pattern never crosses on) one edge of the cut —
+    # routine for principal-plane cuts of a steered beam — mirror the side
+    # that was found instead of reporting NaN.
+    peak_angle = float(angles_deg[peak_idx])
+    left_angle: float | None = None
+    right_angle: float | None = None
+    if left_idx != peak_idx:
+        left_angle = float(
+            np.interp(
+                threshold,
+                [pattern_db[left_idx], pattern_db[left_idx + 1]],
+                [angles_deg[left_idx], angles_deg[left_idx + 1]],
+            )
+        )
+    if right_idx != peak_idx:
+        right_angle = float(
+            np.interp(
+                threshold,
+                [pattern_db[right_idx], pattern_db[right_idx - 1]],
+                [angles_deg[right_idx], angles_deg[right_idx - 1]],
+            )
+        )
+    if left_angle is None:
+        assert right_angle is not None
+        return float(2.0 * abs(right_angle - peak_angle))
+    if right_angle is None:
+        return float(2.0 * abs(peak_angle - left_angle))
     return float(abs(right_angle - left_angle))
 
 

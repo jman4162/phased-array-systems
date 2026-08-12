@@ -746,3 +746,30 @@ def test_n_failed_counts_failures_not_survivors():
     )
     # ~2% of 256 elements: a handful, never hundreds.
     assert 0 < metrics["n_failed_elements"] < 26
+
+
+def test_beamwidth_mirrors_when_peak_sits_on_the_cut_edge():
+    """A principal-plane cut of a steered beam can put the cut's peak at the
+    edge of the angle grid; the half-power width must mirror the side that
+    was found, not report NaN (surfaced by AEDL t3-002 at scan=30 deg)."""
+    import numpy as np
+
+    from phased_array_systems.models.antenna.metrics import compute_beamwidth
+
+    angles = np.linspace(0.0, 90.0, 181)
+    # Monotone falling pattern: peak exactly at index 0
+    pattern = -0.01 * angles**2
+    bw = compute_beamwidth(pattern, angles)
+    # -3 dB at angle sqrt(300) = 17.32 deg -> mirrored width 34.64 deg
+    assert np.isfinite(bw)
+    assert bw == pytest.approx(2 * np.sqrt(300.0), rel=1e-3)
+
+
+def test_beamwidth_nan_only_when_no_crossing_exists():
+    import numpy as np
+
+    from phased_array_systems.models.antenna.metrics import compute_beamwidth
+
+    angles = np.linspace(-10.0, 10.0, 101)
+    flat = np.zeros_like(angles)
+    assert np.isnan(compute_beamwidth(flat, angles))
