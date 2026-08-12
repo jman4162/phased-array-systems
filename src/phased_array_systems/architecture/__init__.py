@@ -7,6 +7,8 @@ from phased_array_systems.architecture.config import (
     DigitalConfig,
     ReliabilityConfig,
     RFChainConfig,
+    TRComponent,
+    TRModuleConfig,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "DigitalConfig",
     "RFChainConfig",
     "ReliabilityConfig",
+    "TRComponent",
+    "TRModuleConfig",
 ]

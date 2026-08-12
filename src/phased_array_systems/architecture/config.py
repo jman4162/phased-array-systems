@@ -214,6 +214,49 @@ class RFChainConfig(BaseModel):
         return v
 
 
+class TRComponent(BaseModel):
+    """One component inside a T/R module chain.
+
+    Component names should come from the reliability vocabulary (lna, pa,
+    phase_shifter, attenuator, switch, control_asic) so the same module
+    description feeds RF, power, and reliability models. Passive components
+    carry negative gain; their noise figure equals their loss.
+    """
+
+    name: str = Field(description="Component name (reliability vocabulary)")
+    gain_db: float = Field(default=0.0, description="Gain (dB, negative for loss)")
+    noise_figure_db: float = Field(default=0.0, ge=0, description="Noise figure (dB)")
+    p1db_dbm: float = Field(default=100.0, description="Input P1dB (dBm; 100 = ideal)")
+    iip3_dbm: float = Field(default=100.0, description="Input IP3 (dBm; 100 = ideal)")
+    dc_power_w: float = Field(default=0.0, ge=0, description="DC power draw (W)")
+
+
+class TRModuleConfig(BaseModel):
+    """A T/R module described as TX and RX component chains.
+
+    When an Architecture carries a TRModuleConfig, RF-chain aggregates the
+    models consume today (rx_stages/tx_stages, composite noise figure, RX DC
+    power, TX output P1dB) are derived from the chains. Any field set
+    explicitly on the RFChainConfig overrides its derived value.
+
+    Attributes:
+        tx_chain: TX components in signal-flow order (driver to antenna)
+        rx_chain: RX components in signal-flow order (antenna to output)
+        technology: Optional semiconductor technology name (catalog key)
+    """
+
+    tx_chain: list[TRComponent] = Field(default_factory=list)
+    rx_chain: list[TRComponent] = Field(default_factory=list)
+    technology: str | None = Field(
+        default=None, description="Semiconductor technology (e.g. GaN, SiGe)"
+    )
+
+    @property
+    def component_names(self) -> set[str]:
+        """All component names used across both chains."""
+        return {c.name for c in self.tx_chain} | {c.name for c in self.rx_chain}
+
+
 class CostConfig(BaseModel):
     """Configuration for cost modeling.
 
@@ -329,7 +372,26 @@ class Architecture(BaseModel):
     digital: DigitalConfig | None = Field(
         default=None, description="Digital beamformer configuration"
     )
+    trm: TRModuleConfig | None = Field(
+        default=None, description="T/R module description (derives RF chain aggregates)"
+    )
     name: str | None = Field(default=None, description="Architecture name")
+
+    @model_validator(mode="after")
+    def apply_trm_derivation(self) -> "Architecture":
+        """Fill RF-chain fields implied by the T/R module description.
+
+        Fields the user set explicitly on the RF chain win over derived
+        values. Without a trm section this is a no-op.
+        """
+        if self.trm is None:
+            return self
+        from phased_array_systems.models.rf.trm import derive_rf_chain_fields
+
+        derived = derive_rf_chain_fields(self.trm, self.rf)
+        if derived:
+            self.rf = self.rf.model_copy(update=derived)
+        return self
 
     @property
     def n_elements(self) -> int:
@@ -366,6 +428,8 @@ class Architecture(BaseModel):
             configs.append(("reliability", self.reliability))
         if self.digital is not None:
             configs.append(("digital", self.digital))
+        if self.trm is not None:
+            configs.append(("trm", self.trm))
         for prefix, config in configs:
             for key, value in config.model_dump().items():
                 flat[f"{prefix}.{key}"] = value
@@ -388,6 +452,7 @@ class Architecture(BaseModel):
         cost_dict = {}
         reliability_dict = {}
         digital_dict = {}
+        trm_dict = {}
         name = None
 
         for key, value in flat_dict.items():
@@ -403,6 +468,8 @@ class Architecture(BaseModel):
                 reliability_dict[key.replace("reliability.", "")] = value
             elif key.startswith("digital."):
                 digital_dict[key.replace("digital.", "")] = value
+            elif key.startswith("trm."):
+                trm_dict[key.replace("trm.", "")] = value
 
         return cls(
             array=ArrayConfig(**array_dict),
@@ -410,5 +477,6 @@ class Architecture(BaseModel):
             cost=CostConfig(**cost_dict) if cost_dict else CostConfig(),
             reliability=ReliabilityConfig(**reliability_dict) if reliability_dict else None,
             digital=DigitalConfig(**digital_dict) if digital_dict else None,
+            trm=TRModuleConfig(**trm_dict) if trm_dict else None,
             name=name,
         )
