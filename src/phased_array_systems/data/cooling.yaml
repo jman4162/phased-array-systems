@@ -1,0 +1,112 @@
+# Cooling-technology catalog: aperture heat-flux capability by approach.
+#
+# These are ORDER-OF-MAGNITUDE REGIME GATES, not sharp limits. Real capability
+# depends on coolant, allowed temperature rise, plate design, and altitude. The
+# catalog exists to answer one question a system model otherwise leaves silent:
+# "does the cooling approach this design assumes actually remove the heat flux
+# the design produces?" A junction-to-ambient thermal resistance is an
+# assertion about a cooling solution; this makes the assertion checkable.
+#
+# Every number carries `verified`:
+#   quoted   - I read this value in the cited primary source; `quote` is verbatim
+#   judgment - engineering-judgment gate consistent with the cited source's
+#              regime structure, but NOT a number quoted from it
+#
+# Honesty note on Mudawar 2001: it is the standard open review of high-heat-flux
+# schemes and its regime structure (natural convection < single-phase forced
+# convection < boiling; micro/mini-channel, jet and spray reaching the highest
+# fluxes) is used here. Its specific numerals could not be re-verified: the PDF
+# renders numbers as embedded objects that three separate text extractors drop.
+# Entries relying on it are therefore marked `judgment`, not `quoted`.
+#
+# Aperture heat flux is quoted on AVERAGE power. Cold-plate and coolant-loop
+# time constants are seconds; a radar PRI is microseconds, so the plate sees the
+# duty-cycle-averaged load. The junction does NOT average that way, which is a
+# separate (transient) problem this package does not model.
+#
+# Scope: these are APERTURE / panel-level fluxes. Die-level and HEMT hot-spot
+# fluxes are two to four orders of magnitude higher (see the ICECool figures in
+# `notes` below) and belong to MMIC and package design, not a system model.
+
+natural_convection:
+  name: "Natural convection to air"
+  max_heat_flux_w_per_cm2:
+    value: 0.05
+    units: "W/cm^2"
+    verified: "judgment"
+    source: >
+      Regime gate. Mudawar (2001) Fig. 1 places natural convection lowest among
+      the compared schemes, below single-phase liquid forced convection; the
+      DARPA MACE air-cooling target of 1 W/cm^2 (below) is described as an
+      aggressive goal for ACTIVELY moved air, bounding passive air well under it.
+    url: "https://engineering.purdue.edu/mudawar/files/articles-all/2001/2001_1.pdf"
+    accessed: "2026-08-13"
+    confidence: "low"
+    quote: "not a quoted threshold; see source note"
+
+forced_air:
+  name: "Forced air (fans, flow agitators, finned heat sinks)"
+  max_heat_flux_w_per_cm2:
+    value: 1.0
+    units: "W/cm^2"
+    verified: "quoted"
+    source: >
+      Bar-Cohen, Maurer & Felbinger, "DARPA's Intra/Interchip Enhanced Cooling
+      (ICECool) Program," CS MANTECH 2013, pp. 171-174. The MACE figure is a
+      research TARGET for advanced air cooling, so treating it as the ceiling of
+      the forced-air class is generous to the design being checked.
+    url: "https://csmantech.org/wp-content/acfrcwduploads/field_5e8cddf5ddd10/post_2558/050.pdf"
+    accessed: "2026-08-13"
+    confidence: "high"
+    quote: >
+      "The Microtechnologies for Air Cooled Exchangers (MACE) effort seeks to
+      develop heat sinks ... to reduce the thermal resistivity towards
+      10 cm2 K/W, meaning a 10 Kelvin temperature rise for a heat flux of
+      1 W/cm2, with a fan coefficient of performance (COP) approaching 30."
+
+liquid_cold_plate:
+  name: "Single-phase liquid cold plate"
+  max_heat_flux_w_per_cm2:
+    value: 20.0
+    units: "W/cm^2"
+    verified: "judgment"
+    source: >
+      Regime gate placed below the DARPA ACM figure: active/embedded cooling
+      modules are the technology pursued for fluxes ABOVE 25 W/cm^2, which
+      bounds conventional single-phase cold plates beneath that. Mudawar (2001)
+      places single-phase liquid forced convection between natural convection
+      and boiling.
+    url: "https://csmantech.org/wp-content/acfrcwduploads/field_5e8cddf5ddd10/post_2558/050.pdf"
+    accessed: "2026-08-13"
+    confidence: "medium"
+    quote: >
+      "... capable of reaching COPs of 2 for a 15K temperature reduction under
+      an applied heat flux greater than 25W/cm2, are being pursued under the
+      Active Cooling Module (ACM) effort."
+
+microchannel_two_phase:
+  name: "Microchannel / jet impingement / spray, two-phase"
+  max_heat_flux_w_per_cm2:
+    value: 100.0
+    units: "W/cm^2"
+    verified: "judgment"
+    source: >
+      Regime gate. Mudawar (2001) concludes that channel flow boiling,
+      micro/mini-channel, jet impingement and spray cooling each reach the
+      highest fluxes among the schemes surveyed, well above single-phase
+      approaches; the numeral could not be re-verified (see header note).
+      Crossing into this class is a program-risk decision, not a component swap.
+    url: "https://engineering.purdue.edu/mudawar/files/articles-all/2001/2001_1.pdf"
+    accessed: "2026-08-13"
+    confidence: "low"
+    quote: "not a quoted threshold; see source note"
+
+notes:
+  die_level_context: >
+    For scale, and to keep aperture-level numbers from being confused with
+    device-level ones: DARPA ICECool Applications targeted "1kW/cm2 and HEMT
+    (sub-millimeter 'hot spot') heat fluxes of 30kW/cm2 or greater, while
+    providing package-level heat removal density of greater than 2kW/cm3"
+    (CS MANTECH 2013, verified verbatim). Those are die and junction scales,
+    three to four orders of magnitude above aperture flux, and are governed by
+    spreading resistance through the module rather than by the array lattice.

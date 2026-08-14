@@ -166,6 +166,7 @@ nav:
     - Phased Array Fundamentals: theory/phased-arrays.md
     - Link Budget Equations: theory/link-budget-equations.md
     - Radar Equation: theory/radar-equation.md
+    - Aperture Power Density: theory/aperture-power-density.md
     - Pareto Optimization: theory/pareto-optimization.md
     - Model Validation: theory/validation.md
   - Contributing: contributing.md

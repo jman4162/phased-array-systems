@@ -257,6 +257,26 @@ class TRModuleConfig(BaseModel):
         return {c.name for c in self.tx_chain} | {c.name for c in self.rx_chain}
 
 
+class CoolingConfig(BaseModel):
+    """Declared cooling approach for the aperture.
+
+    Optional. When present, the evaluation checks the design's aperture heat
+    flux against what the named class can remove, which turns
+    ``ReliabilityConfig.thermal_resistance_c_per_w`` from an unchecked
+    assumption into a falsifiable one.
+    """
+
+    cooling_class: str = Field(
+        default="forced_air",
+        description="Cooling approach key from data/cooling.yaml",
+    )
+    max_heat_flux_w_per_cm2: float | None = Field(
+        default=None,
+        gt=0,
+        description="Override the catalog ceiling for this class (W/cm^2)",
+    )
+
+
 class CostConfig(BaseModel):
     """Configuration for cost modeling.
 
@@ -304,6 +324,13 @@ class ReliabilityConfig(BaseModel):
     )
     ambient_temp_c: float = Field(
         default=25.0, description="Ambient/coldplate temperature (C) for thermal estimate"
+    )
+    tj_max_c: float | None = Field(
+        default=None,
+        description=(
+            "Maximum rated junction temperature (C). None falls back to the "
+            "technology catalog when Architecture.trm names a technology."
+        ),
     )
     mttr_hours: float = Field(default=8.0, ge=0, description="Mean time to repair (hours)")
     mission_hours: float = Field(default=8760.0, gt=0, description="Mission duration (hours)")
@@ -409,6 +436,9 @@ class Architecture(BaseModel):
     digital: DigitalConfig | None = Field(
         default=None, description="Digital beamformer configuration"
     )
+    cooling: CoolingConfig | None = Field(
+        default=None, description="Declared cooling approach for feasibility checks"
+    )
     trm: TRModuleConfig | None = Field(
         default=None, description="T/R module description (derives RF chain aggregates)"
     )
@@ -469,6 +499,8 @@ class Architecture(BaseModel):
             configs.append(("reliability", self.reliability))
         if self.digital is not None:
             configs.append(("digital", self.digital))
+        if self.cooling is not None:
+            configs.append(("cooling", self.cooling))
         if self.trm is not None:
             configs.append(("trm", self.trm))
         for prefix, config in configs:
@@ -493,6 +525,7 @@ class Architecture(BaseModel):
         cost_dict = {}
         reliability_dict = {}
         digital_dict = {}
+        cooling_dict = {}
         trm_dict = {}
         name = None
 
@@ -509,6 +542,8 @@ class Architecture(BaseModel):
                 reliability_dict[key.replace("reliability.", "")] = value
             elif key.startswith("digital."):
                 digital_dict[key.replace("digital.", "")] = value
+            elif key.startswith("cooling."):
+                cooling_dict[key.replace("cooling.", "")] = value
             elif key.startswith("trm."):
                 trm_dict[key.replace("trm.", "")] = value
 
@@ -518,6 +553,7 @@ class Architecture(BaseModel):
             cost=CostConfig(**cost_dict) if cost_dict else CostConfig(),
             reliability=ReliabilityConfig(**reliability_dict) if reliability_dict else None,
             digital=DigitalConfig(**digital_dict) if digital_dict else None,
+            cooling=CoolingConfig(**cooling_dict) if cooling_dict else None,
             trm=TRModuleConfig(**trm_dict) if trm_dict else None,
             name=name,
         )

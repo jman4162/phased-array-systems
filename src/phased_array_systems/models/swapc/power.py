@@ -1,9 +1,42 @@
-"""Power consumption models for phased array systems."""
+"""Power consumption and aperture power-density models for phased arrays."""
 
 from typing import Any
 
 from phased_array_systems.architecture import Architecture
+from phased_array_systems.constants import C
 from phased_array_systems.types import MetricsDict, Scenario
+
+
+def aperture_geometry(arch: Architecture, scenario: Scenario) -> dict[str, float]:
+    """Physical unit-cell and aperture areas from the lambda-normalized lattice.
+
+    ``ArrayConfig`` stores spacing in wavelengths and carries no frequency, so
+    the physical scale comes from the scenario. The radiating aperture is
+    N*d per axis (each element owns a full cell), not the (N-1)*d tip-to-tip
+    extent of the element centres.
+
+    At half-wave spacing the cell is (lambda/2)^2, so cell area falls as
+    1/f^2: at fixed per-element dissipation, aperture heat flux rises as f^2.
+    That scaling is the reason these quantities matter, and it is asserted in
+    tests/test_aperture_density.py.
+
+    Returns:
+        Dictionary with cell_area_m2, cell_area_cm2, aperture_area_m2,
+        aperture_area_cm2, wavelength_m.
+    """
+    freq_hz = float(getattr(scenario, "freq_hz", 0.0))
+    if freq_hz <= 0:
+        raise ValueError("scenario must define a positive freq_hz for aperture geometry")
+    wavelength_m = C / freq_hz
+    cell_area_m2 = arch.array.dx_lambda * arch.array.dy_lambda * wavelength_m**2
+    aperture_area_m2 = cell_area_m2 * arch.array.n_elements
+    return {
+        "wavelength_m": wavelength_m,
+        "cell_area_m2": cell_area_m2,
+        "cell_area_cm2": cell_area_m2 * 1e4,
+        "aperture_area_m2": aperture_area_m2,
+        "aperture_area_cm2": aperture_area_m2 * 1e4,
+    }
 
 
 class PowerModel:
@@ -63,6 +96,12 @@ class PowerModel:
                 - duty_cycle: Transmit duty cycle
                 - pa_efficiency: Power amplifier efficiency
                 - n_elements: Number of array elements
+                - heat_dissipation_w: Heat to remove (DC in minus RF out)
+            When the scenario carries a frequency, also:
+                - wavelength_m, cell_area_cm2, aperture_area_m2
+                - heat_flux_w_per_cm2: dissipation per aperture area (average)
+                - radiated_power_density_peak_w_per_cm2
+                - radiated_power_density_avg_w_per_cm2
         """
         n_elements = arch.array.n_elements
         tx_power_per_elem = arch.rf.tx_power_w_per_elem
@@ -108,6 +147,32 @@ class PowerModel:
         # Prime power (including overhead)
         prime_power_w = dc_power_w * (1 + self.overhead_factor)
 
+        # Heat to remove, from the single shared energy balance. The average
+        # RF term is the right one here: what leaves as radiation over a
+        # duty cycle does not heat the array.
+        thermal = compute_thermal_load(dc_power_w, rf_avg_power_w)
+
+        # Aperture power densities. Heat flux uses AVERAGE power because the
+        # cold plate's time constant (seconds) is far longer than the PRI
+        # (microseconds), so the plate sees the duty-cycle-averaged load.
+        # The junction does not average that way; PAS has no thermal
+        # transient model and does not claim a peak junction flux.
+        density: dict[str, float] = {}
+        try:
+            geom = aperture_geometry(arch, scenario)
+        except ValueError:
+            geom = {}
+        if geom:
+            aperture_cm2 = geom["aperture_area_cm2"]
+            density = {
+                "wavelength_m": geom["wavelength_m"],
+                "cell_area_cm2": geom["cell_area_cm2"],
+                "aperture_area_m2": geom["aperture_area_m2"],
+                "heat_flux_w_per_cm2": thermal["heat_dissipation_w"] / aperture_cm2,
+                "radiated_power_density_peak_w_per_cm2": rf_power_w / aperture_cm2,
+                "radiated_power_density_avg_w_per_cm2": rf_avg_power_w / aperture_cm2,
+            }
+
         return {
             "rf_power_w": rf_power_w,
             "rf_avg_power_w": rf_avg_power_w,
@@ -121,6 +186,8 @@ class PowerModel:
             "duty_cycle": duty_cycle,
             "pa_efficiency": pa_efficiency,
             "n_elements": n_elements,
+            "heat_dissipation_w": thermal["heat_dissipation_w"],
+            **density,
         }
 
 
@@ -131,9 +198,15 @@ def compute_thermal_load(
 ) -> dict[str, float]:
     """Compute thermal dissipation for heat management.
 
+    The single energy balance in the package: ``PowerModel`` calls it for
+    ``heat_dissipation_w``, and the junction-temperature feed-forward in
+    ``evaluate`` consumes that metric rather than recomputing it.
+
     Args:
         dc_power_w: Total DC power consumption (W)
-        rf_power_w: RF power radiated (W)
+        rf_power_w: RF power leaving as radiation (W). Pass the duty-cycle
+            average for a thermal budget; passing peak overstates the
+            radiated fraction and understates the heat.
         additional_dissipation_w: Other heat sources (W)
 
     Returns:

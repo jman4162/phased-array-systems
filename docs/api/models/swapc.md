@@ -41,6 +41,11 @@ from phased_array_systems.models.swapc import PowerModel, CostModel
 |--------|-------|-------------|
 | `rf_power_w` | W | Total RF power (all elements) |
 | `dc_power_w` | W | DC power (RF / PA efficiency) |
+| `heat_dissipation_w` | Heat to remove (DC in minus average RF out) |
+| `heat_flux_w_per_cm2` | Dissipated power per aperture area (average power) |
+| `radiated_power_density_peak_w_per_cm2` | Radiated power per aperture area, peak |
+| `radiated_power_density_avg_w_per_cm2` | Radiated power per aperture area, average |
+| `aperture_area_m2`, `cell_area_cm2` | Physical aperture and unit-cell area |
 | `prime_power_w` | W | Total prime power |
 
 ### Cost Metrics

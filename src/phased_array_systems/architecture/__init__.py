@@ -3,6 +3,7 @@
 from phased_array_systems.architecture.config import (
     Architecture,
     ArrayConfig,
+    CoolingConfig,
     CostConfig,
     DigitalConfig,
     ReliabilityConfig,
@@ -14,6 +15,7 @@ from phased_array_systems.architecture.config import (
 __all__ = [
     "Architecture",
     "ArrayConfig",
+    "CoolingConfig",
     "CostConfig",
     "DigitalConfig",
     "RFChainConfig",

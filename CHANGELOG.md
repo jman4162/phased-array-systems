@@ -5,7 +5,56 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.12.0] - 2026-08-13
+
+### Added
+
+- **Aperture power density.** Nothing in the package computed power per unit
+  area: `ArrayConfig` is wavelength-normalized and carries no frequency, so a
+  physical aperture in m2 was never formed. `PowerModel` now emits
+  `aperture_area_m2`, `cell_area_cm2`, `heat_dissipation_w`,
+  `heat_flux_w_per_cm2`, and radiated power density at peak and average.
+  At half-wave spacing the cell is (lambda/2)^2, so heat flux rises as f^2 at
+  fixed per-element dissipation: the same T/R module is an air-cooled design at
+  X-band and a liquid-cooled one at Ka-band, which no other metric reveals.
+  Heat flux is quoted on average power (cold-plate time constants are seconds,
+  a PRI is microseconds); the junction does not average that way and no peak
+  junction claim is made.
+- **Cooling feasibility** (`Architecture.cooling`, `data/cooling.yaml`,
+  `models/swapc/cooling.py`). `thermal_resistance_c_per_w` is an assertion
+  about a cooling solution; this checks it against the flux the design actually
+  produces, emitting `cooling_class`, `max_heat_flux_w_per_cm2`,
+  `cooling_margin_w_per_cm2`, `cooling_feasible`. Thresholds are
+  order-of-magnitude regime gates, each recording whether its number was
+  **quoted** from a primary source or is a judgment gate consistent with one;
+  the forced-air and cold-plate anchors are quoted verbatim from DARPA
+  CS MANTECH 2013.
+- **Junction temperature limit.** `tj_max_c` sat in the technology catalog
+  unread, so a design could run its junction past the rated maximum and be
+  penalized only indirectly through Arrhenius derating. New
+  `ReliabilityConfig.tj_max_c` (falling back to the catalog when
+  `Architecture.trm` names a technology) emits `junction_temp_max_c`,
+  `junction_temp_margin_c`, `junction_temp_ok`.
+- **Power-aperture product** (`models/radar/search.py`):
+  `effective_aperture_m2` (A_e = G lambda^2/4pi, the direction never computed
+  before), `power_aperture_product_w_m2`, and for search scenarios the required
+  product from the Barton/Skolnik relation plus `power_aperture_margin_db`.
+  It pairs with heat flux deliberately: P*A (W*m^2) says how much power and
+  aperture the mission demands, heat flux (W/cm^2) constrains how tightly that
+  power may be packaged, and the two are dimensional inverses.
+
+### Fixed
+
+- `compute_thermal_load` was dead code with zero callers while `evaluate`
+  inlined a divergent copy of the same energy balance beside it. There is now
+  one balance: `PowerModel` calls it and the junction-temperature feed-forward
+  consumes the result. Junction temperature is numerically unchanged, pinned by
+  a regression test.
+
+### Changed
+
+- Golden snapshot regenerated for eight added metric keys. **Additive only:**
+  no existing value moved, verified by diffing the snapshot before and after.
 
 ## [0.11.0] - 2026-08-11
 

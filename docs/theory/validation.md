@@ -25,6 +25,8 @@ closed-form identities.
 | Phase quantization loss | Mailloux ch. 7 | 3 bits → 0.223 dB, Ruze form | 0.01 dB |
 | Taper loss | scipy window functions | Computed from actual windows (no fitted curves); Taylor −30 dB → 0.69 dB | exact |
 | Search timeline | Beam-packing identity | Frame time = ceil(Ω_search/Ω_beam)·(dwell+overhead), hand-reproduced | 1e-9 |
+| Aperture power density | Unit-cell geometry + energy balance | (lambda/2)^2 cell at 10 GHz = 2.2469 cm^2 hand value; f^2 scaling X to Ka = 9x; total/aperture equals per-element/cell | exact |
+| Power-aperture product | Barton/Skolnik search relation | A_e = G lambda^2/4pi; required P*A scales as R^4 and 1/t_s | exact |
 | Thermal-reliability coupling | Energy balance + Arrhenius | T_j = T_amb + R_th·(P_DC−P_RF)/N hand value; MTBF monotone in duty cycle | exact |
 
 ## Documented approximations

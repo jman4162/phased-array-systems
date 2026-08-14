@@ -77,6 +77,28 @@ def evaluate_case(
     cost_metrics = cost_model.evaluate(arch, scenario, context)
     metrics.update(cost_metrics)
 
+    # Cooling feasibility: does the declared approach remove the aperture heat
+    # flux this design produces? Independent of the junction-temperature path,
+    # which asserts a thermal resistance rather than checking it.
+    if arch.cooling is not None and "heat_flux_w_per_cm2" in metrics:
+        from phased_array_systems.models.swapc.cooling import assess, max_heat_flux
+
+        flux = metrics["heat_flux_w_per_cm2"]
+        flux = float(flux) if isinstance(flux, (int, float)) else 0.0
+        if arch.cooling.max_heat_flux_w_per_cm2 is not None:
+            ceiling = float(arch.cooling.max_heat_flux_w_per_cm2)
+            metrics.update(
+                {
+                    "cooling_class": arch.cooling.cooling_class,
+                    "max_heat_flux_w_per_cm2": ceiling,
+                    "cooling_margin_w_per_cm2": ceiling - flux,
+                    "cooling_feasible": bool(ceiling >= flux),
+                }
+            )
+        else:
+            max_heat_flux(arch.cooling.cooling_class)  # raises on unknown class
+            metrics.update(assess(flux, arch.cooling.cooling_class))
+
     # RF cascade analysis (if rx_stages configured)
     if arch.rf.rx_stages:
         from phased_array_systems.models.rf.cascade import RFStage, cascade_analysis
@@ -163,16 +185,34 @@ def evaluate_case(
         # so array size, TX power, and duty cycle drive Arrhenius derating
         operating_temp_c = arch.reliability.operating_temp_c
         if arch.reliability.thermal_resistance_c_per_w is not None:
-            dc_w = metrics.get("dc_power_w", 0.0)
-            rf_avg_w = metrics.get("rf_avg_power_w", 0.0)
-            dc_w = float(dc_w) if isinstance(dc_w, (int, float)) else 0.0
-            rf_avg_w = float(rf_avg_w) if isinstance(rf_avg_w, (int, float)) else 0.0
-            heat_per_elem_w = max(0.0, dc_w - rf_avg_w) / arch.array.n_elements
+            # One energy balance, computed by PowerModel via
+            # compute_thermal_load; this consumes it rather than repeating it.
+            heat_w = metrics.get("heat_dissipation_w", 0.0)
+            heat_w = float(heat_w) if isinstance(heat_w, (int, float)) else 0.0
+            # Per-DEVICE normalization: this is a junction temperature, so the
+            # divisor is element count, not aperture area. The areal quantity
+            # (heat_flux_w_per_cm2) answers a different question -- whether the
+            # cooling technology assumed by thermal_resistance_c_per_w can
+            # actually remove that flux -- and is checked separately.
+            heat_per_elem_w = max(0.0, heat_w) / arch.array.n_elements
             operating_temp_c = (
                 arch.reliability.ambient_temp_c
                 + arch.reliability.thermal_resistance_c_per_w * heat_per_elem_w
             )
             metrics["junction_temp_c"] = operating_temp_c
+            # Junction limit. The technology catalog carries tj_max_c and
+            # nothing read it until now, so a design could run the junction
+            # past its rated maximum and only ever be penalized indirectly,
+            # through Arrhenius derating of MTBF.
+            tj_max = arch.reliability.tj_max_c
+            if tj_max is None and arch.trm is not None and arch.trm.technology:
+                from phased_array_systems.models.rf.technology import entry
+
+                tj_max = entry(arch.trm.technology).get("tj_max_c")
+            if tj_max is not None:
+                metrics["junction_temp_max_c"] = float(tj_max)
+                metrics["junction_temp_margin_c"] = float(tj_max) - operating_temp_c
+                metrics["junction_temp_ok"] = bool(operating_temp_c <= float(tj_max))
 
         spec = TRMReliabilitySpec(
             component_mtbfs=arch.reliability.component_mtbfs,
@@ -292,6 +332,55 @@ def evaluate_case(
         radar_model = RadarModel()
         radar_metrics = radar_model.evaluate(arch, scenario, context)
         metrics.update(radar_metrics)
+
+        # Power-aperture product: the mission figure of merit that pairs with
+        # aperture heat flux. P*A (W*m^2) says how much power and aperture the
+        # search demands; heat flux (W/cm^2) constrains how tightly it may be
+        # packaged. They are dimensional inverses; see models/radar/search.py.
+        from phased_array_systems.models.radar.search import (
+            effective_aperture_m2,
+            power_aperture_product_w_m2,
+            required_power_aperture_w_m2,
+            search_solid_angle_sr,
+        )
+
+        g_ant = metrics.get("g_ant_db")
+        rf_avg = metrics.get("rf_avg_power_w")
+        if isinstance(g_ant, (int, float)) and isinstance(rf_avg, (int, float)):
+            a_eff = effective_aperture_m2(float(g_ant), scenario.freq_hz)
+            pa_product = power_aperture_product_w_m2(float(rf_avg), a_eff)
+            metrics["effective_aperture_m2"] = a_eff
+            metrics["power_aperture_product_w_m2"] = pa_product
+
+            frame_s = (
+                scenario.search_frame_time_ms / 1e3
+                if scenario.search_frame_time_ms is not None
+                else None
+            )
+            if (
+                scenario.search_az_extent_deg is not None
+                and scenario.search_el_extent_deg is not None
+                and frame_s is not None
+                and frame_s > 0
+            ):
+                snr_req = metrics.get("snr_required_db", 0.0)
+                t_sys = metrics.get("noise_temp_system_k", 290.0)
+                loss = metrics.get("system_loss_db", 0.0)
+                required = required_power_aperture_w_m2(
+                    range_m=scenario.range_m,
+                    target_rcs_m2=scenario.target_rcs_m2,
+                    search_solid_angle_sr=search_solid_angle_sr(
+                        scenario.search_az_extent_deg, scenario.search_el_extent_deg
+                    ),
+                    frame_time_s=frame_s,
+                    snr_required_db=float(snr_req) if isinstance(snr_req, (int, float)) else 0.0,
+                    system_noise_temp_k=float(t_sys) if isinstance(t_sys, (int, float)) else 290.0,
+                    loss_db=float(loss) if isinstance(loss, (int, float)) else 0.0,
+                )
+                metrics["power_aperture_required_w_m2"] = required
+                metrics["power_aperture_margin_db"] = 10.0 * math.log10(
+                    pa_product / required if required > 0 else float("inf")
+                )
 
         # Search timeline (if PRF and search extents configured): connects
         # the antenna beamwidths and dwell time to volume revisit rate
