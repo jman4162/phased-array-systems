@@ -419,6 +419,93 @@ def evaluate_case(
                     scenario.search_frame_time_ms
                 )
 
+        # Track accuracy: what the detection SNR and the revisit rate buy once
+        # the target is held. The scheduler already budgets RADAR_TRACK dwells;
+        # this says what quality that budget purchases. Gated on the maneuver
+        # being stated, because without it there is no tracking index.
+        if scenario.target_accel_max_ms2 is not None:
+            from phased_array_systems.models.radar.tracking import (
+                alpha_beta_gains,
+                angle_sigma_deg,
+                combine_angle_errors_deg,
+                crossrange_sigma_m,
+                deterministic_tracking_index,
+                maneuver_lag_m,
+                process_noise_from_maneuver,
+                range_sigma_m,
+                scan_broadened_beamwidth_deg,
+                steady_state_sigmas,
+                tracking_index,
+                variance_reduction_position,
+            )
+
+            revisit_s = scenario.track_revisit_s
+            if revisit_s is None:
+                frame_metric = metrics.get("search_frame_time_s")
+                revisit_s = float(frame_metric) if isinstance(frame_metric, (int, float)) else None
+
+            snr_for_track = metrics.get("snr_integrated_db", metrics.get("snr_single_pulse_db"))
+
+            if revisit_s is not None and revisit_s > 0 and isinstance(snr_for_track, (int, float)):
+                snr_db = float(snr_for_track)
+
+                # Beams broaden off broadside, so angle accuracy degrades with
+                # scan angle even at constant SNR (Curry Eq. 8.9).
+                bw_az_t = scan_broadened_beamwidth_deg(
+                    float(metrics.get("beamwidth_az_deg", 5.0) or 5.0), scenario.scan_angle_deg
+                )
+                bw_el_t = scan_broadened_beamwidth_deg(
+                    float(metrics.get("beamwidth_el_deg", 5.0) or 5.0), scenario.scan_angle_deg
+                )
+
+                sigma_r = range_sigma_m(
+                    snr_db, scenario.bandwidth_hz, scenario.range_resolution_alpha
+                )
+                thermal_az = angle_sigma_deg(snr_db, bw_az_t, scenario.monopulse_slope)
+                thermal_el = angle_sigma_deg(snr_db, bw_el_t, scenario.monopulse_slope)
+
+                # Hardware pointing error adds in quadrature with thermal noise,
+                # so phase-shifter bits and calibration residue reach track
+                # accuracy. This is the connection a tracking library cannot make.
+                pointing = metrics.get("pointing_error_rms_deg", 0.0)
+                pointing = float(pointing) if isinstance(pointing, (int, float)) else 0.0
+                sigma_az = combine_angle_errors_deg(thermal_az, pointing)
+                sigma_el = combine_angle_errors_deg(thermal_el, pointing)
+
+                sigma_cr_az = crossrange_sigma_m(scenario.range_m, sigma_az)
+                sigma_cr_el = crossrange_sigma_m(scenario.range_m, sigma_el)
+
+                metrics["sigma_range_m"] = sigma_r
+                metrics["sigma_angle_az_deg"] = sigma_az
+                metrics["sigma_angle_el_deg"] = sigma_el
+                metrics["sigma_crossrange_az_m"] = sigma_cr_az
+                metrics["sigma_crossrange_el_m"] = sigma_cr_el
+                metrics["track_revisit_s"] = revisit_s
+                metrics["monopulse_snr_ok"] = snr_db >= 13.0
+
+                # The alpha-beta filter is scalar per coordinate (POMR 19.49-19.53),
+                # so run it independently on range and on the worse cross-range axis.
+                worst_cr = max(sigma_cr_az, sigma_cr_el)
+                for label, sigma_w in (("range", sigma_r), ("crossrange", worst_cr)):
+                    gamma_d = deterministic_tracking_index(
+                        scenario.target_accel_max_ms2, revisit_s, sigma_w
+                    )
+                    sigma_v = process_noise_from_maneuver(gamma_d, scenario.target_accel_max_ms2)
+                    gamma = tracking_index(sigma_v, sigma_w, revisit_s)
+                    alpha, beta = alpha_beta_gains(gamma)
+                    pos, vel = steady_state_sigmas(sigma_w, alpha, beta, revisit_s)
+
+                    metrics[f"track_index_{label}"] = gamma
+                    metrics[f"track_index_deterministic_{label}"] = gamma_d
+                    metrics[f"track_alpha_{label}"] = alpha
+                    metrics[f"track_beta_{label}"] = beta
+                    metrics[f"track_pos_rms_{label}_m"] = pos
+                    metrics[f"track_vel_rms_{label}_ms"] = vel
+                    metrics[f"track_vrr_{label}"] = variance_reduction_position(alpha, beta)
+                    metrics[f"track_maneuver_lag_{label}_m"] = maneuver_lag_m(
+                        sigma_w, alpha, beta, gamma_d
+                    )
+
     # Verify requirements if provided
     if requirements is not None and len(requirements) > 0:
         report = requirements.verify(metrics)

@@ -1,0 +1,80 @@
+# ARSR-3 MTI Clutter Suppression Configuration
+#
+# L-band ground-based air traffic control radar in wooded-hill clutter.
+# Setting scenario.mti_n_pulse enables the canceller; without it the target is
+# undetectable in its own clutter. See docs/theory/mti-clutter-suppression.md.
+
+name: "ARSR-3 MTI Clutter Suppression"
+version: "1.0"
+
+architecture:
+  array:
+    geometry: rectangular
+    nx: 32
+    ny: 32
+    dx_lambda: 0.5
+    dy_lambda: 0.5
+    scan_limit_deg: 60.0
+    taper_type: taylor
+    taper_sll_db: -30.0
+    element_cos_exp: 1.5
+  rf:
+    tx_power_w_per_elem: 10.0
+    pa_efficiency: 0.3
+    noise_figure_db: 3.0
+    feed_loss_db: 1.0
+    system_loss_db: 0.0
+  cost:
+    cost_per_elem_usd: 200.0
+    nre_usd: 50000.0
+    integration_cost_usd: 10000.0
+
+scenario:
+  type: radar
+  freq_hz: 1.3e9               # L-band
+  bandwidth_hz: 500.0e3        # matched to the 2 us pulse
+  range_m: 55.56e3             # 30 nmi
+  target_rcs_dbsm: 3.0         # 2 m^2
+  pfa: 1.0e-6
+  pd_required: 0.9
+  n_pulses: 10
+  prf_hz: 400.0
+  integration_type: noncoherent
+  scan_angle_deg: 0.0
+
+  # Ground clutter environment
+  clutter_type: ground
+  terrain_type: rural
+  antenna_height_m: 10.0
+
+  # MTI clutter suppression
+  mti_n_pulse: 3               # three-pulse canceller [1, -2, 1]
+  clutter_velocity_std_ms: 0.322   # 1.16 km/hr, wind-blown foliage
+
+requirements:
+  - id: REQ-M01
+    name: Signal-to-clutter-plus-noise ratio
+    metric_key: scnr_db
+    op: ">="
+    value: 15.0
+    units: dB
+    severity: must
+
+  - id: REQ-M02
+    name: MTI improvement factor
+    metric_key: mti_improvement_db
+    op: ">="
+    value: 47.6
+    units: dB
+    severity: must
+
+  - id: REQ-M03
+    name: Detection probability
+    metric_key: pd_achieved
+    op: ">="
+    value: 0.9
+    units: ""
+    severity: must
+
+output_dir: ./results
+output_format: parquet

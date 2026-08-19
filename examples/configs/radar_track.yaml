@@ -1,0 +1,78 @@
+# Radar Track Accuracy Configuration
+# Single-case evaluation with track-accuracy metrics enabled.
+#
+# Setting scenario.target_accel_max_ms2 turns on the track metrics: without it
+# no track keys are emitted at all. See docs/theory/track-accuracy.md.
+
+name: "X-band Track Accuracy Study"
+version: "1.0"
+
+architecture:
+  array:
+    geometry: rectangular
+    nx: 64
+    ny: 64
+    dx_lambda: 0.5
+    dy_lambda: 0.5
+    scan_limit_deg: 60.0
+    taper_type: taylor
+    taper_sll_db: -30.0
+    element_cos_exp: 1.5
+  rf:
+    tx_power_w_per_elem: 10.0
+    pa_efficiency: 0.3
+    noise_figure_db: 3.0
+    feed_loss_db: 1.0
+    system_loss_db: 0.0
+  cost:
+    cost_per_elem_usd: 200.0
+    nre_usd: 50000.0
+    integration_cost_usd: 10000.0
+
+scenario:
+  type: radar
+  freq_hz: 10.0e9              # X-band
+  bandwidth_hz: 10.0e6         # 15 m range resolution
+  range_m: 50.0e3
+  target_rcs_dbsm: 0.0
+  pfa: 1.0e-4                  # relaxed Pfa on a confirmed target
+  pd_required: 0.99            # high Pd for track maintenance
+  n_pulses: 64
+  prf_hz: 5000.0
+  integration_type: coherent
+  swerling: 0
+  scan_angle_deg: 0.0
+  system_loss_db: 2.0
+
+  # Track accuracy inputs
+  target_accel_max_ms2: 40.0   # ~4 g maneuver
+  track_revisit_s: 1.0
+  monopulse_slope: 1.6
+
+requirements:
+  - id: REQ-T01
+    name: Cross-range track accuracy
+    metric_key: track_pos_rms_crossrange_m
+    op: "<="
+    value: 100.0
+    units: m
+    severity: must
+
+  - id: REQ-T02
+    name: Range measurement accuracy
+    metric_key: sigma_range_m
+    op: "<="
+    value: 5.0
+    units: m
+    severity: must
+
+  - id: REQ-T03
+    name: Monopulse SNR validity floor
+    metric_key: snr_integrated_db
+    op: ">="
+    value: 13.0
+    units: dB
+    severity: must
+
+output_dir: ./results
+output_format: parquet

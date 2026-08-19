@@ -220,32 +220,57 @@ print(f"SNR Margin at 200 km: {metrics['snr_margin_db']:.1f} dB")
 
 ## Example: Tracking Radar
 
+Setting `target_accel_max_ms2` turns on the track-accuracy metrics: the
+measurement errors that the detection SNR buys, and the steady-state filter
+performance that follows from them and the revisit rate. See
+[Track Accuracy](../theory/track-accuracy.md) for the equations.
+
 ```python
-# Precision tracking radar
+from phased_array_systems import Architecture, ArrayConfig, RFChainConfig, evaluate_case
+from phased_array_systems.scenarios import RadarDetectionScenario
+
 arch = Architecture(
-    array=ArrayConfig(nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5),
+    array=ArrayConfig(nx=64, ny=64, dx_lambda=0.5, dy_lambda=0.5),
     rf=RFChainConfig(
-        tx_power_w_per_elem=5.0,
+        tx_power_w_per_elem=10.0,
         pa_efficiency=0.30,
         noise_figure_db=3.0,
     ),
 )
 
 scenario = RadarDetectionScenario(
-    freq_hz=10e9,              # X-band (precision)
-    target_rcs_m2=0.5,         # Smaller target
-    range_m=50e3,              # 50 km track
-    required_pd=0.99,          # High Pd for tracking
-    pfa=1e-4,                  # Relaxed Pfa (verified target)
-    pulse_width_s=5e-6,        # Short pulse (range resolution)
-    prf_hz=5000,               # High PRF
-    n_pulses=100,              # Many pulses
+    freq_hz=10e9,                 # X-band
+    bandwidth_hz=10e6,            # 15 m range resolution
+    range_m=50e3,
+    target_rcs_dbsm=0.0,
+    pd_required=0.99,             # high Pd for track maintenance
+    pfa=1e-4,                     # relaxed Pfa on a confirmed target
+    n_pulses=64,
+    prf_hz=5000,
     integration_type="coherent",
-    swerling_model=0,          # Stabilized target
+    swerling=0,                   # stabilized target
+    track_revisit_s=1.0,          # track update rate
+    target_accel_max_ms2=40.0,    # ~4 g maneuver
 )
 
 metrics = evaluate_case(arch, scenario)
+
+print(f"SNR:            {metrics['snr_integrated_db']:.1f} dB")
+print(f"sigma_range:    {metrics['sigma_range_m']:.2f} m")
+print(f"sigma_crossrng: {metrics['sigma_crossrange_az_m']:.1f} m")
+print(f"track position: {metrics['track_pos_rms_crossrange_m']:.1f} m")
 ```
+
+```
+SNR:            20.2 dB
+sigma_range:    1.04 m
+sigma_crossrng: 59.5 m
+track position: 48.3 m
+```
+
+Cross-range error is 57x the range error here, and only a larger aperture
+reduces it. `monopulse_snr_ok` reports whether the case sits above the 13 dB
+floor where the angle-accuracy relation is valid.
 
 ## Radar Trade Studies
 

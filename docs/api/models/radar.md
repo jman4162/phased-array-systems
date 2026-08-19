@@ -154,8 +154,69 @@ Where:
 | 3 | Chi-squared (4 DOF) | Scan-to-scan |
 | 4 | Chi-squared (4 DOF) | Pulse-to-pulse |
 
+## MTI Clutter Suppression
+
+Doppler-domain clutter rejection. See
+[Theory: MTI Clutter Suppression](../../theory/mti-clutter-suppression.md).
+
+::: phased_array_systems.models.radar.mti.clutter_spectral_std_hz
+
+::: phased_array_systems.models.radar.mti.normalized_clutter_spread_rad
+
+::: phased_array_systems.models.radar.mti.clutter_autocorrelation
+
+::: phased_array_systems.models.radar.mti.canceller_weights
+
+::: phased_array_systems.models.radar.mti.mti_signal_gain
+
+::: phased_array_systems.models.radar.mti.mti_improvement_factor
+
+::: phased_array_systems.models.radar.mti.mti_clutter_attenuation
+
+::: phased_array_systems.models.radar.mti.required_clutter_attenuation_db
+
+::: phased_array_systems.models.radar.mti.blind_speed_ms
+
+::: phased_array_systems.models.radar.mti.doppler_shift_hz
+
+::: phased_array_systems.models.radar.mti.unambiguous_range_m
+
+## Track Accuracy
+
+Closed-form measurement error and steady-state track performance. See
+[Theory: Track Accuracy](../../theory/track-accuracy.md) for the equations and
+the SNR-convention note.
+
+::: phased_array_systems.models.radar.tracking.range_sigma_m
+
+::: phased_array_systems.models.radar.tracking.angle_sigma_deg
+
+::: phased_array_systems.models.radar.tracking.scan_broadened_beamwidth_deg
+
+::: phased_array_systems.models.radar.tracking.crossrange_sigma_m
+
+::: phased_array_systems.models.radar.tracking.velocity_sigma_ms
+
+::: phased_array_systems.models.radar.tracking.combine_angle_errors_deg
+
+::: phased_array_systems.models.radar.tracking.tracking_index
+
+::: phased_array_systems.models.radar.tracking.deterministic_tracking_index
+
+::: phased_array_systems.models.radar.tracking.process_noise_from_maneuver
+
+::: phased_array_systems.models.radar.tracking.alpha_beta_gains
+
+::: phased_array_systems.models.radar.tracking.steady_state_sigmas
+
+::: phased_array_systems.models.radar.tracking.variance_reduction_position
+
+::: phased_array_systems.models.radar.tracking.maneuver_lag_m
+
 ## See Also
 
 - [Theory: Radar Equation](../../theory/radar-equation.md)
+- [Theory: MTI Clutter Suppression](../../theory/mti-clutter-suppression.md)
+- [Theory: Track Accuracy](../../theory/track-accuracy.md)
 - [User Guide: Radar Detection](../../user-guide/radar-detection.md)
 - [Scenarios API](../scenarios.md)
