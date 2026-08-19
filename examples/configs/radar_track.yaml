@@ -23,7 +23,7 @@ architecture:
     pa_efficiency: 0.3
     noise_figure_db: 3.0
     feed_loss_db: 1.0
-    system_loss_db: 0.0
+    system_loss_db: 2.0
   cost:
     cost_per_elem_usd: 200.0
     nre_usd: 50000.0
@@ -42,7 +42,6 @@ scenario:
   integration_type: coherent
   swerling: 0
   scan_angle_deg: 0.0
-  system_loss_db: 2.0
 
   # Track accuracy inputs
   target_accel_max_ms2: 40.0   # ~4 g maneuver

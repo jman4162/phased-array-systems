@@ -21,7 +21,7 @@ architecture:
     pa_efficiency: 0.3
     noise_figure_db: 3.0
     feed_loss_db: 1.0
-    system_loss_db: 0.0
+    system_loss_db: 2.0
   cost:
     cost_per_elem_usd: 200.0
     nre_usd: 50000.0
@@ -39,7 +39,6 @@ scenario:
   n_pulses: 10             # Number of integrated pulses
   integration_type: noncoherent
   scan_angle_deg: 0.0
-  system_loss_db: 2.0
 
 # Requirements
 requirements:

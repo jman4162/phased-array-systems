@@ -67,15 +67,15 @@ from phased_array_systems.scenarios import RadarDetectionScenario
 
 scenario = RadarDetectionScenario(
     freq_hz=10e9,
-    target_rcs_m2=1.0,
+    bandwidth_hz=100e3,
     range_m=100e3,
-    required_pd=0.9,
+    target_rcs_dbsm=0.0,
+    pd_required=0.9,
     pfa=1e-6,
-    pulse_width_s=10e-6,
     prf_hz=1000,
     n_pulses=10,
     integration_type="coherent",
-    swerling_model=1,
+    swerling=1,
 )
 
 model = RadarModel()
@@ -94,7 +94,7 @@ from phased_array_systems.models.radar import compute_snr_for_pd
 snr_req = compute_snr_for_pd(
     pd=0.9,
     pfa=1e-6,
-    swerling_model=1,
+    swerling=1,
 )
 print(f"Required SNR: {snr_req:.1f} dB")
 ```
@@ -107,7 +107,7 @@ from phased_array_systems.models.radar import compute_pd_from_snr
 pd = compute_pd_from_snr(
     snr_db=15.0,
     pfa=1e-6,
-    swerling_model=1,
+    swerling=1,
 )
 print(f"Detection Probability: {pd:.3f}")
 ```

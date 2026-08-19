@@ -53,15 +53,15 @@ scenario = RadarDetectionScenario(
     freq_hz=10e9,              # X-band
 
     # Target characteristics
-    target_rcs_m2=1.0,         # 1 m² RCS
+    target_rcs_dbsm=0.0,       # 1 m^2 RCS, expressed in dBsm
     range_m=100e3,             # 100 km detection range
 
     # Detection requirements
-    required_pd=0.9,           # 90% detection probability
-    pfa=1e-6,                  # 10⁻⁶ false alarm rate
+    pd_required=0.9,           # 90% detection probability
+    pfa=1e-6,                  # 1e-6 false alarm rate
 
     # Waveform parameters
-    pulse_width_s=10e-6,       # 10 μs pulse
+    bandwidth_hz=100e3,        # matched to a 10 us pulse
     prf_hz=1000,               # 1 kHz PRF
 
     # Integration
@@ -69,7 +69,7 @@ scenario = RadarDetectionScenario(
     integration_type="coherent",  # Coherent integration
 
     # Target model
-    swerling_model=1,          # Swerling 1 (slow fluctuation)
+    swerling=1,                # Swerling 1 (slow fluctuation)
 
     # Scan
     scan_angle_deg=0.0,        # Boresight
@@ -79,7 +79,7 @@ print(f"Radar Scenario:")
 print(f"  Frequency: {scenario.freq_hz/1e9:.1f} GHz")
 print(f"  Target RCS: {scenario.target_rcs_m2} m²")
 print(f"  Range: {scenario.range_m/1e3:.0f} km")
-print(f"  Required Pd: {scenario.required_pd}")
+print(f"  Required Pd: {scenario.pd_required}")
 print(f"  Pfa: {scenario.pfa}")
 print(f"  Integration: {scenario.n_pulses} pulses ({scenario.integration_type})")
 ```

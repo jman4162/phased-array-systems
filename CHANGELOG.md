@@ -62,11 +62,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `docs/user-guide/radar-detection.md` "Example: Tracking Radar" used four field
-  names that do not exist (`target_rcs_m2`, `required_pd`, `pulse_width_s`,
-  `swerling_model`) and demonstrated only a high Pd. Rewritten against the real
-  API with track metrics. **Other examples in that file still carry the same
-  stale names and are not yet fixed.**
+- **Documentation described a constructor that has not existed for several
+  releases.** `target_rcs_m2`, `required_pd`, `pulse_width_s` and
+  `swerling_model` appeared across the radar user guide, the scenario reference
+  table, three API pages and a tutorial. Every example is now correct and the
+  outputs shown are real program output. Also corrected: `RadarEquationModel`
+  (never exported; the class is `RadarModel`), `compute_required_snr` (the
+  function is `compute_snr_for_pd`), and a `compute_detection_range` example
+  whose entire signature was invented and which was imported from the wrong
+  module. The basic-usage example specified an array that could not detect its
+  own target, at a margin of -33 dB; it now shows a design with 2.7 dB of margin.
+- **`system_loss_db` was silently discarded in three shipped configs.**
+  `radar_basic.yaml`, `radar_doe.yaml` and `radar_track.yaml` each set it inside
+  their `scenario` block, where it belongs to `RFChainConfig` and never reached
+  the radar equation, so 2 dB of asserted loss quietly went missing. Moved to
+  `architecture.rf` where it applies; no requirement verdict changed.
+- **Scenarios now reject unknown fields** (`extra="forbid"` on `ScenarioBase`).
+  That silent drop is the mechanism that let the bug above survive, and it turns
+  any future typo or relocation into an error at construction.
+- `tests/test_docs_api_drift.py` reads the documentation and example configs as
+  data and checks every scenario keyword against the live models, so the next
+  rename fails CI. 121 tests, one per documentation file and config.
 
 ### Notes
 
