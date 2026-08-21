@@ -113,8 +113,12 @@ def _peak_sidelobe_db(pattern_db: Any) -> float:
     peak_db = float(pattern_db[rows[0], cols[0]])
 
     visited = np.zeros(pattern_db.shape, dtype=bool)
+    pole_rows = {0, n_theta - 1}  # theta = 0 and pi: one physical point each
     for n, (i, j) in enumerate(zip(rows, cols, strict=True)):
         if visited[i, j]:
+            continue
+        if i in pole_rows and visited[i].any():
+            visited[i, :] = True
             continue
         has_higher_neighbour = False
         for di in (-1, 0, 1):
@@ -132,7 +136,9 @@ def _peak_sidelobe_db(pattern_db: Any) -> float:
         if not has_higher_neighbour and n > 0:
             return float(pattern_db[i, j]) - peak_db
         visited[i, j] = True
-        if n_phi > 1 and j in (0, span):
+        if i in pole_rows:
+            visited[i, :] = True
+        elif n_phi > 1 and j in (0, span):
             visited[i, 0] = visited[i, span] = True
 
     return float("-inf")
@@ -230,7 +236,9 @@ def _opensatcom_margin(gain_dbi: float, arch: Any, scenario: Any) -> float | Non
         required_metric="ebn0_db",
         required_value=float(scenario.required_snr_db),
     )
-    rx_temp_k = float(scenario.rx_noise_temp_k)
+    # Mirror the PAS noise convention: T_sys = T_ant + 290 (F - 1).
+    nf_lin = 10.0 ** (float(arch.rf.noise_figure_db) / 10.0)
+    rx_temp_k = float(scenario.rx_noise_temp_k) + 290.0 * (nf_lin - 1.0)
     tx = Terminal("terminal", 0.0, 0.0, 0.0)
     rx = Terminal("satellite", 0.0, 0.0, float(scenario.range_m), system_noise_temp_k=rx_temp_k)
     total_tx_w = float(arch.rf.tx_power_w_per_elem) * int(arch.array.n_elements)
