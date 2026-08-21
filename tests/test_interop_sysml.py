@@ -130,3 +130,36 @@ def test_unthresholded_spec_raises_when_strict():
     }
     with pytest.raises(ValueError, match="REQ-PROSE"):
         requirement_set_from_specs([prose_only], skip_unthresholded=False)
+
+
+MINIMAL_STUDY = {
+    "name": "engine-smoke",
+    "array": {"nx": 16, "ny": 16, "dx": 0.5, "dy": 0.5},
+    "rf": {"tx_power_w_per_elem": 1.0},
+    "scenario": {
+        "type": "comms",
+        "freq_hz": 28.0e9,
+        "bandwidth_hz": 50.0e6,
+        "range_m": 800.0e3,
+        "required_snr_db": 6.0,
+    },
+}
+
+
+def test_run_study_returns_flat_metrics():
+    from phased_array_systems.interop import run_study
+
+    metrics = run_study(MINIMAL_STUDY)
+    assert isinstance(metrics, dict)
+    for key in ("eirp_dbw", "link_margin_db", "prime_power_w"):
+        assert key in metrics, f"missing {key}"
+        assert isinstance(metrics[key], (int, float))
+
+
+def test_engine_entry_point_registered():
+    import tomllib
+    from pathlib import Path
+
+    pyproject = tomllib.loads((Path(__file__).parents[1] / "pyproject.toml").read_text())
+    eps = pyproject["project"]["entry-points"]["sysml2kit.engines"]
+    assert eps["phased-array-systems"] == "phased_array_systems.interop.sysml:run_study"

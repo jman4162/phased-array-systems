@@ -72,6 +72,9 @@ docs = [
     "mkdocs-section-index>=0.3",
 ]
 
+[project.entry-points."sysml2kit.engines"]
+phased-array-systems = "phased_array_systems.interop.sysml:run_study"
+
 [project.scripts]
 pasys = "phased_array_systems.cli:main"
 
