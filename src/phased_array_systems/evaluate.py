@@ -26,6 +26,7 @@ def evaluate_case(
     requirements: RequirementSet | None = None,
     case_id: str | None = None,
     seed: int | None = None,
+    antenna_fidelity: str | None = None,
 ) -> MetricsDict:
     """Evaluate a single architecture/scenario case.
 
@@ -39,6 +40,8 @@ def evaluate_case(
         case_id: Optional case identifier for tracking
         seed: Optional RNG seed threaded to stochastic sub-models (element
             failure simulation); recorded as meta.seed
+        antenna_fidelity: Explicit antenna method: "analytic" | "pattern" |
+            None (dispatch on library availability)
 
     Returns:
         Dictionary containing all computed metrics plus metadata:
@@ -56,7 +59,9 @@ def evaluate_case(
         metrics["meta.case_id"] = case_id
 
     # Initialize models
-    antenna_model = PhasedArrayAdapter(use_analytical_fallback=True)
+    antenna_model = PhasedArrayAdapter(
+        use_analytical_fallback=True, antenna_fidelity=antenna_fidelity
+    )
     power_model = PowerModel()
     cost_model = CostModel()
 
@@ -495,4 +500,10 @@ def evaluate_config(config: StudyConfig) -> MetricsDict:
     if scenario is None:
         raise ValueError("StudyConfig must have a scenario defined")
 
-    return evaluate_case(arch, scenario, requirements, case_id=config.name)
+    return evaluate_case(
+        arch,
+        scenario,
+        requirements,
+        case_id=config.name,
+        antenna_fidelity=config.antenna_fidelity,
+    )

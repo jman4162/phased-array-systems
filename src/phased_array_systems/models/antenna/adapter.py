@@ -90,19 +90,39 @@ class PhasedArrayAdapter:
         name: Model block name for identification
         use_analytical_fallback: If True, use analytical approximations
             when phased-array-modeling is not available
+        antenna_fidelity: Explicit method selection: "analytic" forces the
+            closed-form path, "pattern" forces the pattern-cut simulation
+            (raising if phased-array-modeling is absent), None (default)
+            keeps availability-based dispatch
     """
 
     name: str = "antenna"
 
-    def __init__(self, use_analytical_fallback: bool = True):
+    def __init__(
+        self,
+        use_analytical_fallback: bool = True,
+        antenna_fidelity: str | None = None,
+    ):
         """Initialize the adapter.
 
         Args:
             use_analytical_fallback: Use analytical methods if PAM unavailable
+            antenna_fidelity: "analytic" | "pattern" | None (dispatch on
+                availability, the previous behavior)
         """
+        if antenna_fidelity not in (None, "analytic", "pattern"):
+            raise ValueError(
+                f"antenna_fidelity must be 'analytic', 'pattern', or None, got {antenna_fidelity!r}"
+            )
         self.use_analytical_fallback = use_analytical_fallback
+        self.antenna_fidelity = antenna_fidelity
 
-        if not HAS_PAM and not use_analytical_fallback:
+        if antenna_fidelity == "pattern" and not HAS_PAM:
+            raise ImportError(
+                "antenna_fidelity='pattern' requires phased-array-modeling. "
+                "Install with: pip install phased-array-modeling"
+            )
+        if not HAS_PAM and antenna_fidelity is None and not use_analytical_fallback:
             raise ImportError(
                 "phased-array-modeling not installed. Install with: "
                 "pip install phased-array-modeling"
@@ -123,10 +143,11 @@ class PhasedArrayAdapter:
         """
         scan_angle_deg = getattr(scenario, "scan_angle_deg", 0.0)
 
-        if HAS_PAM:
-            return self._evaluate_with_pam(arch, scenario, scan_angle_deg, context)
-        else:
+        if self.antenna_fidelity == "analytic":
             return self._evaluate_analytical(arch, scenario, scan_angle_deg)
+        if self.antenna_fidelity == "pattern" or HAS_PAM:
+            return self._evaluate_with_pam(arch, scenario, scan_angle_deg, context)
+        return self._evaluate_analytical(arch, scenario, scan_angle_deg)
 
     def _evaluate_with_pam(
         self,
