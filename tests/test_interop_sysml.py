@@ -157,10 +157,9 @@ def test_run_study_returns_flat_metrics():
 
 
 def test_engine_entry_point_registered():
-    from pathlib import Path
+    # Reads the installed distribution metadata, which proves packaging
+    # exposes the engine (and works on Python 3.10, unlike tomllib).
+    from importlib.metadata import entry_points
 
-    import tomllib
-
-    pyproject = tomllib.loads((Path(__file__).parents[1] / "pyproject.toml").read_text())
-    eps = pyproject["project"]["entry-points"]["sysml2kit.engines"]
+    eps = {ep.name: ep.value for ep in entry_points(group="sysml2kit.engines")}
     assert eps["phased-array-systems"] == "phased_array_systems.interop.sysml:run_study"
