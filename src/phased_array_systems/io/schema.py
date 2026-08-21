@@ -100,6 +100,13 @@ class StudyConfig(BaseModel):
     # Scenario configuration
     scenario: dict[str, Any] | None = Field(default=None, description="Scenario definition")
 
+    # Antenna evaluation method
+    antenna_fidelity: Literal["analytic", "pattern"] | None = Field(
+        default=None,
+        description="Antenna method: 'analytic' (closed-form), 'pattern' "
+        "(pattern-cut simulation), None (dispatch on library availability)",
+    )
+
     # Requirements
     requirements: list[RequirementConfig] = Field(default_factory=list)
 

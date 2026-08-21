@@ -5,6 +5,31 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-08-21
+
+### Added
+
+- **Explicit antenna fidelity selection.** `PhasedArrayAdapter` takes
+  `antenna_fidelity="analytic" | "pattern" | None`; `evaluate_case`,
+  `evaluate_config`, and `StudyConfig` thread it through, so a study can
+  pin the antenna method instead of inheriting whichever library happens
+  to be importable. `None` keeps the previous availability-based
+  dispatch; `"pattern"` raises when phased-array-modeling is absent.
+- **Pattern-integration verification engine** (`run_pattern_study`,
+  entry point `phased-array-systems-pattern`). Both existing antenna
+  paths compose gain analytically (directivity minus scan, taper, and
+  quantization losses), so their link margins are bit-identical — a
+  fidelity ladder built from them alone is degenerate. This engine
+  integrates the full radiation pattern (grid from the payload's
+  `pattern.n_theta`/`pattern.n_phi`, default 361 x 721) and re-runs the
+  link budget with the integrated gain, emitting `directivity_dbi`,
+  full-sphere `sll_db` by local-maximum detection, and
+  `crosscheck_gain_disagreement_db`. When opensatcom is installed it
+  also recomputes the margin independently
+  (`opensatcom_link_margin_db`, `crosscheck_margin_disagreement_db`).
+  The sidelobe and directivity routines are ported from aedl's
+  array-pattern evaluator.
+
 ## [0.13.0] - 2026-08-21
 
 ### Added
