@@ -16,7 +16,7 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from phased_array_systems.requirements.core import Requirement, RequirementSet
-from phased_array_systems.types import ComparisonOp, Severity
+from phased_array_systems.types import ComparisonOp, MetricsDict, Severity
 
 _OPS: tuple[ComparisonOp, ...] = (">=", "<=", "==", ">", "<")
 _SEVERITIES: tuple[Severity, ...] = ("must", "should", "nice")
@@ -71,3 +71,18 @@ def requirement_set_from_specs(
             if not skip_unthresholded:
                 raise
     return req_set
+
+
+def run_study(payload: dict[str, Any]) -> MetricsDict:
+    """Evaluate a study-config payload; the sysml2kit verification engine.
+
+    The payload is a study configuration as a dict (the same shape
+    ``load_config`` reads from YAML). Registered under the
+    ``sysml2kit.engines`` entry-point group as ``phased-array-systems``, so a
+    SysML v2 model whose analysis carries a ``verificationBinding`` naming
+    this engine runs a phased-array study and gets the flat metrics back.
+    """
+    from phased_array_systems.evaluate import evaluate_config
+    from phased_array_systems.io.schema import StudyConfig
+
+    return evaluate_config(StudyConfig.model_validate(payload))
