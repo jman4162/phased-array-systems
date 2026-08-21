@@ -5,6 +5,30 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-08-21
+
+### Added
+
+- **sysml2kit requirement bridge** (`interop/sysml.py`, #1). A SysML v2 model
+  built with [sysml2kit](https://github.com/jman4162/sysml2kit) carries
+  requirements as metricKey/op/value attributes; `requirement_set_from_specs`
+  maps its extracted `RequirementSpec` objects (or their dict form, as the
+  sysml2kit MCP tool `requirements_extract` returns) into a `RequirementSet`
+  ready for `verify(metrics)`. Duck-typed on purpose: sysml2kit is not a
+  dependency of this package, and the bridge accepts plain dicts. Specs
+  without an operator-form threshold are skipped by default
+  (`skip_unthresholded=False` raises instead). Tested against the eight
+  requirements of the aedl t3-001 satcom-terminal benchmark, including a
+  failing-metric case.
+- **sysml2kit verification engine** (#2). `run_study(payload) -> MetricsDict`
+  wraps `StudyConfig.model_validate` + `evaluate_config` and is registered
+  under the `sysml2kit.engines` entry-point group, so a SysML v2 analysis
+  case carrying a `verificationBinding` that names `phased-array-systems`
+  executes a study and checks its requirements against the returned metrics
+  (`sysml2kit verify model.json` with sysml2kit >= 0.3.0). The entry-point
+  test reads installed distribution metadata rather than parsing
+  pyproject.toml, so it also proves packaging exposes the engine.
+
 ## [0.12.0] - 2026-08-13
 
 ### Added
