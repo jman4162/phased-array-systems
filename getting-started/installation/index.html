@@ -3016,7 +3016,7 @@
 </ul>
 <h3 id="with-plotting-extras">With Plotting Extras<a class="headerlink" href="#with-plotting-extras" title="Permanent link">&para;</a></h3>
 <p>For interactive Plotly visualizations:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;phased-array-systems[mdao]&quot;</span><span class="w">       </span><span class="c1"># NSGA-II optimization + Sobol sensitivity</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"phased-array-systems[mdao]"</span><span class="w">       </span><span class="c1"># NSGA-II optimization + Sobol sensitivity</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span>phased-array-systems<span class="o">[</span>plotting<span class="o">]</span>
 </span></code></pre></div>
 <p>Additional packages:</p>
@@ -3062,7 +3062,7 @@
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># On Windows: venv\Scripts\activate</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1"># Install in editable mode with all extras</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,plotting,docs]&quot;</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev,plotting,docs]"</span>
 </span></code></pre></div>
 <h3 id="using-a-virtual-environment">Using a Virtual Environment<a class="headerlink" href="#using-a-virtual-environment" title="Permanent link">&para;</a></h3>
 <p>We recommend using a virtual environment to avoid conflicts:</p>
@@ -3098,7 +3098,7 @@
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># Create a simple array configuration</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">array</span> <span class="o">=</span> <span class="n">ArrayConfig</span><span class="p">(</span><span class="n">nx</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">dx_lambda</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">dy_lambda</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Array has </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">n_elements</span><span class="si">}</span><span class="s2"> elements&quot;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Array has </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">n_elements</span><span class="si">}</span><span class="s2"> elements"</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Expected output:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Array has 64 elements
@@ -3117,7 +3117,7 @@
 <h3 id="import-errors">Import Errors<a class="headerlink" href="#import-errors" title="Permanent link">&para;</a></h3>
 <p>Ensure you're using the correct Python environment:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>which<span class="w"> </span>python<span class="w">  </span><span class="c1"># On Windows: where python</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import phased_array_systems; print(&#39;OK&#39;)&quot;</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import phased_array_systems; print('OK')"</span>
 </span></code></pre></div>
 <h3 id="permission-errors">Permission Errors<a class="headerlink" href="#permission-errors" title="Permanent link">&para;</a></h3>
 <p>On some systems, you may need to use <code>--user</code>:</p>
