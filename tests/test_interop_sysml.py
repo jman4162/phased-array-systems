@@ -157,8 +157,9 @@ def test_run_study_returns_flat_metrics():
 
 
 def test_engine_entry_point_registered():
-    import tomllib
     from pathlib import Path
+
+    import tomllib
 
     pyproject = tomllib.loads((Path(__file__).parents[1] / "pyproject.toml").read_text())
     eps = pyproject["project"]["entry-points"]["sysml2kit.engines"]
