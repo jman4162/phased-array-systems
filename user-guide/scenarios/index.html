@@ -2397,6 +2397,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2552,6 +2556,62 @@
     
   
     Aperture Power Density
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/mti-clutter-suppression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MTI Clutter Suppression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/track-accuracy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Track Accuracy
   
 
     
@@ -3204,10 +3264,10 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
 <td>Operating frequency (Hz)</td>
 </tr>
 <tr>
-<td><code>target_rcs_m2</code></td>
+<td><code>bandwidth_hz</code></td>
 <td>float</td>
 <td>Required</td>
-<td>Target RCS (m²)</td>
+<td>Signal bandwidth (Hz)</td>
 </tr>
 <tr>
 <td><code>range_m</code></td>
@@ -3216,58 +3276,90 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
 <td>Target range (m)</td>
 </tr>
 <tr>
-<td><code>required_pd</code></td>
+<td><code>target_rcs_dbsm</code></td>
+<td>float</td>
+<td>Required</td>
+<td>Target RCS (dBsm)</td>
+</tr>
+<tr>
+<td><code>pd_required</code></td>
 <td>float</td>
 <td><code>0.9</code></td>
-<td>Required detection probability</td>
+<td>Required probability of detection</td>
 </tr>
 <tr>
 <td><code>pfa</code></td>
 <td>float</td>
 <td><code>1e-6</code></td>
-<td>False alarm probability</td>
-</tr>
-<tr>
-<td><code>pulse_width_s</code></td>
-<td>float</td>
-<td>Required</td>
-<td>Pulse width (s)</td>
-</tr>
-<tr>
-<td><code>prf_hz</code></td>
-<td>float</td>
-<td>Required</td>
-<td>Pulse repetition frequency (Hz)</td>
+<td>Probability of false alarm</td>
 </tr>
 <tr>
 <td><code>n_pulses</code></td>
 <td>int</td>
 <td><code>1</code></td>
-<td>Pulses to integrate</td>
+<td>Number of pulses integrated</td>
+</tr>
+<tr>
+<td><code>swerling</code></td>
+<td>int</td>
+<td><code>0</code></td>
+<td>Swerling fluctuation model (0 = non-fluctuating)</td>
 </tr>
 <tr>
 <td><code>integration_type</code></td>
 <td>str</td>
-<td><code>"coherent"</code></td>
+<td><code>"noncoherent"</code></td>
 <td>Integration type</td>
 </tr>
 <tr>
-<td><code>swerling_model</code></td>
-<td>int</td>
-<td><code>1</code></td>
-<td>Target fluctuation model</td>
+<td><code>prf_hz</code></td>
+<td>float | None</td>
+<td><code>None</code></td>
+<td>Pulse repetition frequency (Hz); dwell = <code>n_pulses/prf_hz</code></td>
+</tr>
+<tr>
+<td><code>duty_cycle</code></td>
+<td>float</td>
+<td><code>1.0</code></td>
+<td>Transmit duty cycle (avg/peak power)</td>
 </tr>
 <tr>
 <td><code>scan_angle_deg</code></td>
 <td>float</td>
 <td><code>0.0</code></td>
-<td>Beam scan angle (degrees)</td>
+<td>Scan angle from boresight (degrees)</td>
 </tr>
 <tr>
-<td><code>system_loss_db</code></td>
+<td><code>rx_noise_temp_k</code></td>
 <td>float</td>
-<td><code>0.0</code></td>
-<td>System losses (dB)</td>
+<td><code>290.0</code></td>
+<td>Receiver noise temperature (K)</td>
+</tr>
+</tbody>
+</table>
+<p>There is no pulse-width field: set <code>bandwidth_hz</code>, which for an uncompressed
+pulse is about <code>1/tau</code>. System losses live on the architecture
+(<code>RFChainConfig.system_loss_db</code>) rather than on the scenario.</p>
+<p>These read-only properties are derived from the fields above:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wavelength_m</code></td>
+<td>Wavelength (m)</td>
+</tr>
+<tr>
+<td><code>target_rcs_m2</code></td>
+<td>Target RCS in m^2, converted from <code>target_rcs_dbsm</code></td>
+</tr>
+<tr>
+<td><code>range_resolution_m</code></td>
+<td>Range resolution, <code>c / 2B</code></td>
 </tr>
 </tbody>
 </table>
@@ -3276,15 +3368,15 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">scenario</span> <span class="o">=</span> <span class="n">RadarDetectionScenario</span><span class="p">(</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">freq_hz</span><span class="o">=</span><span class="mf">10e9</span><span class="p">,</span>              <span class="c1"># X-band</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">target_rcs_m2</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>         <span class="c1"># 1 m² target</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">bandwidth_hz</span><span class="o">=</span><span class="mf">100e3</span><span class="p">,</span>        <span class="c1"># matched to a 10 us pulse</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">range_m</span><span class="o">=</span><span class="mf">100e3</span><span class="p">,</span>             <span class="c1"># 100 km</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">required_pd</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>           <span class="c1"># 90% detection probability</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">pfa</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>                  <span class="c1"># 10⁻⁶ false alarm rate</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">pulse_width_s</span><span class="o">=</span><span class="mf">10e-6</span><span class="p">,</span>       <span class="c1"># 10 μs pulse</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">target_rcs_dbsm</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>       <span class="c1"># 1 m^2 target</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">pd_required</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>           <span class="c1"># 90% detection probability</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">pfa</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>                  <span class="c1"># 1e-6 false alarm rate</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">prf_hz</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>               <span class="c1"># 1 kHz PRF</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">n_pulses</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>               <span class="c1"># Integrate 10 pulses</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="n">integration_type</span><span class="o">=</span><span class="s2">"coherent"</span><span class="p">,</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">swerling_model</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>          <span class="c1"># Swerling 1 target</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">swerling</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                <span class="c1"># Swerling 1 target</span>
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="swerling-models">Swerling Models<a class="headerlink" href="#swerling-models" title="Permanent link">&para;</a></h3>
@@ -3516,14 +3608,14 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">scenario</span><span class="p">:</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radar</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">freq_hz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0e9</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">target_rcs_m2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">target_rcs_dbsm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">range_m</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100.0e3</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">required_pd</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">pd_required</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">pfa</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0e-6</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">pulse_width_s</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0e-6</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">bandwidth_hz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100.0e3</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="nt">prf_hz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nt">n_pulses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="nt">swerling_model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="nt">swerling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </span></code></pre></div>
 <p>Load with:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">phased_array_systems.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
@@ -3540,7 +3632,7 @@ L_{FSPL} = 20 \log_{10}(4\pi d f / c)
     E --&gt;|Yes| F[Set range_m, rx_antenna_gain_db]
     E --&gt;|No| G[Satellite?]
     G --&gt;|Yes| H[Large range_m, set atmospheric/rain losses]
-    D --&gt; I[Set target_rcs_m2]
+    D --&gt; I[Set target_rcs_dbsm]
     I --&gt; J[Set detection requirements]
     J --&gt; K[Choose Swerling model]</code></pre>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>

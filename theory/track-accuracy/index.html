@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://jman4162.github.io/phased-array-systems/theory/validation/">
+        <link rel="canonical" href="https://jman4162.github.io/phased-array-systems/theory/track-accuracy/">
       
       
-        <link rel="prev" href="../pareto-optimization/">
+        <link rel="prev" href="../mti-clutter-suppression/">
       
       
-        <link rel="next" href="../../contributing/">
+        <link rel="next" href="../pareto-optimization/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Model Validation - phased-array-systems</title>
+        <title>Track Accuracy - phased-array-systems</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#model-validation" class="md-skip">
+        <a href="#track-accuracy" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Model Validation
+              Track Accuracy
             
           </span>
         </div>
@@ -2288,10 +2288,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../track-accuracy/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Track Accuracy
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2307,6 +2334,115 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#measurement-accuracy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measurement accuracy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Measurement accuracy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-snr-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The SNR convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-range-dominates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-range dominates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tracking-index-and-steady-state-gains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tracking index and steady-state gains
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tracking index and steady-state gains">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-correct-covariance-formulas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two correct covariance formulas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-index-tells-a-designer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the index tells a designer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2344,37 +2480,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Model Validation
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
         
   
   
@@ -2390,37 +2499,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#documented-approximations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documented approximations
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2541,10 +2619,88 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documented-approximations" class="md-nav__link">
+  <a href="#measurement-accuracy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documented approximations
+        Measurement accuracy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Measurement accuracy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-snr-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The SNR convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-range-dominates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-range dominates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tracking-index-and-steady-state-gains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tracking index and steady-state gains
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tracking index and steady-state gains">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-correct-covariance-formulas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two correct covariance formulas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-index-tells-a-designer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the index tells a designer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
       
     </span>
   </a>
@@ -2571,236 +2727,198 @@
   
 
 
-<h1 id="model-validation">Model Validation<a class="headerlink" href="#model-validation" title="Permanent link">&para;</a></h1>
-<p>Every physics model with published reference data is validated against
-that data in CI (<code>tests/test_validation.py</code>). The table below lists the
-model, its source, the reference points checked, and the asserted
-tolerance. Models without an external reference are checked against
-independent hand assemblies of their governing equations or exact
-closed-form identities.</p>
+<h1 id="track-accuracy">Track Accuracy<a class="headerlink" href="#track-accuracy" title="Permanent link">&para;</a></h1>
+<p>This package does not contain a tracker. It runs no recursion, holds no state,
+and processes no detections; the design document lists a real-time DSP tracker
+as a non-goal and that line stands. What it computes is the <strong>steady-state</strong>
+result, which is algebra rather than recursion: under stationary noise and a
+constant revisit interval, the Kalman filter settles to gains and a covariance
+available in closed form. A designer needs that number long before any filter
+exists.</p>
+<p>The chain is:</p>
+<div class="arithmatex">\[
+\text{SNR, } B \;\rightarrow\; \sigma_R
+\qquad
+\text{SNR, } \theta_{3dB} \;\rightarrow\; \sigma_\theta \;\rightarrow\; \sigma_{cr} = R\,\sigma_\theta
+\]</div>
+<div class="arithmatex">\[
+\sigma_w,\; T,\; A_{max} \;\rightarrow\; \Gamma \;\rightarrow\; (\alpha, \beta)
+\;\rightarrow\; \sigma_{pos},\; \sigma_{vel}
+\]</div>
+<p>Every input already exists here, which is why the model belongs in this package
+rather than in a tracking library: the array sets the beamwidth, the radar
+equation sets the SNR, and the scheduler sets the revisit interval. Tracking
+libraries take the measurement covariance as <strong>given</strong>; none of them derive it
+from an aperture.</p>
+<h2 id="measurement-accuracy">Measurement accuracy<a class="headerlink" href="#measurement-accuracy" title="Permanent link">&para;</a></h2>
+<div class="arithmatex">\[
+\sigma_R = \frac{\Delta R}{\sqrt{2\,\mathrm{SNR}}}, \qquad
+\Delta R = \frac{\alpha c}{2B}
+\]</div>
+<div class="arithmatex">\[
+\sigma_\theta = \frac{\theta_{3dB}}{k_m \sqrt{2\,\mathrm{SNR}}}, \qquad
+\theta_\phi = \frac{\theta_B}{\cos\phi}
+\]</div>
+<p>with <span class="arithmatex">\(k_m \approx 1.6\)</span> the monopulse difference-pattern slope. The angle form is
+derived for SNR &gt; 13 dB; below that the monopulse ratio is a biased estimate of
+the angle and the variance is optimistic. <code>monopulse_snr_ok</code> reports whether the
+case sits above the floor rather than silently extrapolating.</p>
+<p>Thermal angle error combines in quadrature with the hardware pointing error from
+<code>models/antenna/errors.py</code>, so phase-shifter bits and calibration residue
+propagate all the way through to track accuracy.</p>
+<h3 id="the-snr-convention">The SNR convention<a class="headerlink" href="#the-snr-convention" title="Permanent link">&para;</a></h3>
+<p>Two conventions appear in the literature and differ by a factor of two:</p>
 <table>
 <thead>
 <tr>
-<th>Model</th>
-<th>Reference</th>
-<th>Checked against</th>
-<th>Tolerance</th>
+<th>Source</th>
+<th>Form</th>
+<th>SNR means</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Gaseous attenuation (line-by-line)</td>
-<td>ITU-R P.676-13, Annex 1</td>
-<td>γ at 10, 22.235, 60, 94, 118.75, 183.31 GHz, standard surface conditions, cross-checked with ITU-Rpy</td>
-<td>2%</td>
+<td>POMR Eq. (18.33)</td>
+<td><span class="arithmatex">\(\sigma_R = \Delta R/\sqrt{\mathrm{SNR}}\)</span></td>
+<td><span class="arithmatex">\(2E/N_0\)</span>, matched-filter peak</td>
 </tr>
 <tr>
-<td>Rain specific attenuation k, α</td>
-<td>ITU-R P.838-3, Tables 1–4</td>
-<td>k/α at 10, 20, 40, 100 GHz, H and V polarization</td>
-<td>0.1%</td>
-</tr>
-<tr>
-<td>Sea clutter σ⁰</td>
-<td>NRL model, Gregers-Hansen &amp; Mittal, NRL/MR/5310-12-9346 (2012); fits Nathanson tables within ~2.3 dB</td>
-<td>Closed-form spot value (9.3 GHz, SS3, 1°, HH = −43.8 dB); VV &gt; HH at low grazing; monotonicity</td>
-<td>0.05 dB (spot)</td>
-</tr>
-<tr>
-<td>Ground clutter σ⁰</td>
-<td>Barton constant-γ model, published median γ per terrain</td>
-<td>γ·sin ψ identity; terrain ordering</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>CA-CFAR loss</td>
-<td>Gregers-Hansen universal curve; Richards ch. 16</td>
-<td>2.0 dB at N=16, 0.97 dB at N=32 (Pfa = 1e-6); monotonicity in N and Pfa</td>
-<td>0.1 dB</td>
-</tr>
-<tr>
-<td>Detection probability (Swerling 0)</td>
-<td>Marcum Q via noncentral χ²</td>
-<td><code>scipy.stats.ncx2.sf</code> identity; required SNR 13.18 dB at Pd=0.9/Pfa=1e-6</td>
-<td>exact / 0.15 dB</td>
-</tr>
-<tr>
-<td>Detection probability (Swerling 1–4)</td>
-<td>Gamma-mixture of noncentral χ²</td>
-<td>Swerling 1 closed form Pfa^(1/(1+SNR)); Swerling 2 gamma closed form; SW1−SW0 penalty 7–9.5 dB at Pd=0.9</td>
-<td>1e-6</td>
-</tr>
-<tr>
-<td>Albersheim's equation</td>
-<td>Richards, <em>Fundamentals of Radar Signal Processing</em></td>
-<td>13.1 dB (n=1), ~5.0 dB (n=10) at Pd=0.9/Pfa=1e-6; agreement with exact inversion</td>
-<td>0.2–0.3 dB</td>
-</tr>
-<tr>
-<td>Radar range equation</td>
-<td>Independent hand assembly</td>
-<td>Full <code>RadarModel</code> vs Pt·G²λ²σ/((4π)³R⁴LkT_sysB); R⁻⁴ and σ scaling laws</td>
-<td>1e-6 dB</td>
-</tr>
-<tr>
-<td>System noise temperature</td>
-<td>T_sys = T_ant + T₀(F−1)</td>
-<td>Identity with kTB+NF at 290 K; satcom case T_ant=60 K, NF=1 dB → T_sys=135.1 K</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>Friis cascade</td>
-<td>Pozar, <em>Microwave Engineering</em></td>
-<td>3-stage textbook chain; stage contributions sum to 100%</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>ADC quantization SNR</td>
-<td>6.02·ENOB + 1.76 dB</td>
-<td>12-bit → 74.0 dB</td>
-<td>0.1 dB</td>
-</tr>
-<tr>
-<td>ADC jitter SNR</td>
-<td>−20·log₁₀(2πf·t_j)</td>
-<td>1 ps at 1 GHz → 44.03 dB</td>
-<td>0.02 dB</td>
-</tr>
-<tr>
-<td>Phase quantization loss</td>
-<td>Mailloux ch. 7</td>
-<td>3 bits → 0.223 dB, Ruze form</td>
-<td>0.01 dB</td>
-</tr>
-<tr>
-<td>Taper loss</td>
-<td>scipy window functions</td>
-<td>Computed from actual windows (no fitted curves); Taylor −30 dB → 0.69 dB</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>Search timeline</td>
-<td>Beam-packing identity</td>
-<td>Frame time = ceil(Ω_search/Ω_beam)·(dwell+overhead), hand-reproduced</td>
-<td>1e-9</td>
-</tr>
-<tr>
-<td>Aperture power density</td>
-<td>Unit-cell geometry + energy balance</td>
-<td>(lambda/2)^2 cell at 10 GHz = 2.2469 cm^2 hand value; f^2 scaling X to Ka = 9x; total/aperture equals per-element/cell</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>Power-aperture product</td>
-<td>Barton/Skolnik search relation</td>
-<td>A_e = G lambda^2/4pi; required P*A scales as R^4 and 1/t_s</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>Clutter Doppler spread</td>
-<td>Skolnik ch. 15</td>
-<td>sigma_c = 2 sigma_v/lambda; 1.16 km/hr at 1.3 GHz -&gt; 2.79 Hz, sigma_omega = 0.0438 rad</td>
-<td>0.01 Hz</td>
-</tr>
-<tr>
-<td>MTI improvement factor</td>
-<td>Richards FRSP Eqs. (5.52)/(5.54) p. 247</td>
-<td>General quadratic form over binomial weights vs both published closed forms; two-pulse 30.2 dB, three-pulse 57.3 dB at sigma_omega = 0.0438</td>
-<td>5e-8 (rel) / 0.1 dB</td>
-</tr>
-<tr>
-<td>MTI signal gain</td>
-<td>Richards FRSP p. 246</td>
-<td>G = sum w_k^2 by Parseval: 2 (3.0 dB) two-pulse, 6 (7.8 dB) three-pulse</td>
-<td>exact</td>
-</tr>
-<tr>
-<td>Clutter cell RCS</td>
-<td>Independent worked case (ARSR-3, L-band ATC)</td>
-<td>A_c = R theta_az (c tau/2) with sigma0 = -20 dB -&gt; 3637 m^2 = 35.6 dBsm; required attenuation 47.6 dB</td>
-<td>0.5% / 0.05 dB</td>
-</tr>
-<tr>
-<td>Range measurement accuracy</td>
-<td>Curry, <em>Radar System Performance Modeling</em> 2e, Eq. (8.6) p. 168</td>
-<td>Worked example B=1 MHz, S/N=15 dB -&gt; 18.9 m; 32%/10% of resolution at POMR p. 690 SNR points</td>
-<td>0.1 m / 0.005</td>
-</tr>
-<tr>
-<td>Angle measurement accuracy</td>
-<td>Curry Eq. (8.8) p. 170; POMR Eq. (18.63) p. 706</td>
-<td>Worked example theta=1 deg, S/N=12 dB -&gt; 1.9 mrad, k_m=1.6; validity floor SNR&gt;13 dB recorded</td>
-<td>0.05 mrad</td>
-</tr>
-<tr>
-<td>Scan broadening</td>
-<td>Curry Eq. (8.9) p. 171</td>
-<td>1 deg beam at 30 deg scan -&gt; 1.15 deg, sigma 1.9 -&gt; 2.2 mrad</td>
-<td>0.01 deg</td>
-</tr>
-<tr>
-<td>Velocity accuracy</td>
-<td>Curry Eq. (8.13) p. 172 (via Barton &amp; Ward pp. 101-103)</td>
-<td>Independent hand assembly lambda/(2 tau sqrt(2 SNR))</td>
-<td>1e-12</td>
-</tr>
-<tr>
-<td>Tracking index and gains</td>
-<td>POMR Eqs. (19.47)/(19.54)-(19.56) pp. 731-732; Kalata 1984</td>
-<td>Kalata relation identity; Gamma round-trip; Gamma=1 -&gt; alpha=0.75, beta=0.50; alpha-&gt;1, beta-&gt;2 asymptotes (Fig. 19-14)</td>
-<td>exact / 1e-10</td>
-</tr>
-<tr>
-<td>Process noise from maneuver</td>
-<td>POMR Eqs. (19.63)/(19.66) p. 734</td>
-<td>Published worked example A=40 m/s^2, T=1 s, sigma_w=120 m -&gt; Gamma_D=0.33, kappa=0.91, sigma_v=36.4</td>
-<td>0.005 / 0.1</td>
-</tr>
-<tr>
-<td>Steady-state covariance (total)</td>
-<td>POMR Eq. (19.53) p. 731</td>
-<td>Fixed-gain covariance recursion (Joseph form) iterated to convergence with process noise, sharing no code</td>
-<td>1e-9 / 1e-7</td>
-</tr>
-<tr>
-<td>Steady-state covariance (sensor-noise only)</td>
-<td>Mahafza Eq. (11.94) ch. 11</td>
-<td>Same recursion with Q=0; canary asserts the incorrect circulating form (VRR&gt;1) is not used</td>
-<td>1e-9</td>
-</tr>
-<tr>
-<td>Thermal-reliability coupling</td>
-<td>Energy balance + Arrhenius</td>
-<td>T_j = T_amb + R_th·(P_DC−P_RF)/N hand value; MTBF monotone in duty cycle</td>
-<td>exact</td>
+<td>Curry Eq. (8.6)</td>
+<td><span class="arithmatex">\(\sigma_R = \Delta R/\sqrt{2\,S/N}\)</span></td>
+<td><span class="arithmatex">\(E/N_0\)</span></td>
 </tr>
 </tbody>
 </table>
-<h2 id="documented-approximations">Documented approximations<a class="headerlink" href="#documented-approximations" title="Permanent link">&para;</a></h2>
-<p>Where a model is deliberately simpler than the full reference, the
-limitation is stated in the module docstring:</p>
+<p>They are algebraically identical. This package's range equation produces the
+Curry/Barton <span class="arithmatex">\(S/N\)</span>, so every function uses the <span class="arithmatex">\(\sqrt{2\,\mathrm{SNR}}\)</span> form.
+POMR's angle relation already carries the factor of two, so range, angle, and
+Doppler end up on one convention.</p>
+<h2 id="cross-range-dominates">Cross-range dominates<a class="headerlink" href="#cross-range-dominates" title="Permanent link">&para;</a></h2>
+<p>Angle accuracy is a fixed fraction of a beamwidth, so cross-range error grows
+linearly with range while range error does not. At X-band, 50 km, 20 dB SNR,
+10 MHz bandwidth and a 64x64 array:</p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\sigma_R\)</span></td>
+<td>1.04 m</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\sigma_\theta\)</span></td>
+<td>0.068°</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\sigma_{cr}\)</span></td>
+<td>59.5 m</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-range error is <strong>57x</strong> the range error. Both terms carry
+<span class="arithmatex">\(1/\sqrt{\mathrm{SNR}}\)</span>, so more power or longer dwell improves each equally
+and leaves the ratio untouched. Only the aperture changes the ratio, by
+narrowing <span class="arithmatex">\(\theta_{3dB}\)</span>. Bandwidth, which buys range resolution cheaply, does
+nothing for cross-range at all.</p>
+<h2 id="tracking-index-and-steady-state-gains">Tracking index and steady-state gains<a class="headerlink" href="#tracking-index-and-steady-state-gains" title="Permanent link">&para;</a></h2>
+<p>The random tracking index (Kalata 1984; POMR Eq. 19.47) is the single number
+that sets the steady-state filter:</p>
+<div class="arithmatex">\[
+\Gamma = \frac{\sigma_v T^2}{\sigma_w}
+\]</div>
+<p>the ratio of position uncertainty from target maneuverability to that from the
+sensor. The optimal gains follow in closed form and satisfy the Kalata relation
+<span class="arithmatex">\(\beta = 2(2-\alpha) - 4\sqrt{1-\alpha}\)</span>, with steady-state error</p>
+<div class="arithmatex">\[
+\mathbf{P} = \sigma_w^2
+\begin{bmatrix}
+\alpha &amp; \beta/T \\
+\beta/T &amp; \dfrac{\beta(2\alpha-\beta)}{2(1-\alpha)T^2}
+\end{bmatrix}
+\]</div>
+<p>so <span class="arithmatex">\(\sigma_{pos} = \sigma_w\sqrt{\alpha}\)</span>.</p>
+<p>Rather than asking for a process-noise variance, the model takes a physical
+maneuver (<span class="arithmatex">\(A_{max}\)</span>, "the target pulls 4 g") and derives <span class="arithmatex">\(\sigma_v\)</span> through
+POMR Eqs. (19.63)/(19.66).</p>
+<h3 id="two-correct-covariance-formulas">Two correct covariance formulas<a class="headerlink" href="#two-correct-covariance-formulas" title="Permanent link">&para;</a></h3>
+<p>POMR Eq. (19.53) and Mahafza Eq. (11.94) disagree numerically because they
+answer different questions. Both are reproduced by the same fixed-gain
+covariance recursion, and both are emitted:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Formula</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>track_pos_rms_*_m</code></td>
+<td>POMR Eq. (19.53)</td>
+<td>total error, maneuver included</td>
+</tr>
+<tr>
+<td><code>track_vrr_*</code></td>
+<td>Mahafza Eq. (11.94)</td>
+<td>sensor-noise reduction, no maneuver</td>
+</tr>
+</tbody>
+</table>
+<p>A third form circulating in the literature,
+<span class="arithmatex">\((2\alpha^2 + 2\beta + \alpha\beta)/(\alpha(4-2\alpha-\beta))\)</span>, is wrong: it
+exceeds unity, claiming that filtering amplifies noise. A canary test asserts
+this package does not implement it.</p>
+<h3 id="what-the-index-tells-a-designer">What the index tells a designer<a class="headerlink" href="#what-the-index-tells-a-designer" title="Permanent link">&para;</a></h3>
+<p>The filter is applied per coordinate, and the two axes usually land in different
+regimes. For the 50 km case above against a 40 m/s² maneuver at 1 Hz revisit:</p>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th><span class="arithmatex">\(\sigma_w\)</span></th>
+<th><span class="arithmatex">\(\Gamma\)</span></th>
+<th><span class="arithmatex">\(\alpha\)</span></th>
+<th>Track <span class="arithmatex">\(\sigma_{pos}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Range</td>
+<td>1.04 m</td>
+<td>26.0</td>
+<td>0.996</td>
+<td>1.04 m</td>
+</tr>
+<tr>
+<td>Cross-range</td>
+<td>59.5 m</td>
+<td>0.60</td>
+<td>0.660</td>
+<td>48.3 m</td>
+</tr>
+</tbody>
+</table>
+<p>On the range axis the index is high: the maneuver is enormous relative to a
+one-metre measurement, so the filter must trust each measurement almost
+completely and smoothing buys nothing. The precise range measurement is wasted
+on a maneuvering target. On the coarse cross-range axis filtering does help,
+improving 59.5 m to 48.3 m. Overall track quality is set by the aperture, not
+the waveform — which is a statement about the array, and therefore belongs in
+this package.</p>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Slant-path atmospherics</strong>: specific attenuation over
-  min(range, equivalent-height/sin el) with h_O₂ = 6.1 km,
-  h_H₂O = 2.4 km (away-from-line values); the layered integration of
-  P.676 Annex 1 §2 is not implemented.</li>
-<li><strong>Effective rain path</strong>: ITU-R P.530 distance factor applied to the
-  scenario rain rate directly (P.530 defines it for the 0.01%-exceeded
-  rate). <strong>This is a terrestrial model and unsuitable for slant paths</strong>:
-  P.530 assumes the whole path sits in rain, while a satellite link exits
-  the rain layer within a few kilometers of altitude. On a 28 GHz LEO
-  link at 8 mm/h the P.530 form over the full slant range predicts tens
-  of dB where ITU-R P.618 predicts under 1 dB (measured against
-  opensatcom's P.618 implementation during AEDL t3-001 calibration,
-  2026-08-11). For earth-space links, take rain from a P.618
-  implementation and pass it in via <code>rain_loss_db</code>.</li>
-<li><strong>Cross-polarized sea clutter</strong>: copolarized NRL value −10 dB (the NRL
-  model has no cross-pol term; spread in the literature is 5–15 dB).</li>
-<li><strong>OS/GO/SO CFAR losses</strong>: published homogeneous-clutter deltas on the
-  CA universal curve, not per-type analytic curves.</li>
-<li><strong>Constant-γ ground clutter</strong> is frequency-independent by
-  construction; terrain γ values are medians with several dB of
-  real-world spread.</li>
+<li>Richards, Scheer &amp; Holm, <em>Principles of Modern Radar: Basic Principles</em>,
+  SciTech, 2010. Ch. 18 (measurements), Ch. 19 (tracking, W. D. Blair).</li>
+<li>Curry, <em>Radar System Performance Modeling</em>, 2nd ed., Artech House, 2005, ch. 8.</li>
+<li>Kalata, "The Tracking Index", <em>IEEE Trans. AES</em> 20(2), 174–182, 1984,
+  doi:10.1109/TAES.1984.310438.</li>
+<li>Mahafza, <em>Radar Systems Analysis and Design Using MATLAB</em>, ch. 11.</li>
+<li>Barton &amp; Ward, <em>Handbook of Radar Measurement</em>, Artech House, 1984.</li>
 </ul>
 
 
@@ -2841,7 +2959,7 @@ limitation is stated in the module docstring:</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../pareto-optimization/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Pareto Optimization">
+          <a href="../mti-clutter-suppression/" class="md-footer__link md-footer__link--prev" aria-label="Previous: MTI Clutter Suppression">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2851,20 +2969,20 @@ limitation is stated in the module docstring:</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Pareto Optimization
+                MTI Clutter Suppression
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../contributing/" class="md-footer__link md-footer__link--next" aria-label="Next: Contributing">
+          <a href="../pareto-optimization/" class="md-footer__link md-footer__link--next" aria-label="Next: Pareto Optimization">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Contributing
+                Pareto Optimization
               </div>
             </div>
             <div class="md-footer__button md-icon">
