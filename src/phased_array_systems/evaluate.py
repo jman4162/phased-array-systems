@@ -485,6 +485,11 @@ def evaluate_case(
 
                 # The alpha-beta filter is scalar per coordinate (POMR 19.49-19.53),
                 # so run it independently on range and on the worse cross-range axis.
+                # The full target_accel_max_ms2 is applied to each axis rather than
+                # projected onto it, so the two indices are an upper bound on both
+                # coordinates at once, not one consistent trajectory. Note also that
+                # sigma_v = kappa_1(Gamma_D) * A_max makes sigma_v axis-dependent,
+                # because kappa_1 depends on sigma_w.
                 worst_cr = max(sigma_cr_az, sigma_cr_el)
                 for label, sigma_w in (("range", sigma_r), ("crossrange", worst_cr)):
                     gamma_d = deterministic_tracking_index(

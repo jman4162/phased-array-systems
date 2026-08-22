@@ -120,6 +120,11 @@ def angle_sigma_deg(
     """sigma_theta = theta_3dB / (k_m * sqrt(2 * SNR)), POMR Eq. (18.63) / Curry Eq. (8.8).
 
     Valid above ``MONOPULSE_SNR_FLOOR_DB``; see the module note.
+
+    Thermal (SNR-driven) term only, as with :func:`range_sigma_m`. Curry
+    Eq. (8.7) adds fixed-random and bias terms in quadrature, and target glint
+    can dominate angular error at short range (Curry p. 170). None of those are
+    consequences of the array design, so they are left to the caller.
     """
     if beamwidth_deg <= 0:
         raise ValueError("beamwidth_deg must be > 0")

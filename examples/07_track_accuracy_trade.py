@@ -24,7 +24,9 @@ def main() -> None:
         f"{'N':>7}  {'SNR dB':>7}  {'BW deg':>7}  {'sig_R m':>8}  "
         f"{'sig_CR m':>9}  {'Gamma':>7}  {'track m':>8}"
     )
-    print("X-band, 50 km, 0 dBsm target, 4 g maneuver, 1 Hz track revisit\n")
+    print("X-band, 50 km, 0 dBsm target, 4 g maneuver, 1 Hz track revisit")
+    print("Transmit power is 10 W per element and is held fixed, so total")
+    print("power grows with the array: 2.6 kW at 16^2 to 164 kW at 128^2.\n")
     print(header)
     print("-" * len(header))
 
@@ -53,12 +55,23 @@ def main() -> None:
         )
 
     print(
-        "\nBoth errors fall as the array grows, because gain and therefore SNR\n"
-        "rise with N^2 and every accuracy term carries 1/sqrt(SNR). Cross-range\n"
-        "falls faster by one further factor of N, because beamwidth narrows too:\n"
-        "the cross-range/range ratio halves on each doubling (115x, 57x, 29x).\n"
-        "At fixed SNR the split is clean -- bandwidth sets range accuracy,\n"
-        "aperture sets cross-range -- and cross-range dominates the track."
+        "\nBoth errors fall as the array grows. With per-element power fixed,\n"
+        "transmit power and both antenna gains each rise with element count M,\n"
+        "so SNR rises as M^3: +18 dB per doubling of a side, and every accuracy\n"
+        "term carries 1/sqrt(SNR), giving 8x. Under fixed *total* power SNR\n"
+        "would rise as M^2 and range accuracy would improve 4x per doubling.\n"
+        "Cross-range falls faster by one further factor of N, because beamwidth\n"
+        "narrows too, so the cross-range/range ratio halves on each doubling\n"
+        "(115x, 57x, 29x). That ratio is SNR-independent, so it is the part of\n"
+        "this sweep that is purely geometric.\n"
+        "At fixed SNR the split is clean: bandwidth sets range accuracy,\n"
+        "aperture sets cross-range, and cross-range dominates the track.\n"
+        "\nTwo caveats the numbers do not carry. The 16^2 and 32^2 rows sit\n"
+        "below MONOPULSE_SNR_FLOOR_DB (13 dB), where POMR Eq. (18.63) is\n"
+        "optimistic and biased, and the 16^2 row is not detectable at all.\n"
+        "All sigmas are thermal-noise terms only: Curry Eq. (8.5) adds fixed\n"
+        "and bias errors in quadrature, which floor the 128^2 range figure well\n"
+        "above 7 cm in any real radar."
     )
 
 
