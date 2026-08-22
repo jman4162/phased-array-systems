@@ -167,6 +167,8 @@ nav:
     - Link Budget Equations: theory/link-budget-equations.md
     - Radar Equation: theory/radar-equation.md
     - Aperture Power Density: theory/aperture-power-density.md
+    - MTI Clutter Suppression: theory/mti-clutter-suppression.md
+    - Track Accuracy: theory/track-accuracy.md
     - Pareto Optimization: theory/pareto-optimization.md
     - Model Validation: theory/validation.md
   - Contributing: contributing.md

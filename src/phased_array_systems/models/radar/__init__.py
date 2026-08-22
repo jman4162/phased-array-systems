@@ -34,6 +34,19 @@ from phased_array_systems.models.radar.integration import (
     integration_loss,
     noncoherent_integration_gain,
 )
+from phased_array_systems.models.radar.mti import (
+    blind_speed_ms,
+    canceller_weights,
+    clutter_autocorrelation,
+    clutter_spectral_std_hz,
+    doppler_shift_hz,
+    mti_clutter_attenuation,
+    mti_improvement_factor,
+    mti_signal_gain,
+    normalized_clutter_spread_rad,
+    required_clutter_attenuation_db,
+    unambiguous_range_m,
+)
 from phased_array_systems.models.radar.propagation import (
     atmospheric_attenuation_db_per_km,
     atmospheric_loss_db,
@@ -43,10 +56,53 @@ from phased_array_systems.models.radar.propagation import (
     rain_attenuation_db,
     rain_attenuation_rate,
 )
+from phased_array_systems.models.radar.tracking import (
+    alpha_beta_gains,
+    angle_sigma_deg,
+    combine_angle_errors_deg,
+    crossrange_sigma_m,
+    deterministic_tracking_index,
+    maneuver_lag_m,
+    process_noise_from_maneuver,
+    range_resolution_m,
+    range_sigma_m,
+    scan_broadened_beamwidth_deg,
+    steady_state_sigmas,
+    tracking_index,
+    variance_reduction_position,
+    velocity_sigma_ms,
+)
 
 __all__ = [
     # Main model
     "RadarModel",
+    # MTI clutter suppression
+    "clutter_spectral_std_hz",
+    "normalized_clutter_spread_rad",
+    "clutter_autocorrelation",
+    "canceller_weights",
+    "mti_signal_gain",
+    "mti_improvement_factor",
+    "mti_clutter_attenuation",
+    "required_clutter_attenuation_db",
+    "blind_speed_ms",
+    "doppler_shift_hz",
+    "unambiguous_range_m",
+    # Track accuracy
+    "range_resolution_m",
+    "range_sigma_m",
+    "angle_sigma_deg",
+    "scan_broadened_beamwidth_deg",
+    "crossrange_sigma_m",
+    "velocity_sigma_ms",
+    "combine_angle_errors_deg",
+    "tracking_index",
+    "deterministic_tracking_index",
+    "process_noise_from_maneuver",
+    "alpha_beta_gains",
+    "steady_state_sigmas",
+    "variance_reduction_position",
+    "maneuver_lag_m",
     # Detection
     "compute_detection_threshold",
     "compute_pd_from_snr",

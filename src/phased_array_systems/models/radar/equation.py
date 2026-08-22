@@ -252,6 +252,31 @@ class RadarModel:
 
             scr_db = compute_scr(rcs_dbsm, clutter_rcs_dbsm)
 
+        # MTI clutter suppression, when a canceller is configured. Without it a
+        # ground-based radar looking at clutter is judged undetectable, which
+        # misrepresents every real MTI system. Improvement factor rather than
+        # clutter attenuation is applied, because I = G*CA carries both the
+        # filter's gain on the target and its rejection of clutter, and it is
+        # the SCR that the detection budget consumes.
+        mti_improvement_db = 0.0
+        if scenario.mti_n_pulse is not None and scenario.clutter_type != "none":
+            from phased_array_systems.models.radar.mti import (
+                clutter_spectral_std_hz,
+                mti_improvement_factor,
+                normalized_clutter_spread_rad,
+            )
+
+            if scenario.prf_hz is None:
+                raise ValueError("mti_n_pulse requires prf_hz to be set")
+            sigma_omega = normalized_clutter_spread_rad(
+                clutter_spectral_std_hz(scenario.clutter_velocity_std_ms, scenario.wavelength_m),
+                scenario.prf_hz,
+            )
+            mti_improvement_db = 10.0 * math.log10(
+                mti_improvement_factor(scenario.mti_n_pulse, sigma_omega)
+            )
+            scr_db += mti_improvement_db
+
         # Compute SCNR (signal-to-clutter-plus-noise ratio)
         scnr_db = compute_scnr(snr_single_db, scr_db)
 
@@ -311,7 +336,7 @@ class RadarModel:
         # In dB: R_det = R * 10^(margin_dB / 40)
         detection_range_m = range_m * 10 ** (snr_margin_db / 40) if snr_margin_db > -40 else 0.0
 
-        return {
+        metrics: MetricsDict = {
             # Power
             "peak_power_w": peak_power_w,
             "peak_power_dbw": peak_power_dbw,
@@ -355,6 +380,14 @@ class RadarModel:
             "integration_type": scenario.integration_type,
             "detection_range_m": detection_range_m,
         }
+
+        # Emitted only when a canceller is configured, so a run without MTI
+        # produces exactly the keys it did before.
+        if scenario.mti_n_pulse is not None and scenario.clutter_type != "none":
+            metrics["mti_improvement_db"] = mti_improvement_db
+            metrics["mti_n_pulse"] = scenario.mti_n_pulse
+
+        return metrics
 
 
 def compute_detection_range(

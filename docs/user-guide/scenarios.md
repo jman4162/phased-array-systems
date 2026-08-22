@@ -102,17 +102,30 @@ For radar detection performance analysis.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `freq_hz` | float | Required | Operating frequency (Hz) |
-| `target_rcs_m2` | float | Required | Target RCS (m²) |
+| `bandwidth_hz` | float | Required | Signal bandwidth (Hz) |
 | `range_m` | float | Required | Target range (m) |
-| `required_pd` | float | `0.9` | Required detection probability |
-| `pfa` | float | `1e-6` | False alarm probability |
-| `pulse_width_s` | float | Required | Pulse width (s) |
-| `prf_hz` | float | Required | Pulse repetition frequency (Hz) |
-| `n_pulses` | int | `1` | Pulses to integrate |
-| `integration_type` | str | `"coherent"` | Integration type |
-| `swerling_model` | int | `1` | Target fluctuation model |
-| `scan_angle_deg` | float | `0.0` | Beam scan angle (degrees) |
-| `system_loss_db` | float | `0.0` | System losses (dB) |
+| `target_rcs_dbsm` | float | Required | Target RCS (dBsm) |
+| `pd_required` | float | `0.9` | Required probability of detection |
+| `pfa` | float | `1e-6` | Probability of false alarm |
+| `n_pulses` | int | `1` | Number of pulses integrated |
+| `swerling` | int | `0` | Swerling fluctuation model (0 = non-fluctuating) |
+| `integration_type` | str | `"noncoherent"` | Integration type |
+| `prf_hz` | float \| None | `None` | Pulse repetition frequency (Hz); dwell = `n_pulses/prf_hz` |
+| `duty_cycle` | float | `1.0` | Transmit duty cycle (avg/peak power) |
+| `scan_angle_deg` | float | `0.0` | Scan angle from boresight (degrees) |
+| `rx_noise_temp_k` | float | `290.0` | Receiver noise temperature (K) |
+
+There is no pulse-width field: set `bandwidth_hz`, which for an uncompressed
+pulse is about `1/tau`. System losses live on the architecture
+(`RFChainConfig.system_loss_db`) rather than on the scenario.
+
+These read-only properties are derived from the fields above:
+
+| Property | Description |
+|----------|-------------|
+| `wavelength_m` | Wavelength (m) |
+| `target_rcs_m2` | Target RCS in m^2, converted from `target_rcs_dbsm` |
+| `range_resolution_m` | Range resolution, `c / 2B` |
 
 ### Example
 
@@ -121,15 +134,15 @@ from phased_array_systems.scenarios import RadarDetectionScenario
 
 scenario = RadarDetectionScenario(
     freq_hz=10e9,              # X-band
-    target_rcs_m2=1.0,         # 1 m² target
+    bandwidth_hz=100e3,        # matched to a 10 us pulse
     range_m=100e3,             # 100 km
-    required_pd=0.9,           # 90% detection probability
-    pfa=1e-6,                  # 10⁻⁶ false alarm rate
-    pulse_width_s=10e-6,       # 10 μs pulse
+    target_rcs_dbsm=0.0,       # 1 m^2 target
+    pd_required=0.9,           # 90% detection probability
+    pfa=1e-6,                  # 1e-6 false alarm rate
     prf_hz=1000,               # 1 kHz PRF
     n_pulses=10,               # Integrate 10 pulses
     integration_type="coherent",
-    swerling_model=1,          # Swerling 1 target
+    swerling=1,                # Swerling 1 target
 )
 ```
 
@@ -226,14 +239,14 @@ scenario:
 scenario:
   type: radar
   freq_hz: 10.0e9
-  target_rcs_m2: 1.0
+  target_rcs_dbsm: 0.0
   range_m: 100.0e3
-  required_pd: 0.9
+  pd_required: 0.9
   pfa: 1.0e-6
-  pulse_width_s: 10.0e-6
+  bandwidth_hz: 100.0e3
   prf_hz: 1000
   n_pulses: 10
-  swerling_model: 1
+  swerling: 1
 ```
 
 Load with:
@@ -256,7 +269,7 @@ graph TD
     E -->|Yes| F[Set range_m, rx_antenna_gain_db]
     E -->|No| G[Satellite?]
     G -->|Yes| H[Large range_m, set atmospheric/rain losses]
-    D --> I[Set target_rcs_m2]
+    D --> I[Set target_rcs_dbsm]
     I --> J[Set detection requirements]
     J --> K[Choose Swerling model]
 ```

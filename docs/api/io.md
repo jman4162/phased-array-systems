@@ -184,15 +184,15 @@ scenario:
 scenario:
   type: radar
   freq_hz: 10.0e9          # Required
-  target_rcs_m2: 1.0       # Required
+  bandwidth_hz: 100.0e3    # Required
   range_m: 100.0e3         # Required
-  required_pd: 0.9         # Default: 0.9
+  target_rcs_dbsm: 0.0     # Required
+  pd_required: 0.9         # Default: 0.9
   pfa: 1.0e-6              # Default: 1e-6
-  pulse_width_s: 10.0e-6   # Required
-  prf_hz: 1000             # Required
   n_pulses: 1              # Default: 1
-  integration_type: coherent  # Default: coherent
-  swerling_model: 1        # Default: 1
+  swerling: 0              # Default: 0
+  integration_type: noncoherent  # Default: noncoherent
+  prf_hz: 1000             # Optional; enables dwell and timeline metrics
 ```
 
 ### Requirements Section

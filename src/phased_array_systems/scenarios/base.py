@@ -1,6 +1,6 @@
 """Base scenario class and utilities."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from phased_array_systems.constants import C
 
@@ -15,6 +15,12 @@ class ScenarioBase(BaseModel):
         freq_hz: Operating frequency in Hz
         name: Optional name for the scenario
     """
+
+    # Reject unknown fields rather than silently dropping them. A misspelled or
+    # relocated parameter (system_loss_db belongs on RFChainConfig, not here)
+    # otherwise vanishes without warning and the run reports physics the user
+    # did not ask for.
+    model_config = ConfigDict(extra="forbid")
 
     freq_hz: float = Field(gt=0, description="Operating frequency (Hz)")
     name: str | None = Field(default=None, description="Scenario name")

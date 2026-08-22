@@ -16,7 +16,6 @@ scenario:
   n_pulses: 10             # Number of integrated pulses
   integration_type: noncoherent
   scan_angle_deg: 0.0
-  system_loss_db: 2.0
 
 # Requirements for feasibility filtering
 requirements:

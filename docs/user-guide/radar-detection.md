@@ -41,7 +41,7 @@ from phased_array_systems.evaluate import evaluate_case
 
 # Define architecture
 arch = Architecture(
-    array=ArrayConfig(nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5),
+    array=ArrayConfig(nx=64, ny=64, dx_lambda=0.5, dy_lambda=0.5),
     rf=RFChainConfig(
         tx_power_w_per_elem=10.0,
         pa_efficiency=0.25,
@@ -52,15 +52,15 @@ arch = Architecture(
 # Define scenario
 scenario = RadarDetectionScenario(
     freq_hz=10e9,              # X-band
-    target_rcs_m2=1.0,         # 1 m² target
+    bandwidth_hz=100e3,        # matched to a 10 us pulse (B ~ 1/tau)
     range_m=100e3,             # 100 km
-    required_pd=0.9,           # 90% detection probability
-    pfa=1e-6,                  # 10⁻⁶ false alarm rate
-    pulse_width_s=10e-6,       # 10 μs pulse
+    target_rcs_dbsm=0.0,       # 1 m^2 target, expressed in dBsm
+    pd_required=0.9,           # 90% detection probability
+    pfa=1e-6,                  # 1e-6 false alarm rate
     prf_hz=1000,               # 1 kHz PRF
     n_pulses=10,               # Integrate 10 pulses
     integration_type="coherent",
-    swerling_model=1,
+    swerling=1,
 )
 
 # Evaluate
@@ -71,6 +71,17 @@ print(f"Integrated SNR: {metrics['snr_integrated_db']:.1f} dB")
 print(f"Required SNR: {metrics['snr_required_db']:.1f} dB")
 print(f"SNR Margin: {metrics['snr_margin_db']:.1f} dB")
 ```
+
+```
+Single-Pulse SNR: 13.8 dB
+Integrated SNR: 23.8 dB
+Required SNR: 21.1 dB
+SNR Margin: 2.7 dB
+```
+
+Target cross-section is given in dBsm, so a 1 m^2 target is `0.0` and a 2 m^2
+target is `3.0`. There is no pulse-width field: set `bandwidth_hz` directly,
+which for an uncompressed pulse is about `1/tau`.
 
 ### Output Metrics
 
@@ -110,9 +121,9 @@ $$
 
 ```python
 # Different Swerling models
-scenario_sw0 = RadarDetectionScenario(..., swerling_model=0)  # Steady target
-scenario_sw1 = RadarDetectionScenario(..., swerling_model=1)  # Typical aircraft
-scenario_sw3 = RadarDetectionScenario(..., swerling_model=3)  # Ship
+scenario_sw0 = RadarDetectionScenario(..., swerling=0)  # Steady target
+scenario_sw1 = RadarDetectionScenario(..., swerling=1)  # Typical aircraft
+scenario_sw3 = RadarDetectionScenario(..., swerling=3)  # Ship
 ```
 
 ## Pulse Integration
@@ -156,20 +167,22 @@ scenario = RadarDetectionScenario(
 For advanced use cases:
 
 ```python
-from phased_array_systems.models.radar.equation import RadarEquationModel
-from phased_array_systems.models.radar.detection import compute_required_snr
+from phased_array_systems.models.radar.equation import RadarModel
+from phased_array_systems.models.radar.detection import compute_snr_for_pd
 
 # Calculate required SNR
-snr_req = compute_required_snr(
+snr_req = compute_snr_for_pd(
     pd=0.9,
     pfa=1e-6,
-    swerling_model=1,
+    swerling=1,
     n_pulses=10,
 )
-print(f"Required SNR: {snr_req:.1f} dB")
+print(f"Required SNR: {snr_req:.1f} dB")   # 13.5 dB
 
-# Use radar equation model directly
-model = RadarEquationModel()
+# Use the radar model directly. It reads antenna gain and beamwidths from
+# `context`; an empty context falls back to defaults, so in normal use pass
+# the antenna model's metrics through as `evaluate_case` does.
+model = RadarModel()
 metrics = model.evaluate(arch, scenario, context={})
 ```
 
@@ -177,15 +190,31 @@ metrics = model.evaluate(arch, scenario, context={})
 
 Solve for range at which SNR equals required SNR:
 
-```python
-from phased_array_systems.models.radar.detection import compute_detection_range
+Every evaluated case already carries it, scaled from the SNR margin by the
+fourth-power range law:
 
-max_range = compute_detection_range(
-    snr_single_db=15.0,
+```python
+metrics = evaluate_case(arch, scenario)
+print(f"Detection range: {metrics['detection_range_m']/1000:.1f} km")
+```
+
+To solve from radar parameters without building an `Architecture`:
+
+```python
+from phased_array_systems.models.radar.equation import compute_detection_range
+
+max_range_m = compute_detection_range(
+    peak_power_w=1000.0,
+    g_ant_db=35.0,
+    freq_hz=10e9,
+    rcs_dbsm=0.0,
+    noise_temp_k=290.0,
+    bandwidth_hz=1e6,
+    noise_figure_db=4.0,
+    system_loss_db=3.0,
     snr_required_db=13.0,
-    current_range_m=100e3,
 )
-print(f"Detection range: {max_range/1000:.1f} km")
+print(f"Detection range: {max_range_m/1000:.1f} km")   # 10.3 km
 ```
 
 ## Example: Search Radar
@@ -203,49 +232,83 @@ arch = Architecture(
 
 scenario = RadarDetectionScenario(
     freq_hz=3e9,               # S-band (longer range)
-    target_rcs_m2=2.0,         # Medium aircraft
+    bandwidth_hz=20e3,         # matched to a 50 us pulse
     range_m=200e3,             # 200 km search
-    required_pd=0.8,           # 80% Pd
+    target_rcs_dbsm=3.0,       # 2 m^2, medium aircraft
+    pd_required=0.8,           # 80% Pd
     pfa=1e-6,
-    pulse_width_s=50e-6,       # Long pulse
     prf_hz=300,
     n_pulses=20,               # Long integration
     integration_type="noncoherent",
-    swerling_model=1,
+    swerling=1,
 )
 
 metrics = evaluate_case(arch, scenario)
 print(f"SNR Margin at 200 km: {metrics['snr_margin_db']:.1f} dB")
+print(f"Detection range: {metrics['detection_range_m']/1000:.1f} km")
 ```
+
+```
+SNR Margin at 200 km: -0.5 dB
+Detection range: 194.3 km
+```
+
+Half a dB short at the stated range, which the detection range restates as
+194 km rather than 200 km.
 
 ## Example: Tracking Radar
 
+Setting `target_accel_max_ms2` turns on the track-accuracy metrics: the
+measurement errors that the detection SNR buys, and the steady-state filter
+performance that follows from them and the revisit rate. See
+[Track Accuracy](../theory/track-accuracy.md) for the equations.
+
 ```python
-# Precision tracking radar
+from phased_array_systems import Architecture, ArrayConfig, RFChainConfig, evaluate_case
+from phased_array_systems.scenarios import RadarDetectionScenario
+
 arch = Architecture(
-    array=ArrayConfig(nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5),
+    array=ArrayConfig(nx=64, ny=64, dx_lambda=0.5, dy_lambda=0.5),
     rf=RFChainConfig(
-        tx_power_w_per_elem=5.0,
+        tx_power_w_per_elem=10.0,
         pa_efficiency=0.30,
         noise_figure_db=3.0,
     ),
 )
 
 scenario = RadarDetectionScenario(
-    freq_hz=10e9,              # X-band (precision)
-    target_rcs_m2=0.5,         # Smaller target
-    range_m=50e3,              # 50 km track
-    required_pd=0.99,          # High Pd for tracking
-    pfa=1e-4,                  # Relaxed Pfa (verified target)
-    pulse_width_s=5e-6,        # Short pulse (range resolution)
-    prf_hz=5000,               # High PRF
-    n_pulses=100,              # Many pulses
+    freq_hz=10e9,                 # X-band
+    bandwidth_hz=10e6,            # 15 m range resolution
+    range_m=50e3,
+    target_rcs_dbsm=0.0,
+    pd_required=0.99,             # high Pd for track maintenance
+    pfa=1e-4,                     # relaxed Pfa on a confirmed target
+    n_pulses=64,
+    prf_hz=5000,
     integration_type="coherent",
-    swerling_model=0,          # Stabilized target
+    swerling=0,                   # stabilized target
+    track_revisit_s=1.0,          # track update rate
+    target_accel_max_ms2=40.0,    # ~4 g maneuver
 )
 
 metrics = evaluate_case(arch, scenario)
+
+print(f"SNR:            {metrics['snr_integrated_db']:.1f} dB")
+print(f"sigma_range:    {metrics['sigma_range_m']:.2f} m")
+print(f"sigma_crossrng: {metrics['sigma_crossrange_az_m']:.1f} m")
+print(f"track position: {metrics['track_pos_rms_crossrange_m']:.1f} m")
 ```
+
+```
+SNR:            25.0 dB
+sigma_range:    0.60 m
+sigma_crossrng: 34.2 m
+track position: 29.7 m
+```
+
+Cross-range error is 57x the range error here, and only a larger aperture
+reduces it. `monopulse_snr_ok` reports whether the case sits above the 13 dB
+floor where the angle-accuracy relation is valid.
 
 ## Radar Trade Studies
 

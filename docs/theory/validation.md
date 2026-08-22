@@ -27,6 +27,18 @@ closed-form identities.
 | Search timeline | Beam-packing identity | Frame time = ceil(Ω_search/Ω_beam)·(dwell+overhead), hand-reproduced | 1e-9 |
 | Aperture power density | Unit-cell geometry + energy balance | (lambda/2)^2 cell at 10 GHz = 2.2469 cm^2 hand value; f^2 scaling X to Ka = 9x; total/aperture equals per-element/cell | exact |
 | Power-aperture product | Barton/Skolnik search relation | A_e = G lambda^2/4pi; required P*A scales as R^4 and 1/t_s | exact |
+| Clutter Doppler spread | Skolnik ch. 15 | sigma_c = 2 sigma_v/lambda; 1.16 km/hr at 1.3 GHz -> 2.79 Hz, sigma_omega = 0.0438 rad | 0.01 Hz |
+| MTI improvement factor | Richards FRSP Eqs. (5.52)/(5.54) p. 247 | General quadratic form over binomial weights vs both published closed forms; two-pulse 30.2 dB, three-pulse 57.3 dB at sigma_omega = 0.0438 | 5e-8 (rel) / 0.1 dB |
+| MTI signal gain | Richards FRSP p. 246 | G = sum w_k^2 by Parseval: 2 (3.0 dB) two-pulse, 6 (7.8 dB) three-pulse | exact |
+| Clutter cell RCS | Independent worked case (ARSR-3, L-band ATC) | A_c = R theta_az (c tau/2) with sigma0 = -20 dB -> 3637 m^2 = 35.6 dBsm; required attenuation 47.6 dB | 0.5% / 0.05 dB |
+| Range measurement accuracy | Curry, *Radar System Performance Modeling* 2e, Eq. (8.6) p. 168 | Worked example B=1 MHz, S/N=15 dB -> 18.9 m; 32%/10% of resolution at POMR p. 690 SNR points | 0.1 m / 0.005 |
+| Angle measurement accuracy | Curry Eq. (8.8) p. 170; POMR Eq. (18.63) p. 706 | Worked example theta=1 deg, S/N=12 dB -> 1.9 mrad, k_m=1.6; validity floor SNR>13 dB recorded | 0.05 mrad |
+| Scan broadening | Curry Eq. (8.9) p. 171 | 1 deg beam at 30 deg scan -> 1.15 deg, sigma 1.9 -> 2.2 mrad | 0.01 deg |
+| Velocity accuracy | Curry Eq. (8.13) p. 172 (via Barton & Ward pp. 101-103) | Independent hand assembly lambda/(2 tau sqrt(2 SNR)) | 1e-12 |
+| Tracking index and gains | POMR Eqs. (19.47)/(19.54)-(19.56) pp. 731-732; Kalata 1984 | Kalata relation identity; Gamma round-trip; Gamma=1 -> alpha=0.75, beta=0.50; alpha->1, beta->2 asymptotes (Fig. 19-14) | exact / 1e-10 |
+| Process noise from maneuver | POMR Eqs. (19.63)/(19.66) p. 734 | Published worked example A=40 m/s^2, T=1 s, sigma_w=120 m -> Gamma_D=0.33, kappa=0.91, sigma_v=36.4 | 0.005 / 0.1 |
+| Steady-state covariance (total) | POMR Eq. (19.53) p. 731 | Fixed-gain covariance recursion (Joseph form) iterated to convergence with process noise, sharing no code | 1e-9 / 1e-7 |
+| Steady-state covariance (sensor-noise only) | Mahafza Eq. (11.94) ch. 11 | Same recursion with Q=0; canary asserts the incorrect circulating form (VRR>1) is not used | 1e-9 |
 | Thermal-reliability coupling | Energy balance + Arrhenius | T_j = T_amb + R_th·(P_DC−P_RF)/N hand value; MTBF monotone in duty cycle | exact |
 
 ## Documented approximations

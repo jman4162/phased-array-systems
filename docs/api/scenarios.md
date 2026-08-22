@@ -58,15 +58,15 @@ from phased_array_systems.scenarios import RadarDetectionScenario
 
 scenario = RadarDetectionScenario(
     freq_hz=10e9,
-    target_rcs_m2=1.0,
+    bandwidth_hz=100e3,
     range_m=100e3,
-    required_pd=0.9,
+    target_rcs_dbsm=0.0,
+    pd_required=0.9,
     pfa=1e-6,
-    pulse_width_s=10e-6,
     prf_hz=1000,
     n_pulses=10,
     integration_type="coherent",
-    swerling_model=1,
+    swerling=1,
 )
 ```
 

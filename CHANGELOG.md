@@ -5,6 +5,104 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-08-21
+
+### Added
+
+- **Design-time track accuracy** (`models/radar/tracking.py`). The radar chain
+  stopped at the detection decision: nothing said how well a held target is
+  located, and `Function.RADAR_TRACK` had been a scheduler time budget with no
+  model behind it. This adds the closed-form chain from SNR and revisit rate to
+  steady-state track error. It is not a tracker and adds no recursion, no state,
+  and no dependency; the non-goal barring a real-time DSP tracker stands. The
+  steady-state Kalman result is algebra, so it fits the flat metrics contract.
+  Emits `sigma_range_m`, `sigma_angle_az_deg`/`_el_deg`,
+  `sigma_crossrange_az_m`/`_el_m`, `track_revisit_s`, `monopulse_snr_ok`, and
+  per-axis `track_index_*`, `track_alpha_*`, `track_beta_*`,
+  `track_pos_rms_*_m`, `track_vel_rms_*_ms`, `track_vrr_*`,
+  `track_maneuver_lag_*_m`. Gated on `RadarDetectionScenario.target_accel_max_ms2`:
+  unset, no keys are emitted and the golden snapshot is unchanged.
+- **MTI clutter suppression** (`models/radar/mti.py`). `clutter.py` computed how
+  much clutter a geometry produces but nothing said how much a radar can remove,
+  so the detection chain was broken in the middle: a ground-based radar facing
+  its own clutter scored as undetectable, which misrepresents every real MTI
+  system. Adds clutter Doppler spread from velocity (Skolnik ch. 15), binomial
+  N-pulse canceller weights, signal gain, clutter attenuation, improvement
+  factor, blind speeds, and unambiguous range. `RadarModel` applies the
+  improvement factor to SCR when `mti_n_pulse` is set, emitting
+  `mti_improvement_db` and `mti_n_pulse`; the chain now runs clutter RCS -> MTI
+  -> post-MTI SCNR -> detection, and through SNR into track accuracy. On the
+  ARSR-3 case a target at Pd = 0.000 without MTI reaches Pd = 1.000 with a
+  two-pulse canceller.
+  Improvement factor is computed from the general quadratic form over the
+  canceller weights rather than from tabulated closed forms. It reproduces
+  Richards FRSP Eqs. (5.52)/(5.54) exactly, extends to N > 3 where no closed
+  form is tabulated, and is better conditioned: the three-pulse closed form
+  differences three terms near unity and loses precision as the clutter spectrum
+  narrows (2.3e-8 relative at sigma_omega = 0.01 against a 50-digit evaluation,
+  versus 1.2e-8 for the form used).
+- **First worked-case test for the clutter model.** `compute_resolution_cell_area`
+  had no end-to-end verification. The ARSR-3 case pins it at 3637 m^2 / 35.6 dBsm
+  with a 47.6 dB required attenuation, cross-checked against `compute_scr`.
+- **Angle error budget.** `models/antenna/errors.py` computed
+  `pointing_error_rms_deg` but nothing consumed it. Thermal angle error now
+  combines with it in quadrature, so phase-shifter bits and calibration residue
+  reach track accuracy. This is the connection a tracking library cannot make:
+  it needs the array model, not just the filter.
+- Scenario fields `target_accel_max_ms2`, `track_revisit_s`, `monopulse_slope`,
+  `range_resolution_alpha`. The maneuver is stated physically (m/s^2) rather
+  than as a process-noise variance; POMR Eqs. (19.63)/(19.66) derive sigma_v.
+- Scenario fields `mti_n_pulse` and `clutter_velocity_std_ms`. Gated like the
+  track metrics: unset, no new keys are emitted and the golden snapshot is
+  unchanged.
+- `docs/theory/track-accuracy.md` and `docs/theory/mti-clutter-suppression.md`,
+  twelve validation-table rows, `examples/07_track_accuracy_trade.py`,
+  `examples/08_mti_clutter_suppression.py`, and configs `radar_track.yaml` and
+  `radar_mti.yaml`.
+
+### Fixed
+
+- **Documentation described a constructor that has not existed for several
+  releases.** `target_rcs_m2`, `required_pd`, `pulse_width_s` and
+  `swerling_model` appeared across the radar user guide, the scenario reference
+  table, three API pages and a tutorial. Every example is now correct and the
+  outputs shown are real program output. Also corrected: `RadarEquationModel`
+  (never exported; the class is `RadarModel`), `compute_required_snr` (the
+  function is `compute_snr_for_pd`), and a `compute_detection_range` example
+  whose entire signature was invented and which was imported from the wrong
+  module. The basic-usage example specified an array that could not detect its
+  own target, at a margin of -33 dB; it now shows a design with 2.7 dB of margin.
+- **`system_loss_db` was silently discarded in three shipped configs.**
+  `radar_basic.yaml`, `radar_doe.yaml` and `radar_track.yaml` each set it inside
+  their `scenario` block, where it belongs to `RFChainConfig` and never reached
+  the radar equation, so 2 dB of asserted loss quietly went missing. Moved to
+  `architecture.rf` where it applies; no requirement verdict changed.
+- **Scenarios now reject unknown fields** (`extra="forbid"` on `ScenarioBase`).
+  That silent drop is the mechanism that let the bug above survive, and it turns
+  any future typo or relocation into an error at construction.
+- `tests/test_docs_api_drift.py` reads the documentation and example configs as
+  data and checks every scenario keyword against the live models, so the next
+  rename fails CI. 121 tests, one per documentation file and config.
+
+### Notes
+
+- **Two SNR conventions were reconciled.** POMR Eq. (18.33) uses SNR = 2E/N0
+  while Curry Eq. (8.6) uses S/N = E/N0; the forms differ by sqrt(2) and are
+  algebraically identical. This package's range equation produces the
+  Curry/Barton S/N, so the sqrt(2*SNR) form is used throughout and documented in
+  the module. Same discipline as 0.8's single noise-temperature convention.
+- **Two steady-state covariance formulas were reconciled.** POMR Eq. (19.53) and
+  Mahafza Eq. (11.94) disagree numerically because they answer different
+  questions: total error with process noise, versus sensor-noise-only reduction.
+  Both are emitted, each verified against a fixed-gain covariance recursion
+  iterated to convergence. A third form circulating in the literature is wrong
+  (it yields VRR > 1, i.e. noise amplification) and a canary test pins that the
+  package does not implement it.
+- `alpha_beta_gains` uses an algebraic rearrangement of POMR Eqs. (19.47)/(19.56)
+  rather than Eqs. (19.54)/(19.55) literally: the literal form loses precision as
+  alpha approaches 1, reaching 4e-5 relative error by Gamma = 1e5, against ~1e-12
+  for the rearrangement. Both forms are pinned against each other in tests.
+
 ## [0.13.0] - 2026-08-21
 
 ### Added

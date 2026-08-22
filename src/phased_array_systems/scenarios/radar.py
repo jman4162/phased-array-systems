@@ -42,6 +42,12 @@ class RadarDetectionScenario(ScenarioBase):
         cfar_type: CFAR detector type
         cfar_ref_cells: Number of CFAR reference cells
         cfar_guard_cells: Number of CFAR guard cells
+        mti_n_pulse: Binomial MTI canceller length; enables clutter suppression
+        clutter_velocity_std_ms: Clutter Doppler spread in velocity (m/s)
+        target_accel_max_ms2: Max target acceleration; enables track metrics
+        track_revisit_s: Track revisit interval (defaults to search frame time)
+        monopulse_slope: Monopulse difference-pattern slope k_m
+        range_resolution_alpha: Range resolution degradation factor
         include_atmos_loss: Include atmospheric attenuation
         temperature_c: Ambient temperature for atmos model
         humidity_pct: Relative humidity for atmos model
@@ -114,6 +120,39 @@ class RadarDetectionScenario(ScenarioBase):
         default=None,
         gt=0,
         description="Allotted search frame budget (ms); sets timeline_occupancy",
+    )
+
+    # MTI clutter suppression (mti_n_pulse set -> improvement factor applied)
+    mti_n_pulse: int | None = Field(
+        default=None,
+        ge=2,
+        description="Binomial MTI canceller length (2=two-pulse, 3=three-pulse); needs prf_hz",
+    )
+    clutter_velocity_std_ms: float = Field(
+        default=0.322,
+        ge=0,
+        description="Clutter Doppler spread as velocity std dev (m/s); ~0.32 = wooded hills",
+    )
+
+    # Track accuracy parameters (target_accel_max_ms2 set -> track metrics computed)
+    target_accel_max_ms2: float | None = Field(
+        default=None,
+        ge=0,
+        description="Max target acceleration (m/s^2); set to enable track accuracy metrics",
+    )
+    track_revisit_s: float | None = Field(
+        default=None,
+        gt=0,
+        description="Track revisit interval (s); defaults to the search frame time",
+    )
+    monopulse_slope: float = Field(
+        default=1.6, gt=0, description="Monopulse difference-pattern slope k_m"
+    )
+    range_resolution_alpha: float = Field(
+        default=1.0,
+        ge=1.0,
+        le=2.0,
+        description="Range resolution degradation factor (1=matched filter, 2=heavy windowing)",
     )
 
     # Propagation parameters
