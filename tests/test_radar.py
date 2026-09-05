@@ -1,6 +1,9 @@
 """Tests for radar detection models."""
 
+import math
+
 import pytest
+from pydantic import ValidationError
 
 from phased_array_systems.architecture import Architecture, ArrayConfig, RFChainConfig
 from phased_array_systems.evaluate import evaluate_case
@@ -906,3 +909,187 @@ class TestRadarModelWithClutter:
         )
         # c / (2 * 10e6) = 15 m
         assert scenario.range_resolution_m == pytest.approx(15.0, rel=0.01)
+
+
+class TestScenarioConfigurationIsValidatedAtLoad:
+    """Configuration errors belong at construction, not three hundred lines
+    into an evaluation.
+
+    Each of these used to be discovered by RadarModel.evaluate as a per-case
+    ValueError the batch runner recorded as bad physics, or -- worse -- not
+    discovered at all: an MTI canceller requested without clutter simply
+    vanished, which is the silent-drop failure that put extra="forbid" on
+    ScenarioBase in the first place.
+    """
+
+    @staticmethod
+    def _kwargs(**overrides):
+        base = {
+            "freq_hz": 1.3e9,
+            "bandwidth_hz": 500e3,
+            "range_m": 55e3,
+            "target_rcs_dbsm": 3.0,
+            "n_pulses": 10,
+            "prf_hz": 400.0,
+            "clutter_type": "ground",
+        }
+        base.update(overrides)
+        return base
+
+    def test_valid_mti_setup_constructs(self):
+        assert RadarDetectionScenario(**self._kwargs(mti_n_pulse=3)).mti_n_pulse == 3
+
+    def test_mti_without_prf_is_rejected(self):
+        with pytest.raises(ValidationError, match="prf_hz"):
+            RadarDetectionScenario(**self._kwargs(mti_n_pulse=3, prf_hz=None))
+
+    def test_mti_without_clutter_is_rejected(self):
+        """Previously a silent no-op: no mti_* keys, no warning, and a
+        canceller the user asked for that never ran."""
+        with pytest.raises(ValidationError, match="clutter_type"):
+            RadarDetectionScenario(**self._kwargs(mti_n_pulse=3, clutter_type="none"))
+
+    def test_canceller_longer_than_the_dwell_is_rejected(self):
+        """An N-pulse canceller returns n_pulses - N + 1 outputs, so a
+        single-pulse dwell cannot support a three-pulse canceller. It used to
+        be accepted and awarded 57 dB of improvement, turning an undetectable
+        target into pd_achieved = 1.0."""
+        with pytest.raises(ValidationError, match="exceeds n_pulses"):
+            RadarDetectionScenario(**self._kwargs(n_pulses=1, mti_n_pulse=3))
+
+    def test_endfire_scan_is_rejected(self):
+        """le=90 admitted a scan angle at which the projected aperture
+        vanishes; compute_scan_loss already returned inf there, so the field
+        bound was the outlier."""
+        with pytest.raises(ValidationError):
+            RadarDetectionScenario(**self._kwargs(scan_angle_deg=90.0))
+        assert RadarDetectionScenario(**self._kwargs(scan_angle_deg=89.0)).scan_angle_deg == 89.0
+
+    def test_zero_maneuver_is_rejected(self):
+        """With no maneuver there is no tracking index: Gamma_D = 0 makes
+        process_noise_from_maneuver raise, and the alpha = beta = 0 filter it
+        implies leaves the VRR and lag terms undefined. Rejecting it at load
+        beats a ValueError from deep inside the track block."""
+        with pytest.raises(ValidationError):
+            RadarDetectionScenario(**self._kwargs(target_accel_max_ms2=0.0))
+
+
+class TestMtiPulseBudgetAndCeiling:
+    @staticmethod
+    def _arch():
+        return Architecture(
+            array=ArrayConfig(nx=32, ny=32, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=10.0, pa_efficiency=0.3, noise_figure_db=3.0),
+        )
+
+    @staticmethod
+    def _scenario(**overrides):
+        base = {
+            "freq_hz": 1.3e9,
+            "bandwidth_hz": 500e3,
+            "range_m": 55.56e3,
+            "target_rcs_dbsm": 3.0,
+            "n_pulses": 10,
+            "prf_hz": 400.0,
+            "clutter_type": "ground",
+            "terrain_type": "rural",
+            "clutter_velocity_std_ms": 0.322,
+        }
+        base.update(overrides)
+        return RadarDetectionScenario(**base)
+
+    def test_canceller_consumes_pulses_from_the_integration_budget(self):
+        """A three-pulse canceller over a ten-pulse dwell leaves eight
+        outputs, so the integration gain cannot still credit ten."""
+        no_mti = evaluate_case(self._arch(), self._scenario())
+        with_mti = evaluate_case(self._arch(), self._scenario(mti_n_pulse=3))
+        assert no_mti["n_pulses_effective"] == 10
+        assert with_mti["n_pulses_effective"] == 8
+        assert with_mti["integration_gain_db"] < no_mti["integration_gain_db"]
+
+    def test_improvement_is_capped_at_the_stability_limit(self):
+        """A near-stationary clutter spectrum drives the canceller model past
+        150 dB, which no transmitter supports. The cap is what keeps that (and
+        the infinity at zero spread) out of the metrics dict and the exported
+        JSON."""
+        capped = evaluate_case(
+            self._arch(),
+            self._scenario(mti_n_pulse=3, clutter_velocity_std_ms=0.001),
+        )
+        assert capped["mti_improvement_db"] == pytest.approx(60.0)
+        assert capped["mti_improvement_limited"] is True
+
+    def test_stationary_clutter_does_not_leak_infinity(self):
+        metrics = evaluate_case(
+            self._arch(),
+            self._scenario(mti_n_pulse=3, clutter_velocity_std_ms=0.0),
+        )
+        assert metrics["mti_improvement_db"] == pytest.approx(60.0)
+        assert math.isfinite(metrics["scr_db"])
+        assert math.isfinite(metrics["scnr_db"])
+
+    def test_uncapped_when_the_limit_is_disabled(self):
+        metrics = evaluate_case(
+            self._arch(),
+            self._scenario(
+                mti_n_pulse=3,
+                clutter_velocity_std_ms=0.001,
+                mti_improvement_limit_db=None,
+            ),
+        )
+        assert metrics["mti_improvement_db"] > 150.0
+        assert metrics["mti_improvement_limited"] is False
+
+    def test_ordinary_case_is_below_the_ceiling(self):
+        """ARSR-3's three-pulse canceller delivers 57.3 dB, under the 60 dB
+        default, so the cap changes no shipped number."""
+        metrics = evaluate_case(self._arch(), self._scenario(mti_n_pulse=3))
+        assert metrics["mti_improvement_db"] == pytest.approx(57.3, abs=0.1)
+        assert metrics["mti_improvement_limited"] is False
+
+
+class TestBlindSpeedsReachTheMetrics:
+    @staticmethod
+    def _case(**overrides):
+        arch = Architecture(
+            array=ArrayConfig(nx=32, ny=32, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=10.0, pa_efficiency=0.3, noise_figure_db=3.0),
+        )
+        base = {
+            "freq_hz": 1.3e9,
+            "bandwidth_hz": 500e3,
+            "range_m": 30e3,
+            "target_rcs_dbsm": 3.0,
+            "n_pulses": 10,
+            "prf_hz": 2000.0,
+            "clutter_type": "ground",
+            "mti_n_pulse": 2,
+        }
+        base.update(overrides)
+        return evaluate_case(arch, RadarDetectionScenario(**base))
+
+    def test_blind_speed_is_reported(self):
+        """PRF 2 kHz at L-band puts the first blind speed at 230 m/s. It was
+        computed by the module and exported by __init__, but never reached the
+        metrics dict, so no requirement could test it."""
+        metrics = self._case()
+        assert metrics["mti_blind_speed_ms"] == pytest.approx(230.6, abs=0.5)
+        assert metrics["mti_unambiguous_range_m"] == pytest.approx(74.9e3, rel=0.01)
+
+    def test_target_at_a_blind_speed_is_flagged_and_uncredited(self):
+        """The canceller nulls a 230 m/s target along with the clutter. The
+        Doppler-averaged model credited it the full improvement factor and
+        reported a detection anyway."""
+        clear = self._case(target_radial_velocity_ms=115.0)
+        blind = self._case(target_radial_velocity_ms=230.6)
+        assert blind["mti_target_near_blind"] is True
+        assert clear["mti_target_near_blind"] is False
+        assert blind["mti_improvement_db"] < clear["mti_improvement_db"] - 30.0
+        assert blind["pd_achieved"] < clear["pd_achieved"]
+
+    def test_unknown_velocity_keeps_the_averaged_gain(self):
+        """Without a stated target velocity the Doppler-averaged figure is the
+        right one, and the behaviour is unchanged."""
+        metrics = self._case()
+        assert metrics["mti_target_near_blind"] is False
+        assert "target_doppler_hz" not in metrics

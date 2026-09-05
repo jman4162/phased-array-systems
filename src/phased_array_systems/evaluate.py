@@ -16,6 +16,28 @@ from phased_array_systems.requirements import RequirementSet, VerificationReport
 from phased_array_systems.scenarios import CommsLinkScenario, RadarDetectionScenario
 from phased_array_systems.types import MetricsDict, Scenario
 
+# Stand-in beamwidth when the antenna model could not produce one. Wide enough
+# to be obviously a placeholder rather than a plausible array.
+DEFAULT_BEAMWIDTH_DEG = 5.0
+
+
+def _metric_float(metrics: MetricsDict, key: str, default: float) -> float:
+    """A metric as a finite float, or ``default``.
+
+    Guards non-numeric *and* non-finite values. The second half matters:
+    ``compute_beamwidth`` returns NaN when a pattern never crosses -3 dB, NaN
+    is truthy so ``float(value or default)`` passes it straight through, and
+    every downstream guard is a ``<= 0`` comparison that NaN also slips past.
+    It used to surface a hundred lines later as "alpha must satisfy
+    0 <= alpha < 1", which names nothing that went wrong.
+    """
+    value = metrics.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return default
+    value = float(value)
+    return value if math.isfinite(value) else default
+
+
 if TYPE_CHECKING:
     from phased_array_systems.io.schema import StudyConfig
 
@@ -393,10 +415,13 @@ def evaluate_case(
 
             dwell_time_s = scenario.n_pulses / scenario.prf_hz
 
-            bw_az = metrics.get("beamwidth_az_deg", 5.0)
-            bw_el = metrics.get("beamwidth_el_deg", 5.0)
-            bw_az = float(bw_az) if isinstance(bw_az, (int, float)) else 5.0
-            bw_el = float(bw_el) if isinstance(bw_el, (int, float)) else 5.0
+            # Broadside widths, not scanned ones: the beam tiles the whole
+            # search volume rather than looking in one direction, so pinning
+            # its footprint to a single scan angle biases the beam count
+            # (44% low at 60 degrees, i.e. an optimistic frame time and an
+            # optimistic timeline_occupancy).
+            bw_az = _metric_float(metrics, "beamwidth_az_broadside_deg", DEFAULT_BEAMWIDTH_DEG)
+            bw_el = _metric_float(metrics, "beamwidth_el_broadside_deg", DEFAULT_BEAMWIDTH_DEG)
             beam_solid_angle_sr = math.radians(bw_az) * math.radians(bw_el)
             scan_volume_sr = math.radians(scenario.search_az_extent_deg) * math.radians(
                 scenario.search_el_extent_deg
@@ -425,15 +450,16 @@ def evaluate_case(
         # being stated, because without it there is no tracking index.
         if scenario.target_accel_max_ms2 is not None:
             from phased_array_systems.models.radar.tracking import (
+                MONOPULSE_SNR_FLOOR_DB,
                 alpha_beta_gains,
                 angle_sigma_deg,
                 combine_angle_errors_deg,
                 crossrange_sigma_m,
                 deterministic_tracking_index,
+                deterministic_tracking_index_is_extrapolated,
                 maneuver_lag_m,
                 process_noise_from_maneuver,
                 range_sigma_m,
-                scan_broadened_beamwidth_deg,
                 steady_state_sigmas,
                 tracking_index,
                 variance_reduction_position,
@@ -444,19 +470,27 @@ def evaluate_case(
                 frame_metric = metrics.get("search_frame_time_s")
                 revisit_s = float(frame_metric) if isinstance(frame_metric, (int, float)) else None
 
-            snr_for_track = metrics.get("snr_integrated_db", metrics.get("snr_single_pulse_db"))
+            # snr_measurement_db, not snr_integrated_db: the latter carries the
+            # CFAR threshold loss, which is a detection-threshold penalty and
+            # not a reduction in received power, so it has no business in
+            # sigma = dR / sqrt(2 SNR).
+            snr_for_track = metrics.get(
+                "snr_measurement_db",
+                metrics.get("snr_integrated_db", metrics.get("snr_single_pulse_db")),
+            )
 
             if revisit_s is not None and revisit_s > 0 and isinstance(snr_for_track, (int, float)):
                 snr_db = float(snr_for_track)
 
-                # Beams broaden off broadside, so angle accuracy degrades with
-                # scan angle even at constant SNR (Curry Eq. 8.9).
-                bw_az_t = scan_broadened_beamwidth_deg(
-                    float(metrics.get("beamwidth_az_deg", 5.0) or 5.0), scenario.scan_angle_deg
-                )
-                bw_el_t = scan_broadened_beamwidth_deg(
-                    float(metrics.get("beamwidth_el_deg", 5.0) or 5.0), scenario.scan_angle_deg
-                )
+                # Already at the scan angle: the antenna model reports the
+                # scanned widths (see PhasedArrayAdapter's beamwidth
+                # convention), with the azimuth plane carrying the 1/cos(phi)
+                # broadening of Curry Eq. (8.9) and elevation carrying none,
+                # since the scan is azimuth-only. Applying
+                # scan_broadened_beamwidth_deg here squared that factor on
+                # azimuth and invented one on elevation.
+                bw_az_t = _metric_float(metrics, "beamwidth_az_deg", DEFAULT_BEAMWIDTH_DEG)
+                bw_el_t = _metric_float(metrics, "beamwidth_el_deg", DEFAULT_BEAMWIDTH_DEG)
 
                 sigma_r = range_sigma_m(
                     snr_db, scenario.bandwidth_hz, scenario.range_resolution_alpha
@@ -481,7 +515,7 @@ def evaluate_case(
                 metrics["sigma_crossrange_az_m"] = sigma_cr_az
                 metrics["sigma_crossrange_el_m"] = sigma_cr_el
                 metrics["track_revisit_s"] = revisit_s
-                metrics["monopulse_snr_ok"] = snr_db >= 13.0
+                metrics["monopulse_snr_ok"] = snr_db >= MONOPULSE_SNR_FLOOR_DB
 
                 # The alpha-beta filter is scalar per coordinate (POMR 19.49-19.53),
                 # so run it independently on range and on the worse cross-range axis.
@@ -502,6 +536,9 @@ def evaluate_case(
 
                     metrics[f"track_index_{label}"] = gamma
                     metrics[f"track_index_deterministic_{label}"] = gamma_d
+                    metrics[f"track_fit_extrapolated_{label}"] = (
+                        deterministic_tracking_index_is_extrapolated(gamma_d)
+                    )
                     metrics[f"track_alpha_{label}"] = alpha
                     metrics[f"track_beta_{label}"] = beta
                     metrics[f"track_pos_rms_{label}_m"] = pos

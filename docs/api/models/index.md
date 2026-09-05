@@ -42,8 +42,10 @@ All models contribute to a unified metrics dictionary:
 | Key | Units | Description |
 |-----|-------|-------------|
 | `g_peak_db` | dB | Peak antenna gain |
-| `beamwidth_az_deg` | degrees | Azimuth beamwidth |
-| `beamwidth_el_deg` | degrees | Elevation beamwidth |
+| `beamwidth_az_deg` | degrees | Azimuth beamwidth at the scan angle |
+| `beamwidth_el_deg` | degrees | Elevation beamwidth at the scan angle |
+| `beamwidth_az_broadside_deg` | degrees | Azimuth beamwidth at broadside |
+| `beamwidth_el_broadside_deg` | degrees | Elevation beamwidth at broadside |
 | `sll_db` | dB | Sidelobe level |
 | `scan_loss_db` | dB | Scan loss |
 | `directivity_db` | dB | Directivity |

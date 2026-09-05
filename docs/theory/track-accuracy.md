@@ -35,8 +35,7 @@ $$
 $$
 
 $$
-\sigma_\theta = \frac{\theta_{3dB}}{k_m \sqrt{2\,\mathrm{SNR}}}, \qquad
-\theta_\phi = \frac{\theta_B}{\cos\phi}
+\sigma_\theta = \frac{\theta_{3dB}}{k_m \sqrt{2\,\mathrm{SNR}}}
 $$
 
 with $k_m \approx 1.6$ the monopulse difference-pattern slope. The angle form is
@@ -44,9 +43,40 @@ derived for SNR > 13 dB; below that the monopulse ratio is a biased estimate of
 the angle and the variance is optimistic. `monopulse_snr_ok` reports whether the
 case sits above the floor rather than silently extrapolating.
 
+$\theta_{3dB}$ here is the beamwidth **at the scan angle**, which is what the
+antenna model reports. Curry Eq. (8.9)'s scan broadening
+$\theta_\phi = \theta_B / \cos\phi$ is therefore already in the number and this
+chain must not apply it again — until v0.15.0 it did, squaring the factor on
+azimuth (4x at a 75 degree scan) and inventing one on elevation, which does not
+broaden at all because the scan is azimuth-only. `scan_broadened_beamwidth_deg`
+remains available for a caller holding a broadside figure.
+
+### Which SNR
+
+The measurement SNR is `snr_measurement_db`, not `snr_integrated_db`. The two
+differ by the CFAR loss, which is a *detection threshold* penalty rather than a
+reduction in received signal power and so has no place in
+$\Delta R/\sqrt{2\,\mathrm{SNR}}$: selecting a CFAR detector used to inflate every
+measurement sigma and flip `monopulse_snr_ok` on a quantity POMR Eq. (18.63) is
+not derived against. One approximation remains and is deliberate: for a
+noncoherent dwell the integration term is a reduction in *required* SNR, used
+here as a design-time proxy for the estimator's effective SNR.
+
 Thermal angle error combines in quadrature with the hardware pointing error from
 `models/antenna/errors.py`, so phase-shifter bits and calibration residue
 propagate all the way through to track accuracy.
+
+### Where the maneuver fit stops
+
+$\sigma_v = \kappa_1(\Gamma_D) A_{max}$ lets a design state a physical maneuver
+instead of a process-noise variance, but POMR fits $\kappa_1$ only over
+$0.01 \le \Gamma_D \le 10$. The quadratic is concave in $\log_{10}\Gamma_D$ and
+crosses zero at $\Gamma_D = 5.2\times10^4$, past which it returns a negative
+process-noise sigma — a 4 g target on a 10 s revisit measured to 5 cm reaches
+$8\times10^4$, so this is an ordinary corner of a trade study rather than an
+exotic one. The fit is floored at 1% of the peak maneuver, and
+`track_fit_extrapolated_{range,crossrange}` marks every case outside the fitted
+band so a sweep can see which of its points are extrapolating.
 
 ### The SNR convention
 

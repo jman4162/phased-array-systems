@@ -15,7 +15,7 @@ from phased_array_systems.evaluate import (
     evaluate_case_with_report,
 )
 from phased_array_systems.requirements import Requirement, RequirementSet
-from phased_array_systems.scenarios import CommsLinkScenario
+from phased_array_systems.scenarios import CommsLinkScenario, RadarDetectionScenario
 
 
 class TestEvaluateCase:
@@ -777,3 +777,129 @@ class TestDACIntegration:
         """Same ENOB both directions -> same stream rate."""
         m = evaluate_case(self._arch(adc_enob=10.0, dac_enob=10.0), self._scenario())
         assert m["tx_bf_data_rate_gbps"] == pytest.approx(m["bf_data_rate_gbps"])
+
+
+class TestScanBroadeningAppliedOnce:
+    """The antenna model reports beamwidths at the scan angle; the track block
+    must consume them, not broaden them again.
+
+    Until v0.15.0 evaluate_case multiplied both principal planes by 1/cos(phi)
+    on top of what the pattern path had already measured, so azimuth carried
+    the factor squared (4x at a 75 degree scan) and elevation carried one it
+    has no physical source for -- the scan is azimuth-only. Because the
+    analytical fallback emitted broadside widths, the size of the error also
+    depended on whether the pattern backend happened to be installed.
+    """
+
+    @staticmethod
+    def _arch():
+        return Architecture(
+            array=ArrayConfig(nx=32, ny=32, dx_lambda=0.5, dy_lambda=0.5, scan_limit_deg=75.0),
+            rf=RFChainConfig(tx_power_w_per_elem=10.0, pa_efficiency=0.3, noise_figure_db=3.0),
+        )
+
+    @staticmethod
+    def _scenario(scan_angle_deg: float):
+        return RadarDetectionScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=50e3,
+            target_rcs_dbsm=0.0,
+            n_pulses=64,
+            prf_hz=5000.0,
+            integration_type="coherent",
+            track_revisit_s=1.0,
+            target_accel_max_ms2=40.0,
+            scan_angle_deg=scan_angle_deg,
+        )
+
+    def test_angle_sigma_is_consistent_with_the_reported_beamwidth(self):
+        """The regression test for the double count, and the reason it is
+        stated this way: sigma_angle must be exactly what angle_sigma_deg
+        returns for the beamwidth the same run reports. Any second broadening
+        applied anywhere in between breaks this identity."""
+        from phased_array_systems.models.radar.tracking import angle_sigma_deg
+
+        for scan in (0.0, 30.0, 60.0):
+            m = evaluate_case(self._arch(), self._scenario(scan))
+            for axis in ("az", "el"):
+                expected = angle_sigma_deg(m["snr_measurement_db"], m[f"beamwidth_{axis}_deg"], 1.6)
+                assert m[f"sigma_angle_{axis}_deg"] == pytest.approx(expected, rel=1e-12)
+
+    def test_azimuth_broadens_once_with_scan(self):
+        """1/cos(60) = 2.0, not 4.0. Held to 10% because the element pattern
+        interacts weakly with the steered azimuth cut."""
+        broadside = evaluate_case(self._arch(), self._scenario(0.0))
+        scanned = evaluate_case(self._arch(), self._scenario(60.0))
+        ratio = scanned["beamwidth_az_deg"] / broadside["beamwidth_az_deg"]
+        assert ratio == pytest.approx(2.0, rel=0.1)
+
+    def test_elevation_does_not_broaden_with_azimuth_scan(self):
+        """phi = 90 gives u = 0 along the whole cut, so for a separable taper
+        the azimuth factor is a constant on it and the width is the broadside
+        one at any scan."""
+        broadside = evaluate_case(self._arch(), self._scenario(0.0))
+        scanned = evaluate_case(self._arch(), self._scenario(60.0))
+        assert scanned["beamwidth_el_deg"] == pytest.approx(broadside["beamwidth_el_deg"], rel=0.02)
+
+    def test_broadside_keys_are_scan_invariant(self):
+        """What the search timeline consumes: the beam tiles the whole volume,
+        so its footprint cannot be pinned to one scan angle."""
+        broadside = evaluate_case(self._arch(), self._scenario(0.0))
+        scanned = evaluate_case(self._arch(), self._scenario(60.0))
+        for key in ("beamwidth_az_broadside_deg", "beamwidth_el_broadside_deg"):
+            assert scanned[key] == pytest.approx(broadside[key], rel=0.02)
+
+    def test_nan_beamwidth_falls_back_instead_of_raising(self):
+        """compute_beamwidth returns NaN when a pattern never crosses -3 dB.
+        NaN is truthy, so `float(value or 5.0)` passed it straight through and
+        every downstream guard is a `<= 0` comparison it also slips past; it
+        used to surface as "alpha must satisfy 0 <= alpha < 1", which names
+        nothing that went wrong."""
+        from phased_array_systems.evaluate import DEFAULT_BEAMWIDTH_DEG, _metric_float
+
+        assert _metric_float({"bw": float("nan")}, "bw", 5.0) == 5.0
+        assert _metric_float({"bw": float("inf")}, "bw", 5.0) == 5.0
+        assert _metric_float({"bw": "wide"}, "bw", 5.0) == 5.0
+        assert _metric_float({}, "bw", 5.0) == 5.0
+        assert _metric_float({"bw": 1.25}, "bw", 5.0) == 1.25
+        assert DEFAULT_BEAMWIDTH_DEG == 5.0
+
+
+class TestMeasurementSnrIsNotTheDetectionSnr:
+    @staticmethod
+    def _case(cfar_type):
+        arch = Architecture(
+            array=ArrayConfig(nx=32, ny=32, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=10.0, pa_efficiency=0.3, noise_figure_db=3.0),
+        )
+        scenario = RadarDetectionScenario(
+            freq_hz=10e9,
+            bandwidth_hz=10e6,
+            range_m=50e3,
+            target_rcs_dbsm=0.0,
+            n_pulses=64,
+            prf_hz=5000.0,
+            integration_type="coherent",
+            track_revisit_s=1.0,
+            target_accel_max_ms2=40.0,
+            cfar_type=cfar_type,
+        )
+        return evaluate_case(arch, scenario)
+
+    def test_cfar_loss_moves_detection_but_not_measurement(self):
+        """A CFAR loss is a threshold penalty, not a reduction in received
+        power, so it belongs in the detection margin and nowhere near
+        sigma = dR / sqrt(2 SNR). Selecting a detector used to inflate every
+        measurement sigma and flip monopulse_snr_ok."""
+        plain = self._case("none")
+        cfar = self._case("CA")
+        assert cfar["cfar_loss_db"] > 0
+        assert cfar["snr_integrated_db"] < plain["snr_integrated_db"]
+        assert cfar["snr_measurement_db"] == pytest.approx(plain["snr_measurement_db"])
+        assert cfar["sigma_range_m"] == pytest.approx(plain["sigma_range_m"])
+        assert cfar["sigma_crossrange_az_m"] == pytest.approx(plain["sigma_crossrange_az_m"])
+
+    def test_measurement_snr_is_the_integrated_snr_before_cfar(self):
+        plain = self._case("none")
+        assert plain["snr_measurement_db"] == pytest.approx(plain["snr_integrated_db"])

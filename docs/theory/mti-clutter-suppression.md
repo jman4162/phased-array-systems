@@ -52,9 +52,43 @@ $$
 rather than from tabulated closed forms. It reduces to them exactly — FRSP
 Eq. (5.52) $I = 1/(1-\rho[1])$ for $N=2$, Eq. (5.54)
 $I = 1/(1 - \frac{4}{3}\rho[1] + \frac{1}{3}\rho[2])$ for $N=3$ — and extends to
-$N > 3$ where no closed form is tabulated. It is also better conditioned: the
-three-pulse closed form differences three terms all near unity, and loses
-precision as the clutter spectrum narrows.
+$N > 3$ where no closed form is tabulated.
+
+Conditioning is the whole difficulty in that denominator, and until v0.15.0 the
+package lost to it. Written literally, $\sum_i \sum_j w_i w_j \rho_c[i-j]$ is a
+difference of terms of magnitude $\binom{2N-2}{N-1}$ whose true value is
+$O(\sigma_\omega^{2N-2})$: at a 1 mm/s clutter spread the three-pulse residue is
+$10^{-15}$ assembled from terms of magnitude 6, i.e. pure rounding noise, and for
+$N \ge 4$ it goes negative and was reported to the user as an out-of-range input.
+Two exact rearrangements fix it. For a narrow spectrum, expanding $\rho_c$ and
+exchanging the sums gives
+
+$$
+\text{residue} = \sum_{m \ge N-1} \frac{(-1)^m}{m!}
+    \left(\frac{\sigma_\omega^2}{2}\right)^m S_m,
+\qquad S_m = \sum_d a_d\, d^{2m}
+$$
+
+over the weight autocorrelation $a_d = \sum_i w_i w_{i+d}$. An $N$-pulse binomial
+canceller has an $(N-1)$-order zero at DC, so $S_m$ vanishes identically for every
+$m < N-1$: the cancellation *is* those leading terms, and the series does not
+compute them. For a wide spectrum, $\sum_d a_d = 0$ turns the sum into
+$\sum_d a_d(\rho_c[d]-1)$, evaluated with `expm1`. The two branch at
+$\sigma_\omega (N-1) = 2$ and are machine-accurate over $N = 2 \ldots 8$ and
+$\sigma_\omega = 10^{-8} \ldots 5$.
+
+The series also gives the small-spread limit
+
+$$
+I \to \frac{1}{(N-1)!} \left(\frac{2}{\sigma_\omega^2}\right)^{N-1}
+$$
+
+which is unbounded, and physically so -- perfectly correlated clutter cancels
+exactly. Real MTI does not: transmitter stability, phase noise and converter
+dynamic range hold it to roughly 30-60 dB, none of which this model represents.
+`RadarDetectionScenario.mti_improvement_limit_db` (default 60 dB) caps the applied
+figure and `mti_improvement_limited` reports when it bit, so a study cannot
+quietly bank 200 dB of subclutter visibility.
 
 ### Improvement factor, not clutter attenuation
 
@@ -71,6 +105,19 @@ filter's gain on the target and its rejection of clutter. Quoting $CA$ alone
 understates the benefit by $G$ — 3.0 dB for a two-pulse canceller, 7.8 dB for a
 three-pulse.
 
+The same applies to the *required* figure, which is why
+`required_improvement_factor_db` is named for what it returns.
+$(S/C)_\text{required} - (\sigma_t - \sigma_c)$ is a required improvement in
+signal-to-clutter ratio, so it is judged against $I$. Until v0.15.0 it was called
+`required_clutter_attenuation_db` and this page's worked table judged it against
+$CA$, which puts the verdict a full $G$ out and can send a designer to a longer
+canceller than the requirement needs. `examples/configs/radar_mti.yaml` had it
+right all along, testing `mti_improvement_db >= 47.6`.
+
+$G$ is the gain averaged over an unknown target Doppler. Where the target's
+radial velocity is known, `mti_target_gain` gives $|H(\omega_d)|^2$ — what the
+filter does to *that* target — which is zero at the blind speeds below.
+
 ## Blind speeds
 
 A target whose Doppler shift is a multiple of the PRF advances in phase by a
@@ -82,7 +129,14 @@ v_{blind} = \frac{n \cdot \mathrm{PRF} \cdot \lambda}{2}
 $$
 
 A single-PRF MTI is only usable where the anticipated target Doppler band sits
-clear of these nulls.
+clear of these nulls, and the model now says so rather than leaving it to the
+reader: `mti_blind_speed_ms` and `mti_unambiguous_range_m` are emitted whenever a
+canceller is configured, so a requirement can test them. Setting
+`target_radial_velocity_ms` goes further and credits the canceller its response
+at the target Doppler in place of the average $G$, together with
+`mti_target_near_blind`. Without it a target sitting exactly on a blind speed was
+awarded the full improvement factor and reported $P_d \approx 1$ while the
+canceller was nulling it along with the clutter.
 
 ## Worked case: ARSR-3
 
@@ -96,13 +150,23 @@ spread 1.16 km/hr, 2 m² target at 30 nmi, 15 dB required S/C.
 | First blind speed | 46.1 m/s (400 Hz, clear of the 50–350 Hz target band) |
 | Clutter cell area $R\theta_{az}(c\tau/2)$ | 3.64 × 10⁵ m² |
 | Clutter RCS | 3637 m² = 35.6 dBsm |
-| Required attenuation | 15 − (3 − 35.6) = **47.6 dB** |
+| Required improvement $I_{req}$ | 15 − (3 − 35.6) = **47.6 dB** |
 | $\sigma_c$, $\sigma_\omega$ | 2.79 Hz, 0.0438 rad |
-| Two-pulse: $I$, $G$, $CA$ | 30.2 dB, 3.0 dB, **27.2 dB** — insufficient |
-| Three-pulse: $I$, $G$, $CA$ | 57.3 dB, 7.8 dB, **49.5 dB** — sufficient |
+| Two-pulse: $I$, $G$, $CA$ | **30.2 dB**, 3.0 dB, 27.2 dB — insufficient |
+| Three-pulse: $I$, $G$, $CA$ | **57.3 dB**, 7.8 dB, 49.5 dB — sufficient |
 
 The three-pulse canceller is the shortest binomial canceller that meets the
-requirement. Every figure in this table is asserted in
+requirement — on $I$, which is the comparison the detection chain makes. The
+verdict happens to be the same on $CA$ for this case, because 47.6 dB falls
+outside the 49.5–57.3 dB window where the two disagree; a 52 dB requirement
+would have split them.
+
+The canceller also costs pulses. An $N$-pulse canceller run over a dwell of
+$n$ returns $n - N + 1$ outputs, so the integration budget is computed on
+`n_pulses_effective` rather than on the full dwell: the ARSR-3 case integrates 8
+of its 10 pulses, worth 0.70 dB. (Adjacent canceller outputs share noise, so the
+true post-MTI gain is a little below this independent-sample figure; capturing
+that needs the output covariance and is out of scope.) Every figure in this table is asserted in
 `tests/test_radar_mti_oracles.py`, which also gives the clutter model its first
 end-to-end worked case.
 

@@ -41,8 +41,10 @@ The antenna module provides an adapter to the `phased-array-modeling` package fo
 | Metric | Units | Description |
 |--------|-------|-------------|
 | `g_peak_db` | dB | Peak antenna gain |
-| `beamwidth_az_deg` | degrees | 3 dB beamwidth in azimuth |
-| `beamwidth_el_deg` | degrees | 3 dB beamwidth in elevation |
+| `beamwidth_az_deg` | degrees | 3 dB azimuth beamwidth, at the scenario's scan angle |
+| `beamwidth_el_deg` | degrees | 3 dB elevation beamwidth, at the scenario's scan angle |
+| `beamwidth_az_broadside_deg` | degrees | 3 dB azimuth beamwidth at broadside (scan-invariant) |
+| `beamwidth_el_broadside_deg` | degrees | 3 dB elevation beamwidth at broadside (scan-invariant) |
 | `sll_db` | dB | Peak sidelobe level |
 | `scan_loss_db` | dB | Gain reduction due to scan |
 | `directivity_db` | dB | Antenna directivity |

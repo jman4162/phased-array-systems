@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import Field, computed_field
+from pydantic import Field, computed_field, model_validator
 
 from phased_array_systems.constants import C_LIGHT
 from phased_array_systems.scenarios.base import ScenarioBase
@@ -44,6 +44,8 @@ class RadarDetectionScenario(ScenarioBase):
         cfar_guard_cells: Number of CFAR guard cells
         mti_n_pulse: Binomial MTI canceller length; enables clutter suppression
         clutter_velocity_std_ms: Clutter Doppler spread in velocity (m/s)
+        mti_improvement_limit_db: System-limited ceiling on the MTI improvement factor
+        target_radial_velocity_ms: Target radial velocity; enables blind-speed awareness
         target_accel_max_ms2: Max target acceleration; enables track metrics
         track_revisit_s: Track revisit interval (defaults to search frame time)
         monopulse_slope: Monopulse difference-pattern slope k_m
@@ -71,7 +73,10 @@ class RadarDetectionScenario(ScenarioBase):
         default=1.0, gt=0, le=1, description="Transmit duty cycle (avg/peak power ratio)"
     )
     scan_angle_deg: float = Field(
-        default=0.0, ge=0, le=90, description="Scan angle from boresight (deg)"
+        default=0.0,
+        ge=0,
+        lt=90,
+        description="Scan angle from boresight (deg); < 90, an endfire beam has no aperture",
     )
     integration_type: Literal["coherent", "noncoherent"] = Field(
         default="noncoherent", description="Integration type"
@@ -133,12 +138,35 @@ class RadarDetectionScenario(ScenarioBase):
         ge=0,
         description="Clutter Doppler spread as velocity std dev (m/s); ~0.32 = wooded hills",
     )
+    mti_improvement_limit_db: float | None = Field(
+        default=60.0,
+        gt=0,
+        description=(
+            "System-limited MTI improvement ceiling (dB). The canceller model is "
+            "unbounded and passes 200 dB for a narrow spectrum and a long canceller; "
+            "real MTI is held to roughly 30-60 dB by transmitter stability, phase "
+            "noise and converter dynamic range, none of which this model represents. "
+            "None disables the cap"
+        ),
+    )
+    target_radial_velocity_ms: float | None = Field(
+        default=None,
+        description=(
+            "Target radial velocity (m/s). When set, the canceller is credited its "
+            "actual response at the target Doppler instead of the Doppler-averaged "
+            "gain, so a target at a blind speed is not credited with being detected"
+        ),
+    )
 
     # Track accuracy parameters (target_accel_max_ms2 set -> track metrics computed)
     target_accel_max_ms2: float | None = Field(
         default=None,
-        ge=0,
-        description="Max target acceleration (m/s^2); set to enable track accuracy metrics",
+        gt=0,
+        description=(
+            "Max target acceleration (m/s^2); set to enable track accuracy metrics. "
+            "Must be > 0: with no maneuver there is no tracking index, and the "
+            "alpha = beta = 0 filter that follows leaves the VRR and lag terms undefined"
+        ),
     )
     track_revisit_s: float | None = Field(
         default=None,
@@ -159,6 +187,38 @@ class RadarDetectionScenario(ScenarioBase):
     include_atmos_loss: bool = Field(default=False, description="Include atmospheric attenuation")
     temperature_c: float = Field(default=15.0, description="Ambient temperature (Celsius)")
     humidity_pct: float = Field(default=50.0, ge=0, le=100, description="Relative humidity (%)")
+
+    @model_validator(mode="after")
+    def _check_mti_configuration(self) -> "RadarDetectionScenario":
+        """Reject an MTI setup that cannot mean what it says.
+
+        All three of these used to be discovered inside ``RadarModel.evaluate``
+        or not at all, which is the wrong place for a configuration error: a
+        missing ``prf_hz`` surfaced as a per-case failure the batch runner
+        recorded as bad physics rather than a bad config, and a canceller
+        requested without clutter simply vanished -- the same silent-drop
+        failure that put ``extra="forbid"`` on ``ScenarioBase``.
+        """
+        if self.mti_n_pulse is None:
+            return self
+        if self.prf_hz is None:
+            raise ValueError(
+                "mti_n_pulse requires prf_hz: the clutter spectrum is only "
+                "defined relative to the pulse repetition frequency"
+            )
+        if self.clutter_type == "none":
+            raise ValueError(
+                "mti_n_pulse requires a clutter_type other than 'none': there is "
+                "nothing for the canceller to suppress, and the requested filter "
+                "would be silently ignored"
+            )
+        if self.mti_n_pulse > self.n_pulses:
+            raise ValueError(
+                f"mti_n_pulse ({self.mti_n_pulse}) exceeds n_pulses ({self.n_pulses}): "
+                f"an N-pulse canceller consumes N pulses and returns "
+                f"n_pulses - N + 1 outputs, so the dwell cannot support it"
+            )
+        return self
 
     @computed_field  # type: ignore[prop-decorator]
     @property
