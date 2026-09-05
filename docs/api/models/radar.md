@@ -173,7 +173,11 @@ Doppler-domain clutter rejection. See
 
 ::: phased_array_systems.models.radar.mti.mti_clutter_attenuation
 
-::: phased_array_systems.models.radar.mti.required_clutter_attenuation_db
+::: phased_array_systems.models.radar.mti.required_improvement_factor_db
+
+::: phased_array_systems.models.radar.mti.mti_target_gain
+
+::: phased_array_systems.models.radar.mti.mti_improvement_factor_at_doppler
 
 ::: phased_array_systems.models.radar.mti.blind_speed_ms
 
@@ -202,6 +206,8 @@ the SNR-convention note.
 ::: phased_array_systems.models.radar.tracking.tracking_index
 
 ::: phased_array_systems.models.radar.tracking.deterministic_tracking_index
+
+::: phased_array_systems.models.radar.tracking.deterministic_tracking_index_is_extrapolated
 
 ::: phased_array_systems.models.radar.tracking.process_noise_from_maneuver
 

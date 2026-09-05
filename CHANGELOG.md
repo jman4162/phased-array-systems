@@ -5,6 +5,118 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Scan broadening was applied twice** (`evaluate.py`, `models/antenna/adapter.py`).
+  `PhasedArrayAdapter` measures the azimuth beamwidth on the *steered* pattern, so
+  it already carries Curry Eq. (8.9)'s 1/cos(phi); the track-accuracy block then
+  applied it again, and applied it to elevation as well, which does not broaden at
+  all because the scan is azimuth-only. Every `sigma_*` and `track_*` metric was
+  wrong by 1/cos(phi) or its square whenever `scan_angle_deg > 0` -- 4x at the
+  75-degree scan a 60-degree-limit array is swept to in a DOE -- and by a
+  different amount depending on whether the pattern backend was installed, since
+  the analytical fallback emitted broadside widths. `beamwidth_{az,el}_deg` are
+  now defined as the widths *at the scan angle* on both paths and are consumed as
+  such. No shipped config moves: both use `scan_angle_deg: 0.0`.
+- **The elevation beamwidth was measured off the beam** (`models/antenna/adapter.py`).
+  The elevation cut was taken at phi = 90, which passes through broadside while a
+  steered beam is elsewhere. At a 30-degree scan that cut peaks at 5.8e-13, below
+  the 1e-12 pattern floor, so `compute_beamwidth` saw a flat pattern and returned
+  NaN; at 60 degrees it landed on a sidelobe and returned that sidelobe's skirt.
+  The cut now holds u = sin(theta_s) and sweeps v, tracing the elevation plane of
+  the steered beam, and reduces exactly to the old cut at broadside.
+- **The MTI improvement factor lost every significant digit on narrow clutter
+  spectra** (`models/radar/mti.py`). Its denominator is a difference of terms of
+  magnitude C(2N-2, N-1) whose value is O(sigma_omega^(2N-2)): at a 1 mm/s spread
+  the three-pulse residue was 7.8e-16 assembled from terms of magnitude 6, so the
+  reported 158 dB was rounding noise, and for N >= 4 the residue went negative and
+  was reported to the user as an out-of-range input. Rewritten over the weight
+  autocorrelation as a power series that starts at the canceller's (N-1)-order DC
+  null -- where the vanishing leading terms are skipped rather than computed --
+  with an `expm1` branch for wide spectra. Machine-accurate over N = 2..8 and
+  sigma_omega = 1e-8..5, and it restores monotonicity in N, which the old form
+  violated near sigma_omega = 2e-4. Perfectly stationary clutter now returns
+  infinity, the documented limit, rather than raising.
+- **A canceller's pulses were spent twice** (`models/radar/equation.py`). An
+  N-pulse canceller over a dwell of n returns n - N + 1 outputs, but the
+  integration gain still credited all n. The ARSR-3 case integrates 8 of its 10
+  pulses, worth 0.70 dB. Emitted as `n_pulses_effective`.
+- **The CFAR loss reached the measurement accuracy** (`models/radar/equation.py`,
+  `evaluate.py`). A CFAR loss is a detection-threshold penalty, not a reduction in
+  received power, so subtracting it from the SNR fed to sigma = dR/sqrt(2 SNR)
+  made range and angle accuracy degrade when a detector was merely selected, and
+  flipped `monopulse_snr_ok` on a quantity POMR Eq. (18.63) is not derived
+  against. Track accuracy now consumes a separate `snr_measurement_db`.
+- **POMR's maneuver fit returned a negative process noise**
+  (`models/radar/tracking.py`). kappa_1_min is fitted over 0.01 <= Gamma_D <= 10
+  and crosses zero at 5.2e4; a 4 g target on a 10 s revisit measured to 5 cm
+  reaches 8e4 and the case aborted from inside `tracking_index` with an error
+  naming none of this. Floored at 1% of the peak maneuver, with
+  `track_fit_extrapolated_{range,crossrange}` marking cases outside the fitted
+  band.
+- **NaN slipped through the beamwidth guard** (`evaluate.py`). `compute_beamwidth`
+  returns NaN when a pattern never crosses -3 dB, NaN is truthy so
+  `float(value or 5.0)` passed it straight through, and every downstream guard is
+  a `<= 0` comparison it also evades -- surfacing a hundred lines later as
+  "alpha must satisfy 0 <= alpha < 1". Both sites now share one `_metric_float`
+  accessor that rejects non-numeric and non-finite values alike.
+- **MTI configuration errors were found at evaluate time, or not at all**
+  (`scenarios/radar.py`). `mti_n_pulse` without `prf_hz` raised mid-run, where the
+  batch runner recorded it as bad physics rather than a bad config; with
+  `clutter_type: none` it was silently ignored -- the same vanishing-parameter
+  failure that put `extra="forbid"` on `ScenarioBase`; and `mti_n_pulse > n_pulses`
+  was accepted, awarding a single-pulse dwell 57 dB of three-pulse improvement.
+  All three are now `model_validator` checks. `scan_angle_deg` is bounded `lt=90`
+  (endfire has no aperture, and `compute_scan_loss` already returned infinity
+  there) and `target_accel_max_ms2` is `gt=0` (with no maneuver there is no
+  tracking index).
+- `maneuver_lag_m` no longer carries a second copy of
+  `variance_reduction_position`, and `evaluate.py` uses `MONOPULSE_SNR_FLOOR_DB`
+  instead of a hardcoded 13.0.
+- The documentation drift guard now reads ```yaml fences, which is where the
+  `pulse_width_s` / `target_rcs_m2` drift it exists to prevent actually lived; it
+  previously globbed `examples/configs/` and parsed ```python fences only.
+
+### Added
+
+- **A stability ceiling on the MTI improvement factor**
+  (`RadarDetectionScenario.mti_improvement_limit_db`, default 60 dB). The
+  canceller model is unbounded and passes 200 dB for a narrow spectrum and a long
+  canceller; transmitter stability, phase noise and converter dynamic range hold
+  real MTI to roughly 30-60 dB, none of which this model represents.
+  `mti_improvement_limited` reports when the cap bit. ARSR-3's three-pulse 57.3 dB
+  sits under the default, so no shipped number moves.
+- **Blind speeds reach the metrics dict.** `mti_blind_speed_ms` and
+  `mti_unambiguous_range_m` are emitted whenever a canceller is configured; they
+  were computed and exported but nothing consumed them, so no requirement could
+  test them. Setting the new `target_radial_velocity_ms` credits the canceller its
+  response at the target Doppler (`mti_target_gain`,
+  `mti_improvement_factor_at_doppler`) in place of the Doppler average, and emits
+  `target_doppler_hz` and `mti_target_near_blind`. A target sitting on a blind
+  speed was previously awarded the full improvement factor and reported
+  `pd_achieved` near 1.0 while the canceller was nulling it along with the clutter.
+- `beamwidth_{az,el}_broadside_deg`, the scan-invariant beam footprint, measured
+  from the unsteered taper rather than by dividing the scanned width back out by
+  cos(scan) -- which is 31% off by a 75-degree scan. The search timeline consumes
+  these, because the beam tiles the whole search volume rather than looking in one
+  direction; pinning its footprint to one scan angle understated the beam count by
+  44% at 60 degrees, and so reported an optimistic frame time and
+  `timeline_occupancy`.
+
+### Changed
+
+- `required_clutter_attenuation_db` is renamed `required_improvement_factor_db`,
+  with a deprecated alias for one release. It returns
+  (S/C)_required - (sigma_t - sigma_c), which is a required *improvement factor*
+  and must be judged against I, not CA -- a full signal gain G apart, 3.0 dB for a
+  two-pulse canceller and 7.8 dB for a three-pulse. `examples/08` and
+  `docs/theory/mti-clutter-suppression.md` compared it against CA, which
+  `examples/configs/radar_mti.yaml` had never done. No verdict in the shipped
+  worked case changes: 47.6 dB falls outside the 49.5-57.3 dB window where the two
+  disagree.
+
 ## [0.14.0] - 2026-08-21
 
 ### Added
