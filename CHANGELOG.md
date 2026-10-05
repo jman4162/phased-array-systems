@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `g_peak_db`; scan loss is applied only to the boresight-gain fallback, as the
   comms link budget already did. Boresight results are unchanged.
 
+### Changed
+
+- Requires `phased-array-modeling>=1.5.0`. 1.5.0 stopped squaring the
+  element pattern twice, which widens `beamwidth_az_deg`/`_el_deg` slightly
+  and raises `sll_db` (golden case: 4.0162° to 4.0186°, -30.394 dB to
+  -30.356 dB). The golden snapshot is regenerated against it.
+
 ## [0.14.0] - 2026-08-21
 
 ### Added
