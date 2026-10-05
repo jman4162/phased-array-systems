@@ -44,6 +44,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         if: matrix.python-version == '3.12'
+        # fail_ci_if_error does not cover the action itself crashing (e.g. a
+        # TLS handshake failure fetching the uploader); coverage stays optional.
+        continue-on-error: true
         with:
           files: ./coverage.xml
           fail_ci_if_error: false

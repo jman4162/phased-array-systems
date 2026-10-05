@@ -777,3 +777,34 @@ class TestDACIntegration:
         """Same ENOB both directions -> same stream rate."""
         m = evaluate_case(self._arch(adc_enob=10.0, dac_enob=10.0), self._scenario())
         assert m["tx_bf_data_rate_gbps"] == pytest.approx(m["bf_data_rate_gbps"])
+
+
+class TestRadarScanLoss:
+    """Scan loss enters the radar equation once per antenna pass, not twice."""
+
+    def test_snr_drops_by_two_way_scan_loss(self):
+        from phased_array_systems.scenarios import RadarDetectionScenario
+
+        arch = Architecture(
+            array=ArrayConfig(nx=16, ny=16, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=2.0),
+        )
+
+        def run(scan_deg):
+            scenario = RadarDetectionScenario(
+                freq_hz=10e9,
+                bandwidth_hz=50e6,
+                range_m=20e3,
+                target_rcs_dbsm=0.0,
+                scan_angle_deg=scan_deg,
+            )
+            return evaluate_case(arch, scenario)
+
+        boresight, scanned = run(0.0), run(60.0)
+        scan_loss = scanned["scan_loss_db"]
+        assert scan_loss == pytest.approx(3.0103, abs=1e-3)  # 10*log10(1/cos 60°)
+        # The radar gain is the antenna's scanned gain, with no second scan-loss term
+        assert scanned["g_ant_db"] == pytest.approx(scanned["g_peak_db"])
+        # Gain appears on transmit and receive: SNR drops by 2x the one-way loss
+        drop = boresight["snr_single_pulse_db"] - scanned["snr_single_pulse_db"]
+        assert drop == pytest.approx(2 * scan_loss, abs=0.01)

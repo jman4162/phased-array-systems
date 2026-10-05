@@ -5,6 +5,26 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.1] - 2026-10-04
+
+### Fixed
+
+- **Radar scan loss was counted twice.** `RadarModel` subtracted
+  `scan_loss_db` from the antenna adapter's `g_peak_db`, which already has
+  scan loss removed. Because the gain enters the radar equation on transmit
+  and receive, scanned beams lost 4x the one-way scan loss instead of 2x: at
+  60°, single-pulse SNR fell 12.04 dB instead of 6.02 dB, and Pd, margin and
+  detection range were pessimistic to match. `g_ant_db` now equals
+  `g_peak_db`; scan loss is applied only to the boresight-gain fallback, as the
+  comms link budget already did. Boresight results are unchanged.
+
+### Changed
+
+- Requires `phased-array-modeling>=1.5.0`. 1.5.0 stopped squaring the
+  element pattern twice, which widens `beamwidth_az_deg`/`_el_deg` slightly
+  and raises `sll_db` (golden case: 4.0162° to 4.0186°, -30.394 dB to
+  -30.356 dB). The golden snapshot is regenerated against it.
+
 ## [0.14.0] - 2026-08-21
 
 ### Added
