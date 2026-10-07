@@ -121,6 +121,8 @@ def evaluate_case(
                 "cascade_gain_db": float(cascade_metrics["total_gain_db"]),
                 "cascade_iip3_dbm": float(cascade_metrics["iip3_dbm"]),
                 "cascade_oip3_dbm": float(cascade_metrics["oip3_dbm"]),
+                "cascade_ip1db_dbm": float(cascade_metrics["ip1db_dbm"]),
+                "cascade_op1db_dbm": float(cascade_metrics["op1db_dbm"]),
                 "cascade_mds_dbm": float(cascade_metrics["mds_dbm"]),
                 "cascade_sfdr_db": float(cascade_metrics["sfdr_db"]),
             }

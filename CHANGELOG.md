@@ -5,6 +5,17 @@ All notable changes to phased-array-systems will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `evaluate_case` exports the cascaded receive compression point,
+  `cascade_ip1db_dbm` and `cascade_op1db_dbm`, beside the IP3 metrics it
+  already returned, so requirements (and sysml2kit verification bindings)
+  can target P1dB directly. The value is the reciprocal-sum cascade from
+  `cascade_p1db`; stages without `p1db_dbm` count as ideal (100 dBm), as
+  stages without `iip3_dbm` already did for IIP3.
+
 ## [0.14.1] - 2026-10-04
 
 ### Fixed

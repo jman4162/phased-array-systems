@@ -186,6 +186,8 @@ def print_metrics_table(metrics: dict[str, Any], title: str = "Metrics") -> None
             "cascade_gain_db",
             "cascade_iip3_dbm",
             "cascade_oip3_dbm",
+            "cascade_ip1db_dbm",
+            "cascade_op1db_dbm",
             "cascade_sfdr_db",
             "cascade_mds_dbm",
         ):

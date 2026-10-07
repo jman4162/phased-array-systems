@@ -256,6 +256,25 @@ class TestRFCascadeIntegration:
         assert "cascade_mds_dbm" in metrics
         assert "cascade_sfdr_db" in metrics
 
+    def test_cascade_p1db_exported(self, sample_scenario):
+        """Cascaded input/output P1dB follow cascade_p1db over the RX stages."""
+        from phased_array_systems.models.rf.cascade import cascade_p1db
+
+        stages = [
+            {"name": "fem_lna", "gain_db": 23.0, "nf_db": 2.2, "p1db_dbm": -11.2},
+            {"name": "beamformer", "gain_db": 10.0, "nf_db": 8.0, "p1db_dbm": -16.0},
+        ]
+        arch = Architecture(
+            array=ArrayConfig(nx=8, ny=8, dx_lambda=0.5, dy_lambda=0.5),
+            rf=RFChainConfig(tx_power_w_per_elem=1.0, rx_stages=stages),
+        )
+        metrics = evaluate_case(arch, sample_scenario)
+        expected = cascade_p1db([(s["gain_db"], s["p1db_dbm"]) for s in stages])
+        assert metrics["cascade_ip1db_dbm"] == pytest.approx(expected["ip1db_dbm"])
+        assert metrics["cascade_op1db_dbm"] == pytest.approx(expected["op1db_dbm"])
+        # The beamformer, behind 23 dB of gain, sets the chain: -16 - 23 = -39 dBm
+        assert metrics["cascade_ip1db_dbm"] == pytest.approx(-39.0, abs=0.05)
+
     def test_cascade_nf_reasonable(self, cascade_architecture, sample_scenario):
         """Cascaded NF should be dominated by first stage but higher."""
         metrics = evaluate_case(cascade_architecture, sample_scenario)
