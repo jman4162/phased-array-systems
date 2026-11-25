@@ -114,12 +114,11 @@ class RadarModel:
                 - rain_loss_db: Two-way rain attenuation (dB)
                 - cfar_loss_db: CFAR processing loss (dB)
         """
-        # Get antenna gain from context or compute approximate
+        # Get antenna gain from context or compute approximate.  The antenna
+        # adapter's g_peak_db already has scan loss removed, so scan_loss_db
+        # applies only to the boresight approximation (as in the link budget).
         if "g_peak_db" in context:
             g_ant_db = context["g_peak_db"]
-            # Apply scan loss if provided
-            if "scan_loss_db" in context:
-                g_ant_db -= context["scan_loss_db"]
         else:
             # Approximate gain for uniform rectangular array
             # G ≈ 4*pi*A/λ^2 = 4*pi * (nx*dx) * (ny*dy) when spacing in wavelengths
@@ -128,6 +127,10 @@ class RadarModel:
             )
             g_ant_linear = 4 * math.pi * aperture_lambda_sq
             g_ant_db = 10 * math.log10(g_ant_linear)
+
+            # Apply scan loss if provided
+            if "scan_loss_db" in context:
+                g_ant_db -= context["scan_loss_db"]
 
         # Get beamwidths from context or approximate
         beamwidth_az_deg = context.get("beamwidth_az_deg", 5.0)
