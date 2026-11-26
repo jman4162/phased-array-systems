@@ -79,9 +79,9 @@ class ModelBlock(Protocol):
 ```
 
 **Canonical Metrics Dictionary** (universal exchange format):
-- Antenna: `g_peak_db`, `beamwidth_az_deg`, `beamwidth_el_deg`, `sll_db`, `scan_loss_db`
+- Antenna: `g_peak_db`, `beamwidth_az_deg`, `beamwidth_el_deg` (at the scan angle), `beamwidth_az_broadside_deg`, `beamwidth_el_broadside_deg`, `sll_db`, `scan_loss_db`
 - Comms: `eirp_dbw`, `path_loss_db`, `snr_rx_db`, `link_margin_db`
-- Radar: `snr_single_pulse_db`, `snr_required_db`, `snr_margin_db`, `pd`, `pfa`
+- Radar: `snr_single_pulse_db`, `snr_measurement_db`, `snr_required_db`, `snr_margin_db`, `pd`, `pfa`, `n_pulses_effective`, `mti_improvement_db`, `mti_blind_speed_ms`
 - RF Cascade: `cascade_nf_db`, `cascade_gain_db`, `cascade_iip3_dbm`, `cascade_oip3_dbm`, `cascade_sfdr_db`, `cascade_mds_dbm`
 - Digital: `adc_enob`, `adc_snr_db`, `bf_data_rate_gbps`, `bf_compute_gops`, `processing_margin_db`, `fpga_utilization_pct`
 - Reliability: `trm_mtbf_hours`, `array_mtbf_hours`, `expected_failed_elements`, `array_availability`

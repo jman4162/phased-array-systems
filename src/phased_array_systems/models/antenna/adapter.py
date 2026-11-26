@@ -86,6 +86,27 @@ class PhasedArrayAdapter:
     using the phased-array-modeling library, with fallback to analytical
     approximations when the library is not available.
 
+    Beamwidth convention
+    --------------------
+    ``beamwidth_az_deg`` and ``beamwidth_el_deg`` are the half-power widths in
+    each principal plane **at the scenario's scan angle**. The scan is in the
+    azimuth plane (``scan_phi_deg = 0``), so azimuth carries the 1/cos(phi)
+    broadening of Curry Eq. (8.9) and elevation does not. Both paths emit them
+    on this convention, and no consumer should broaden them again -- doing so
+    squared the factor for every track metric until v0.15.0, and did it only
+    when the pattern backend happened to be installed.
+
+    ``beamwidth_{az,el}_broadside_deg`` are the same widths at broadside. Use
+    these wherever a *scan-invariant* footprint is wanted -- tiling a search
+    volume, for instance, where the beam sweeps the whole sector and pinning
+    the footprint to one scan angle biases the beam count badly (44% low at 60
+    degrees). Use the scanned widths for anything that looks in one direction:
+    measurement accuracy, and the clutter resolution cell.
+
+    The two paths are not interchangeable to better than about 25% on a tapered
+    array: the analytical branch uses the uniform-illumination 0.886/(N d) form
+    and does not model taper broadening, which the pattern path measures.
+
     Attributes:
         name: Model block name for identification
         use_analytical_fallback: If True, use analytical approximations
@@ -204,10 +225,26 @@ class PhasedArrayAdapter:
         tp_az_db = 20 * np.log10(np.abs(tp_az) + 1e-12)
         tp_az_db = tp_az_db - np.max(tp_az_db)  # Normalize to peak
 
-        # Elevation cut (phi=90)
-        phi_el = np.full_like(theta_rad, np.pi / 2)
+        # Elevation cut, taken through the steered beam rather than through
+        # broadside. Holding u = sin(theta_s) fixed and sweeping
+        # v = sin(psi) traces the elevation principal plane of the *steered*
+        # beam; at broadside it reduces exactly to the phi = 90 cut.
+        #
+        # The phi = 90 cut it replaces was measuring the wrong thing at every
+        # nonzero scan angle, because it passes through broadside while the
+        # beam is elsewhere: at a 30 degree scan its peak amplitude is 5.8e-13,
+        # under the 1e-12 floor added below, so compute_beamwidth saw a flat
+        # pattern and returned NaN; at 60 degrees it landed on a sidelobe and
+        # returned that sidelobe's skirt as an elevation beamwidth.
+        u_s = np.sin(np.radians(scan_angle_deg))
+        psi_max_deg = np.degrees(np.arcsin(np.sqrt(max(0.0, 1.0 - u_s**2))))
+        psi_deg = np.linspace(-psi_max_deg, psi_max_deg, 721)
+        v_el = np.sin(np.radians(psi_deg))
+        sin_theta_el = np.clip(np.hypot(u_s, v_el), 0.0, 1.0)
+        theta_el = np.arcsin(sin_theta_el)
+        phi_el = np.arctan2(v_el, u_s)
         tp_el = total_pattern(
-            theta_rad,
+            theta_el,
             phi_el,
             geom.x,
             geom.y,
@@ -219,9 +256,39 @@ class PhasedArrayAdapter:
         tp_el_db = 20 * np.log10(np.abs(tp_el) + 1e-12)
         tp_el_db = tp_el_db - np.max(tp_el_db)
 
-        # 6. Extract metrics from computed patterns
+        # 6. Extract metrics from computed patterns.
+        #
+        # These are measured on the *steered* pattern, so beamwidth_az_deg
+        # already carries the 1/cos(scan) broadening -- that is the convention
+        # (see the class docstring), and evaluate.py must not apply it a second
+        # time. The elevation cut does not broaden under an azimuth-plane scan:
+        # phi = 90 gives u = sin(theta)cos(90) = 0 along the whole cut, so for a
+        # separable taper the azimuth factor AFx(0 - u_s) is a constant on it and
+        # only AFy(v) varies with theta. The element pattern is a function of
+        # theta alone, so it too is a common factor. compute_beamwidth normalizes
+        # to the cut's own peak, so what comes back is the broadside elevation
+        # width at any azimuth scan.
         beamwidth_az = compute_beamwidth(tp_az_db, theta_deg)
-        beamwidth_el = compute_beamwidth(tp_el_db, theta_deg)
+        beamwidth_el = compute_beamwidth(tp_el_db, psi_deg)
+        # Scan-invariant footprint, for consumers that tile a search volume
+        # rather than look in one direction. Measured from the unsteered
+        # taper rather than by dividing the scanned width back out by
+        # cos(scan): the 1/cos law is only a model of what the steered cut
+        # does, and backing it out is 31% off by a 75 degree scan. Impairments
+        # are deliberately excluded -- this is the array's nominal tiling
+        # footprint, not a performance metric.
+        tp_az_bs = total_pattern(
+            theta_rad,
+            phi_az,
+            geom.x,
+            geom.y,
+            taper_weights.astype(complex),
+            k,
+            element_pattern_func=element_pattern,
+            cos_exp_theta=element_cos_exp,
+        )
+        tp_az_bs_db = 20 * np.log10(np.abs(tp_az_bs) + 1e-12)
+        beamwidth_az_broadside = compute_beamwidth(tp_az_bs_db - np.max(tp_az_bs_db), theta_deg)
         sll = compute_sidelobe_level(tp_az_db, theta_deg)
         scan_loss = compute_scan_loss(scan_angle_deg)
         directivity = compute_directivity_rectangular(
@@ -252,6 +319,10 @@ class PhasedArrayAdapter:
             "g_peak_db": g_peak,
             "beamwidth_az_deg": beamwidth_az,
             "beamwidth_el_deg": beamwidth_el,
+            "beamwidth_az_broadside_deg": beamwidth_az_broadside,
+            # The elevation width does not broaden under an azimuth-plane
+            # scan (see above), so the scanned and broadside values coincide.
+            "beamwidth_el_broadside_deg": beamwidth_el,
             "sll_db": sll,
             "scan_loss_db": scan_loss,
             "directivity_db": directivity,
@@ -327,9 +398,21 @@ class PhasedArrayAdapter:
 
         # Beamwidth approximations for a rectangular array
         # BW ≈ 0.886 / (N * d_lambda) radians (uniform-taper form; tapers
-        # broaden this slightly, not modeled here)
-        beamwidth_az_deg = np.degrees(0.886 / (nx * arch.array.dx_lambda))
-        beamwidth_el_deg = np.degrees(0.886 / (ny * arch.array.dy_lambda))
+        # broaden this slightly, not modeled here -- see the class docstring,
+        # the two paths are not interchangeable to better than ~25% on a
+        # tapered array)
+        beamwidth_az_broadside_deg = np.degrees(0.886 / (nx * arch.array.dx_lambda))
+        beamwidth_el_broadside_deg = np.degrees(0.886 / (ny * arch.array.dy_lambda))
+
+        # Reported at the scan angle, as the pattern path reports them. The
+        # scan is in azimuth only, so only the azimuth width broadens
+        # (Curry Eq. 8.9); the elevation width is unchanged. Mirrors
+        # compute_scan_loss at endfire, where the projected aperture vanishes.
+        if scan_angle_deg >= 90.0:
+            beamwidth_az_deg = float("inf")
+        else:
+            beamwidth_az_deg = beamwidth_az_broadside_deg / np.cos(np.radians(scan_angle_deg))
+        beamwidth_el_deg = beamwidth_el_broadside_deg
 
         # Sidelobe level: taper design SLL, floored by the RMS error
         # sidelobe floor when quantization is present
@@ -358,6 +441,8 @@ class PhasedArrayAdapter:
             "g_peak_db": g_peak,
             "beamwidth_az_deg": beamwidth_az_deg,
             "beamwidth_el_deg": beamwidth_el_deg,
+            "beamwidth_az_broadside_deg": beamwidth_az_broadside_deg,
+            "beamwidth_el_broadside_deg": beamwidth_el_broadside_deg,
             "sll_db": sll_db,
             "scan_loss_db": scan_loss,
             "directivity_db": directivity_db,

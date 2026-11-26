@@ -20,7 +20,7 @@ from phased_array_systems.models.radar.mti import (
     mti_improvement_factor,
     mti_signal_gain,
     normalized_clutter_spread_rad,
-    required_clutter_attenuation_db,
+    required_improvement_factor_db,
     unambiguous_range_m,
 )
 from phased_array_systems.scenarios import RadarDetectionScenario
@@ -48,13 +48,13 @@ def main() -> None:
     cell_area = compute_resolution_cell_area(TARGET_RANGE_M, range_res_m, AZ_BEAMWIDTH_DEG)
     clutter_rcs = cell_area * 10 ** (SIGMA0_DB / 10)
     clutter_dbsm = 10 * math.log10(clutter_rcs)
-    ca_req = required_clutter_attenuation_db(TARGET_RCS_DBSM, clutter_dbsm, REQUIRED_SCR_DB)
+    i_req = required_improvement_factor_db(TARGET_RCS_DBSM, clutter_dbsm, REQUIRED_SCR_DB)
 
     print(f"\n  clutter cell area   {cell_area:.3e} m^2")
     print(f"  clutter RCS         {clutter_rcs:.0f} m^2 = {clutter_dbsm:.1f} dBsm")
     print(f"  target RCS          {TARGET_RCS_DBSM:.1f} dBsm")
     print(f"  required S/C        {REQUIRED_SCR_DB:.0f} dB")
-    print(f"  -> attenuation need {ca_req:.1f} dB")
+    print(f"  -> improvement need {i_req:.1f} dB")
 
     sigma_omega = normalized_clutter_spread_rad(
         clutter_spectral_std_hz(CLUTTER_V_STD_MS, LAMBDA_M), PRF_HZ
@@ -68,10 +68,16 @@ def main() -> None:
         i_db = 10 * math.log10(mti_improvement_factor(n, sigma_omega))
         g_db = 10 * math.log10(mti_signal_gain(n))
         ca_db = 10 * math.log10(mti_clutter_attenuation(n, sigma_omega))
-        verdict = "meets requirement" if ca_db >= ca_req else "insufficient"
+        # Judged on I, not CA. I = G*CA is what the detection budget consumes
+        # and what RadarModel credits to the SCR, so comparing the requirement
+        # against CA understates every canceller by its signal gain G -- 3.0 dB
+        # for the two-pulse, 7.8 dB for the three-pulse.
+        verdict = "meets requirement" if i_db >= i_req else "insufficient"
         print(f"  {n:>2}  {i_db:>7.1f}  {g_db:>6.1f}  {ca_db:>7.1f}   {verdict}")
 
     print("\n  The three-pulse canceller is the shortest that suffices.")
+    print("  CA is shown for reference; the verdict is on I, which is what the")
+    print("  detection budget consumes.")
 
     # What the filter is actually worth, through the full detection chain.
     arch = Architecture(
@@ -98,6 +104,11 @@ def main() -> None:
         print(f"  {label:>5}  {m['scr_db']:>7.1f}  {m['scnr_db']:>8.1f}  {m['pd_achieved']:>6.3f}")
 
     print("\n  Without the canceller the target is undetectable in its own clutter.")
+    print(f"\n  first blind speed   {blind_speed_ms(PRF_HZ, LAMBDA_M):.1f} m/s")
+    print("  A target at that speed advances a full cycle per pulse and is")
+    print("  cancelled with the clutter. Set target_radial_velocity_ms on the")
+    print("  scenario and the canceller is credited its response at the target")
+    print("  Doppler instead of its Doppler average, so the case is visible.")
 
 
 if __name__ == "__main__":

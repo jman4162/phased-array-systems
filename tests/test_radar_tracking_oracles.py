@@ -33,12 +33,15 @@ import math
 import pytest
 
 from phased_array_systems.models.radar.tracking import (
+    GAMMA_D_FIT_MAX,
+    KAPPA_1_MIN_FLOOR,
     MONOPULSE_SNR_FLOOR_DB,
     alpha_beta_gains,
     angle_sigma_deg,
     combine_angle_errors_deg,
     crossrange_sigma_m,
     deterministic_tracking_index,
+    deterministic_tracking_index_is_extrapolated,
     maneuver_lag_m,
     process_noise_from_maneuver,
     range_resolution_m,
@@ -329,8 +332,51 @@ class TestManeuverLag:
         assert hard > quiet
 
     def test_lag_reduces_to_noise_term_without_maneuver(self):
-        """With Gamma_D = 0 the MMSE collapses to the sensor-noise term."""
+        """With Gamma_D = 0 the MMSE collapses to the sensor-noise term.
+
+        POMR Eq. (19.60)'s noise term is Mahafza Eq. (11.94) written
+        differently -- (2a^2 + b(2 - 3a)) against (2a^2 - 3ab + 2b) over the
+        same denominator -- so this asserts the identity rather than carrying
+        a third transcription of it.
+        """
         alpha, beta = alpha_beta_gains(1.0)
-        denom = alpha * (4.0 - 2.0 * alpha - beta)
-        expected = 100.0 * math.sqrt((2 * alpha**2 + beta * (2 - 3 * alpha)) / denom)
+        expected = 100.0 * math.sqrt(variance_reduction_position(alpha, beta))
         assert maneuver_lag_m(100.0, alpha, beta, 0.0) == pytest.approx(expected, rel=1e-12)
+
+
+class TestManeuverFitOutsideItsBand:
+    """POMR fits kappa_1_min over 0.01 <= Gamma_D <= 10. Outside it the
+    quadratic is extrapolated, and above Gamma_D = 5.2e4 it is not merely
+    inaccurate but negative."""
+
+    def test_fit_crosses_zero_where_the_floor_takes_over(self):
+        """The unfloored quadratic 0.87 - 0.09 L - 0.02 L^2 has its positive
+        root at L = log10(Gamma_D) = 4.72. Stated here so the floor's reason
+        is checkable rather than asserted."""
+        root_log = 4.7169
+        assert 0.87 - 0.09 * root_log - 0.02 * root_log**2 == pytest.approx(0.0, abs=1e-3)
+
+    @pytest.mark.parametrize("gamma_d", [5.3e4, 8e4, 1e6, 1e9])
+    def test_process_noise_stays_positive_far_outside_the_fit(self, gamma_d):
+        """A 4 g target on a 10 s revisit measured to 5 cm gives Gamma_D = 8e4,
+        which is an ordinary corner of a trade study -- the largest arrays and
+        the widest bandwidths. It used to return a negative sigma_v and abort
+        the case from inside tracking_index."""
+        sigma_v = process_noise_from_maneuver(gamma_d, 40.0)
+        assert sigma_v == pytest.approx(KAPPA_1_MIN_FLOOR * 40.0)
+        assert tracking_index(sigma_v, 0.05, 10.0) > 0.0
+
+    def test_fit_is_untouched_where_it_is_valid(self):
+        """The floor must not perturb any value the fit gets right: POMR's own
+        worked example (p. 734) and the whole fitted band."""
+        assert process_noise_from_maneuver(0.33, 40.0) == pytest.approx(36.4, abs=0.1)
+        for gamma_d in (0.01, 0.1, 1.0, 10.0, 1e3, 1e4):
+            log_gd = math.log10(gamma_d)
+            unfloored = (0.87 - 0.09 * log_gd - 0.02 * log_gd**2) * 40.0
+            assert process_noise_from_maneuver(gamma_d, 40.0) == pytest.approx(unfloored, rel=1e-12)
+
+    def test_extrapolation_is_reported(self):
+        assert not deterministic_tracking_index_is_extrapolated(1.0)
+        assert not deterministic_tracking_index_is_extrapolated(GAMMA_D_FIT_MAX)
+        assert deterministic_tracking_index_is_extrapolated(GAMMA_D_FIT_MAX * 1.001)
+        assert deterministic_tracking_index_is_extrapolated(1e-3)

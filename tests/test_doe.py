@@ -37,6 +37,13 @@ class TestDesignVariable:
         with pytest.raises(ValueError):
             DesignVariable(name="x", type="categorical")
 
+    def test_categorical_empty_values_raises(self):
+        """An empty list is as unusable as a missing one, and this is the case
+        the validator's condition now rests on: `not self.values` covers both,
+        where it used to also test `len(self.values) < 1` redundantly."""
+        with pytest.raises(ValueError):
+            DesignVariable(name="x", type="categorical", values=[])
+
 
 class TestDesignSpace:
     """Tests for DesignSpace."""

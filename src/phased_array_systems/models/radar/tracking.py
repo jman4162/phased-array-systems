@@ -72,6 +72,18 @@ DEFAULT_MONOPULSE_SLOPE = 1.6
 # is optimistic. Reported, not enforced: the caller decides.
 MONOPULSE_SNR_FLOOR_DB = 13.0
 
+# POMR fits kappa_1_min (Eq. 19.66) over this band; see
+# process_noise_from_maneuver for what happens outside it.
+GAMMA_D_FIT_MIN = 0.01
+GAMMA_D_FIT_MAX = 10.0
+
+# Floor on the extrapolated kappa_1_min. The fit crosses zero at
+# Gamma_D = 5.2e4 and goes negative above it; sigma_v cannot be negative, and
+# zero is no better -- it drives alpha = beta = 0, where the VRR and maneuver
+# lag are undefined. 1% of the peak maneuver keeps the filter well posed while
+# making it obvious that the fit has stopped contributing.
+KAPPA_1_MIN_FLOOR = 0.01
+
 
 def _snr_linear(snr_db: float) -> float:
     return float(10.0 ** (snr_db / 10.0))
@@ -310,7 +322,19 @@ def process_noise_from_maneuver(gamma_d: float, accel_max_ms2: float) -> float:
     Lets the caller state a physical maneuver ("the target pulls 4 g") instead
     of tuning a process-noise variance. POMR fits the curve over
     0.01 <= Gamma_D <= 10; outside that band the fit is extrapolated and the
-    caller should treat the result as indicative.
+    caller should treat the result as indicative --
+    :func:`deterministic_tracking_index_is_extrapolated` reports which side of
+    the band a case is on.
+
+    The extrapolation has a hard end. The quadratic is concave in log10 and
+    crosses zero at Gamma_D = 5.2e4, beyond which it returns a *negative*
+    process-noise sigma -- unphysical, and it used to abort the case from
+    inside :func:`tracking_index` with an error naming none of this. The
+    highest-performance corner of a trade study reaches it easily: a 4 g target
+    on a 10 s revisit measured to 5 cm gives Gamma_D = 8e4. The fit is
+    therefore floored at ``KAPPA_1_MIN_FLOOR``, which leaves every value the
+    fit gets right untouched and turns the rest into a small positive process
+    noise rather than a crash.
     """
     if gamma_d <= 0:
         raise ValueError("gamma_d must be > 0")
@@ -318,7 +342,18 @@ def process_noise_from_maneuver(gamma_d: float, accel_max_ms2: float) -> float:
         raise ValueError("accel_max_ms2 must be >= 0")
     log_gd = math.log10(gamma_d)
     kappa = 0.87 - 0.09 * log_gd - 0.02 * log_gd**2
-    return float(kappa * accel_max_ms2)
+    return float(max(kappa, KAPPA_1_MIN_FLOOR) * accel_max_ms2)
+
+
+def deterministic_tracking_index_is_extrapolated(gamma_d: float) -> bool:
+    """True when Gamma_D sits outside the band POMR fits kappa_1_min over.
+
+    Reported rather than enforced, in the manner of
+    :data:`MONOPULSE_SNR_FLOOR_DB`: a DOE should be able to see which of its
+    cases left the validated band instead of inheriting the extrapolation
+    silently.
+    """
+    return not (GAMMA_D_FIT_MIN <= gamma_d <= GAMMA_D_FIT_MAX)
 
 
 def maneuver_lag_m(
@@ -341,6 +376,6 @@ def maneuver_lag_m(
     denom = alpha * (4.0 - 2.0 * alpha - beta)
     if denom <= 0:
         raise ValueError("alpha, beta outside the stable region")
-    noise_term = (2.0 * alpha**2 + beta * (2.0 - 3.0 * alpha)) / denom
+    noise_term = variance_reduction_position(alpha, beta)
     lag_term = (1.0 - alpha) ** 2 * gamma_d**2 / beta**2
     return float(sigma_w * math.sqrt(noise_term + lag_term))

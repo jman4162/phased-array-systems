@@ -37,9 +37,8 @@ class DesignVariable(BaseModel):
                 raise ValueError(f"Variable '{self.name}': low and high required for {self.type}")
             if self.low > self.high:
                 raise ValueError(f"Variable '{self.name}': low must be <= high")
-        elif self.type == "categorical":
-            if not self.values or len(self.values) < 1:
-                raise ValueError(f"Variable '{self.name}': values required for categorical")
+        elif self.type == "categorical" and not self.values:
+            raise ValueError(f"Variable '{self.name}': values required for categorical")
         return self
 
     def sample_uniform(self, n: int, rng: np.random.Generator) -> np.ndarray:
